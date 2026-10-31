@@ -1,0 +1,78 @@
+# --- Secrets and credentials (never commit; guard_paths.py will block agents from editing them too) ---
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.p8
+*.p12
+*.mobileprovision
+*.pem
+*.jks
+*.keystore
+*service-account*.json
+google-services.json
+GoogleService-Info.plist
+local.properties
+secrets/
+
+# --- Local agent / harness state (the shared config IS committed: .claude/agents, .claude/settings.json) ---
+.claude/settings.local.json
+CLAUDE.local.md
+AGENTS.local.md
+.opencode/node_modules/
+.pi/sessions/
+
+# --- Gradle / Kotlin ---
+.gradle/
+build/
+.kotlin/
+*.class
+hs_err_pid*
+
+# --- Android Studio / IntelliJ ---
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# --- Xcode / Swift ---
+xcuserdata/
+DerivedData/
+*.xcuserstate
+.build/
+.swiftpm/
+Pods/
+*.xcworkspace/xcuserdata/
+
+# --- Node (React Native bridge) ---
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-store/
+
+# --- Flutter / Dart ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# --- Docker (local data) ---
+postgres-data/
+docker-compose.override.yml
+
+# --- Python (scripts/agent tests) ---
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# --- OS / misc ---
+.DS_Store
+*.log
