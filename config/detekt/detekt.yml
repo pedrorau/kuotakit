@@ -1,0 +1,5 @@
+# Builds on detekt's defaults (see build.gradle.kts). Only deviations are listed here.
+potential-bugs:
+  # No `!!` in library code (AGENTS.md conventions, ADR 0011).
+  UnsafeCallOnNullableType:
+    active: true

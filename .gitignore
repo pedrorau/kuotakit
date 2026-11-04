@@ -29,6 +29,7 @@ build/
 .kotlin/
 *.class
 hs_err_pid*
+*.hprof
 
 # --- Android Studio / IntelliJ ---
 .idea/
