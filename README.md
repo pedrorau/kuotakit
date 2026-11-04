@@ -75,6 +75,18 @@ val restored     = KuotaKit.restore()
 if (customerInfo.entitlements["premium"]?.isActive == true) unlockPremium()
 ```
 
+## Run locally
+
+Requirements: a Docker engine (Docker Desktop, Colima, OrbStack or Linux Docker). JDK 21 is downloaded automatically by Gradle.
+
+```
+./gradlew build                      # compile, test, lint
+./gradlew :backend:installDist
+cp .env.example .env                 # then set POSTGRES_PASSWORD
+docker compose up --build
+curl localhost:8080/health           # {"status":"ok"}
+```
+
 ## Roadmap
 
 See [docs/roadmap.md](docs/roadmap.md). In short: backend + Android → iOS → React Native + Flutter → docs and launch.

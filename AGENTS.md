@@ -20,7 +20,10 @@ KuotaKit: open-source, self-hosted in-app purchases and subscriptions. KMP core 
 ## Conventions
 - Kotlin: official style, ktlint + detekt, coroutines and Flow, no `!!` in library code.
 - Swift: Swift 5.10+, async/await, SwiftLint.
-- Backend: Ktor, kotlinx.serialization, Testcontainers for Postgres. Tests: Kotest if it works with Pitest, otherwise JUnit 5 (ADR 0011; decided in Phase 1, task 1).
+- Backend: Ktor, kotlinx.serialization, Testcontainers for Postgres. Tests: Kotest (works with Pitest, see ADR 0011).
+- Gradle: the root `settings.gradle.kts` includes only `:contracts` and `:backend`. Future bridges (`bridges/react-native`, `bridges/flutter`) keep their own build tools and are NOT included in it. Versions live in `gradle/libs.versions.toml`.
+- JDK 21 comes from the Gradle toolchain (downloaded automatically); do not rely on the JDK installed on the machine.
+- Every `.kt` file starts with the Apache-2.0 license header (ADR 0006).
 - Store identifiers are always `play_store` and `app_store` (API, YAML, SDK).
 - API models live only in `contracts/`. Never redefine them in the SDK or the backend.
 - Any backend change must keep the conformance suite green (ADR 0007).
@@ -47,14 +50,20 @@ Rules that must always hold are enforced by scripts in `scripts/agent/`, not by 
 - Architecture tests, the public API dump and mutation testing run in CI (ADR 0011). A green build with a dropped mutation score is a failure.
 If a guard blocks you, do not try to work around it. Explain and ask.
 
-## Commands (fill in when code exists)
-- Backend tests: `TBD`
-- SDK tests: `TBD`
-- Lint all: `TBD`
+## Commands
+- Build, tests and lint (ktlint + detekt, all modules): `./gradlew build`
+- Backend tests: `./gradlew :backend:test`
+- Contracts tests (JVM): `./gradlew :contracts:jvmTest` (iOS simulator tests only run on Apple Silicon or in CI: `:contracts:iosSimulatorArm64Test`)
+- Auto-format: `./gradlew ktlintFormat`
+- Run the backend: `./gradlew :backend:run`, then `curl localhost:8080/health`
+- Backend + Postgres: `./gradlew :backend:installDist && cp .env.example .env && docker compose up --build`
+- Mutation testing spike (not in CI yet): `./gradlew :backend:pitest`
+- SDK tests: `TBD` (no SDK yet)
 
 ## Current state
 - Phase 0 done (2026-10-30): docs closed, identifiers reserved.
 - Phase 0 wrap-up done (2026-10-31): planning docs at the repo root, NOTICE added (LICENSE came from GitHub). No code yet.
-- Phase 1, task 1 next: monorepo skeleton (Gradle, `contracts/`, backend with `/health`, docker-compose with Postgres, CI).
+- Phase 1, task 1 done (2026-11-03, branch `feat/project-skeleton`): Gradle multi-module (`contracts` KMP with jvm/android/iOS targets, `backend` Ktor with `GET /health`), docker-compose with Postgres, ktlint + detekt, GitHub Actions CI. Kotest confirmed to work with Pitest. **Public API:** first public symbol in `contracts`, `HealthResponse(status)`; `explicitApi()` is enabled.
+- Pending: `docker-compose.yml` has not been run locally yet (no Docker engine on the maintainer's machine; Colima to be installed). Until then it is verified only by the `compose` job in CI.
 - Then task 2: all five guardrail scripts in `scripts/agent/` (`guard_paths`, `guard_commands`, `check_changed`, `protect_tests`, `check_tests`) + Claude Code hooks (ADR 0010). Until then, guardrails are not active.
 - Then task 3: the rest of the rules as checks (ADR 0011): architecture tests, public API dump, license-header check, mutation testing.
