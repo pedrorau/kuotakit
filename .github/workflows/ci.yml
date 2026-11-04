@@ -24,6 +24,7 @@ jobs:
       jvm: ${{ steps.filter.outputs.jvm }}
       ios: ${{ steps.filter.outputs.ios }}
       compose: ${{ steps.filter.outputs.compose }}
+      agent: ${{ steps.filter.outputs.agent }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -50,6 +51,11 @@ jobs:
               - 'backend/**'
               - 'docker-compose.yml'
               - '.env.example'
+            agent:
+              - 'scripts/**'
+              - '.claude/**'
+              - '.gitignore' # guard_paths.py reads its secrets block
+              - '.github/workflows/ci.yml'
 
   jvm:
     needs: changes
@@ -103,8 +109,20 @@ jobs:
       - if: always() && hashFiles('.env') != ''
         run: docker compose down -v
 
+  agent-scripts:
+    needs: changes
+    if: needs.changes.outputs.agent == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install -r scripts/agent/requirements-dev.txt
+      - run: python -m pytest scripts/agent -q
+
   ci:
-    needs: [changes, jvm, ios, compose]
+    needs: [changes, jvm, ios, compose, agent-scripts]
     if: always()
     runs-on: ubuntu-latest
     steps:

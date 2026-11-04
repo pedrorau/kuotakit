@@ -15,7 +15,7 @@ Every rule that can be broken silently is turned into an automated check:
 - **License headers → a CI check** that every source file has the Apache-2.0 header (ADR 0006).
 - **Public API → Binary Compatibility Validator.** Public API changes fail the build until the `.api` dump is updated, so they are always visible in review.
 - **Protected tests.** A guard script (`scripts/agent/protect_tests.py`) asks for human approval before an agent edits or deletes an existing test file. New test files are allowed.
-- **No "done" in red.** At the end of an agent task, a guard (`scripts/agent/check_tests.py`) runs the relevant tests; the task cannot be closed while they fail.
+- **No "done" in red.** At the end of an agent task, a guard (`scripts/agent/check_tests.py`) runs the relevant checks (tests, ktlint, detekt) of the modules with uncommitted changes; the task cannot be closed while they fail. To avoid an endless loop it blocks up to 3 times in a row per session and then lets the agent stop with a loud warning; CI and the branch ruleset are the final gate.
 - **Mutation testing (Pitest, JVM).** Runs on changed code in every PR and on the whole backend and core weekly. Critical modules (purchase validation, entitlement computation) must keep a minimum mutation score, starting at 70% and raised over time.
 - The two guard scripts (`protect_tests.py`, `check_tests.py`) ship in Phase 1, task 2 with the other agent guardrails; the remaining checks above ship in task 3.
 - All of these run in CI as well, so they apply to any harness or to humans.

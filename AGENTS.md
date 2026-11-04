@@ -41,12 +41,12 @@ KuotaKit: open-source, self-hosted in-app purchases and subscriptions. KMP core 
 Questions about Google Play or Apple store APIs follow [docs/store-docs-rules.md](docs/store-docs-rules.md): official sources only, with links.
 
 ## Guardrails enforced by scripts (not by this file)
-Rules that must always hold are enforced by scripts in `scripts/agent/`, not by asking the model. Every harness calls the same scripts (ADR 0010), and CI runs the same checks for everyone:
+Rules that must always hold are enforced by scripts in `scripts/agent/`, not by asking the model. Every harness calls the same scripts (ADR 0010); the contract, the limits and how to wire a harness are in [docs/harnesses/guard-scripts.md](docs/harnesses/guard-scripts.md). The hooks are active in Claude Code (`.claude/settings.json`); OpenCode and Pi are documented in `docs/harnesses/` but not configured. CI runs the same checks for everyone:
 - `guard_paths.py`: blocks edits to secrets and credentials: every pattern under "Secrets and credentials" in `.gitignore` (`.env*`, `*.p8`, `*.p12`, `*.pem`, `*.jks`, `*.keystore`, `*.mobileprovision`, `*service-account*.json`, `google-services.json`, `GoogleService-Info.plist`, `local.properties`, `secrets/`). Template files with no secrets (`.env.example`, `.env.sample`, `.env.template`) are allowed.
 - `guard_commands.py`: blocks dangerous commands (`git push --force`, `git reset --hard`, `rm -rf` outside build dirs, publishing to Maven/npm/pub.dev).
-- `check_changed.py`: formats and lints the files the agent changed.
+- `check_changed.py`: after each edit, formats the changed Kotlin file with ktlint and returns what it cannot fix.
 - `protect_tests.py`: editing or deleting an existing test needs human approval; new test files are allowed. Never weaken a test to make it pass; fix the code or explain why the test is wrong (ADR 0011).
-- `check_tests.py`: runs the relevant tests when a task ends; the task cannot be closed while they fail (ADR 0011).
+- `check_tests.py`: when a task ends, runs the checks (tests, ktlint, detekt) of the modules with uncommitted changes; the task cannot be closed while they fail. After 3 blocked attempts in a row it lets the agent stop with a loud warning, so an unfixable failure does not trap a session (ADR 0011).
 - Architecture tests, the public API dump and mutation testing run in CI (ADR 0011). A green build with a dropped mutation score is a failure.
 If a guard blocks you, do not try to work around it. Explain and ask.
 
@@ -58,12 +58,14 @@ If a guard blocks you, do not try to work around it. Explain and ask.
 - Run the backend: `./gradlew :backend:run`, then `curl localhost:8080/health`
 - Backend + Postgres: `./gradlew :backend:installDist && cp .env.example .env && docker compose up --build`
 - Mutation testing spike (not in CI yet): `./gradlew :backend:pitest`
+- Guardrail script tests: `python3 -m venv .venv && .venv/bin/pip install -r scripts/agent/requirements-dev.txt && .venv/bin/python -m pytest scripts/agent`
 - SDK tests: `TBD` (no SDK yet)
 
 ## Current state
 - Phase 0 done (2026-10-30): docs closed, identifiers reserved.
 - Phase 0 wrap-up done (2026-10-31): planning docs at the repo root, NOTICE added (LICENSE came from GitHub). No code yet.
 - Phase 1, task 1 done (2026-11-03, branch `feat/project-skeleton`): Gradle multi-module (`contracts` KMP with jvm/android/iOS targets, `backend` Ktor with `GET /health`), docker-compose with Postgres, ktlint + detekt, GitHub Actions CI. Kotest confirmed to work with Pitest. **Public API:** first public symbol in `contracts`, `HealthResponse(status)`; `explicitApi()` is enabled.
-- Pending: `docker-compose.yml` has not been run locally yet (no Docker engine on the maintainer's machine; Colima to be installed). Until then it is verified only by the `compose` job in CI.
-- Then task 2: all five guardrail scripts in `scripts/agent/` (`guard_paths`, `guard_commands`, `check_changed`, `protect_tests`, `check_tests`) + Claude Code hooks (ADR 0010). Until then, guardrails are not active.
+- Phase 1, task 2 done (2026-11-03, branch `feat/agent-guardrails`): the five guardrail scripts in `scripts/agent/` with 238 pytest cases (also in CI, job `agent-scripts`), Claude Code hooks in `.claude/settings.json`, and the OpenCode and Pi wiring documented in `docs/harnesses/`. Guardrails are active in Claude Code sessions opened inside the repo.
+- Optional: `docker-compose.yml` is verified by the `compose` job in CI; the maintainer may still install Colima to run it locally.
+- Known gap: an agent could edit `.claude/settings.json` or `scripts/agent/` itself; treat changes to them as a review item.
 - Then task 3: the rest of the rules as checks (ADR 0011): architecture tests, public API dump, license-header check, mutation testing.
