@@ -6,15 +6,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/agent/guard_paths.py"],
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}\"/scripts/agent/guard_paths.py",
             "timeout": 10,
             "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "python3",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/agent/protect_tests.py"],
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}\"/scripts/agent/protect_tests.py",
             "timeout": 10,
             "onFailure": "block"
           }
@@ -25,15 +23,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/agent/guard_commands.py"],
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}\"/scripts/agent/guard_commands.py",
             "timeout": 10,
             "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "python3",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/agent/protect_tests.py"],
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}\"/scripts/agent/protect_tests.py",
             "timeout": 10,
             "onFailure": "block"
           }
@@ -46,8 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/agent/check_changed.py"],
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}\"/scripts/agent/check_changed.py",
             "timeout": 300
           }
         ]
@@ -58,8 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/agent/check_tests.py"],
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}\"/scripts/agent/check_tests.py",
             "timeout": 900,
             "onFailure": "block"
           }

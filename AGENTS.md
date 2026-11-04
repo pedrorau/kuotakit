@@ -65,7 +65,7 @@ If a guard blocks you, do not try to work around it. Explain and ask.
 - Phase 0 done (2026-10-30): docs closed, identifiers reserved.
 - Phase 0 wrap-up done (2026-10-31): planning docs at the repo root, NOTICE added (LICENSE came from GitHub). No code yet.
 - Phase 1, task 1 done (2026-11-03, branch `feat/project-skeleton`): Gradle multi-module (`contracts` KMP with jvm/android/iOS targets, `backend` Ktor with `GET /health`), docker-compose with Postgres, ktlint + detekt, GitHub Actions CI. Kotest confirmed to work with Pitest. **Public API:** first public symbol in `contracts`, `HealthResponse(status)`; `explicitApi()` is enabled.
-- Phase 1, task 2 done (2026-11-03, branch `feat/agent-guardrails`): the five guardrail scripts in `scripts/agent/` with 238 pytest cases (also in CI, job `agent-scripts`), Claude Code hooks in `.claude/settings.json`, and the OpenCode and Pi wiring documented in `docs/harnesses/`. Guardrails are active in Claude Code sessions opened inside the repo.
+- Phase 1, task 2 done (2026-11-03, branch `feat/agent-guardrails`): the five guardrail scripts in `scripts/agent/` with 242 pytest cases (also in CI, job `agent-scripts`), Claude Code hooks in `.claude/settings.json`, and the OpenCode and Pi wiring documented in `docs/harnesses/`. Guardrails are active in Claude Code sessions opened inside the repo.
 - Optional: `docker-compose.yml` is verified by the `compose` job in CI; the maintainer may still install Colima to run it locally.
 - Known gap: an agent could edit `.claude/settings.json` or `scripts/agent/` itself; treat changes to them as a review item.
 - Then task 3: the rest of the rules as checks (ADR 0011): architecture tests, public API dump, license-header check, mutation testing.
