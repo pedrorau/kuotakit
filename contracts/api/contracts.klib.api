@@ -6,6 +6,238 @@
 // - Show declarations: true
 
 // Library unique name: <kuotakit:contracts>
+final enum class dev.pedrorau.kuotakit.contracts/ErrorCode : kotlin/Enum<dev.pedrorau.kuotakit.contracts/ErrorCode> { // dev.pedrorau.kuotakit.contracts/ErrorCode|null[0]
+    enum entry FORBIDDEN // dev.pedrorau.kuotakit.contracts/ErrorCode.FORBIDDEN|null[0]
+    enum entry INVALID_PAYLOAD // dev.pedrorau.kuotakit.contracts/ErrorCode.INVALID_PAYLOAD|null[0]
+    enum entry NOT_FOUND // dev.pedrorau.kuotakit.contracts/ErrorCode.NOT_FOUND|null[0]
+    enum entry PURCHASE_INVALID // dev.pedrorau.kuotakit.contracts/ErrorCode.PURCHASE_INVALID|null[0]
+    enum entry STORE_UNAVAILABLE // dev.pedrorau.kuotakit.contracts/ErrorCode.STORE_UNAVAILABLE|null[0]
+    enum entry TOKEN_ALREADY_LINKED // dev.pedrorau.kuotakit.contracts/ErrorCode.TOKEN_ALREADY_LINKED|null[0]
+    enum entry UNAUTHORIZED // dev.pedrorau.kuotakit.contracts/ErrorCode.UNAUTHORIZED|null[0]
+    enum entry UNKNOWN // dev.pedrorau.kuotakit.contracts/ErrorCode.UNKNOWN|null[0]
+
+    final val entries // dev.pedrorau.kuotakit.contracts/ErrorCode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<dev.pedrorau.kuotakit.contracts/ErrorCode> // dev.pedrorau.kuotakit.contracts/ErrorCode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): dev.pedrorau.kuotakit.contracts/ErrorCode // dev.pedrorau.kuotakit.contracts/ErrorCode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<dev.pedrorau.kuotakit.contracts/ErrorCode> // dev.pedrorau.kuotakit.contracts/ErrorCode.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // dev.pedrorau.kuotakit.contracts/ErrorCode.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/ErrorCode> // dev.pedrorau.kuotakit.contracts/ErrorCode.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // dev.pedrorau.kuotakit.contracts/ErrorCode.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class dev.pedrorau.kuotakit.contracts/PeriodType : kotlin/Enum<dev.pedrorau.kuotakit.contracts/PeriodType> { // dev.pedrorau.kuotakit.contracts/PeriodType|null[0]
+    enum entry INTRO // dev.pedrorau.kuotakit.contracts/PeriodType.INTRO|null[0]
+    enum entry NORMAL // dev.pedrorau.kuotakit.contracts/PeriodType.NORMAL|null[0]
+    enum entry TRIAL // dev.pedrorau.kuotakit.contracts/PeriodType.TRIAL|null[0]
+    enum entry UNKNOWN // dev.pedrorau.kuotakit.contracts/PeriodType.UNKNOWN|null[0]
+
+    final val entries // dev.pedrorau.kuotakit.contracts/PeriodType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<dev.pedrorau.kuotakit.contracts/PeriodType> // dev.pedrorau.kuotakit.contracts/PeriodType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): dev.pedrorau.kuotakit.contracts/PeriodType // dev.pedrorau.kuotakit.contracts/PeriodType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<dev.pedrorau.kuotakit.contracts/PeriodType> // dev.pedrorau.kuotakit.contracts/PeriodType.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // dev.pedrorau.kuotakit.contracts/PeriodType.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/PeriodType> // dev.pedrorau.kuotakit.contracts/PeriodType.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // dev.pedrorau.kuotakit.contracts/PeriodType.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class dev.pedrorau.kuotakit.contracts/Store : kotlin/Enum<dev.pedrorau.kuotakit.contracts/Store> { // dev.pedrorau.kuotakit.contracts/Store|null[0]
+    enum entry APP_STORE // dev.pedrorau.kuotakit.contracts/Store.APP_STORE|null[0]
+    enum entry PLAY_STORE // dev.pedrorau.kuotakit.contracts/Store.PLAY_STORE|null[0]
+    enum entry UNKNOWN // dev.pedrorau.kuotakit.contracts/Store.UNKNOWN|null[0]
+
+    final val entries // dev.pedrorau.kuotakit.contracts/Store.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<dev.pedrorau.kuotakit.contracts/Store> // dev.pedrorau.kuotakit.contracts/Store.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): dev.pedrorau.kuotakit.contracts/Store // dev.pedrorau.kuotakit.contracts/Store.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<dev.pedrorau.kuotakit.contracts/Store> // dev.pedrorau.kuotakit.contracts/Store.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // dev.pedrorau.kuotakit.contracts/Store.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/Store> // dev.pedrorau.kuotakit.contracts/Store.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // dev.pedrorau.kuotakit.contracts/Store.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface dev.pedrorau.kuotakit.contracts/ReceiptRequest { // dev.pedrorau.kuotakit.contracts/ReceiptRequest|null[0]
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // dev.pedrorau.kuotakit.contracts/ReceiptRequest.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/ReceiptRequest> // dev.pedrorau.kuotakit.contracts/ReceiptRequest.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // dev.pedrorau.kuotakit.contracts/ReceiptRequest.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest : dev.pedrorau.kuotakit.contracts/ReceiptRequest { // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest|null[0]
+    constructor <init>(kotlin/String, kotlin/String) // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val bundleId // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.bundleId|{}bundleId[0]
+        final fun <get-bundleId>(): kotlin/String // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.bundleId.<get-bundleId>|<get-bundleId>(){}[0]
+    final val signedTransaction // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.signedTransaction|{}signedTransaction[0]
+        final fun <get-signedTransaction>(): kotlin/String // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.signedTransaction.<get-signedTransaction>|<get-signedTransaction>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.component1|component1(){}[0]
+    final fun component2(): kotlin/String // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ...): dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.copy|copy(kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest> { // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest) // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.AppStoreReceiptRequest){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest> // dev.pedrorau.kuotakit.contracts/AppStoreReceiptRequest.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/CustomerInfo { // dev.pedrorau.kuotakit.contracts/CustomerInfo|null[0]
+    constructor <init>(kotlin/String, kotlin.time/Instant, kotlin.collections/Map<kotlin/String, dev.pedrorau.kuotakit.contracts/Entitlement>, kotlin.collections/List<kotlin/String>, kotlin.collections/List<dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase>) // dev.pedrorau.kuotakit.contracts/CustomerInfo.<init>|<init>(kotlin.String;kotlin.time.Instant;kotlin.collections.Map<kotlin.String,dev.pedrorau.kuotakit.contracts.Entitlement>;kotlin.collections.List<kotlin.String>;kotlin.collections.List<dev.pedrorau.kuotakit.contracts.NonSubscriptionPurchase>){}[0]
+
+    final val activeSubscriptions // dev.pedrorau.kuotakit.contracts/CustomerInfo.activeSubscriptions|{}activeSubscriptions[0]
+        final fun <get-activeSubscriptions>(): kotlin.collections/List<kotlin/String> // dev.pedrorau.kuotakit.contracts/CustomerInfo.activeSubscriptions.<get-activeSubscriptions>|<get-activeSubscriptions>(){}[0]
+    final val appUserId // dev.pedrorau.kuotakit.contracts/CustomerInfo.appUserId|{}appUserId[0]
+        final fun <get-appUserId>(): kotlin/String // dev.pedrorau.kuotakit.contracts/CustomerInfo.appUserId.<get-appUserId>|<get-appUserId>(){}[0]
+    final val entitlements // dev.pedrorau.kuotakit.contracts/CustomerInfo.entitlements|{}entitlements[0]
+        final fun <get-entitlements>(): kotlin.collections/Map<kotlin/String, dev.pedrorau.kuotakit.contracts/Entitlement> // dev.pedrorau.kuotakit.contracts/CustomerInfo.entitlements.<get-entitlements>|<get-entitlements>(){}[0]
+    final val nonSubscriptionPurchases // dev.pedrorau.kuotakit.contracts/CustomerInfo.nonSubscriptionPurchases|{}nonSubscriptionPurchases[0]
+        final fun <get-nonSubscriptionPurchases>(): kotlin.collections/List<dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase> // dev.pedrorau.kuotakit.contracts/CustomerInfo.nonSubscriptionPurchases.<get-nonSubscriptionPurchases>|<get-nonSubscriptionPurchases>(){}[0]
+    final val requestDate // dev.pedrorau.kuotakit.contracts/CustomerInfo.requestDate|{}requestDate[0]
+        final fun <get-requestDate>(): kotlin.time/Instant // dev.pedrorau.kuotakit.contracts/CustomerInfo.requestDate.<get-requestDate>|<get-requestDate>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.contracts/CustomerInfo.component1|component1(){}[0]
+    final fun component2(): kotlin.time/Instant // dev.pedrorau.kuotakit.contracts/CustomerInfo.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/Map<kotlin/String, dev.pedrorau.kuotakit.contracts/Entitlement> // dev.pedrorau.kuotakit.contracts/CustomerInfo.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/List<kotlin/String> // dev.pedrorau.kuotakit.contracts/CustomerInfo.component4|component4(){}[0]
+    final fun component5(): kotlin.collections/List<dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase> // dev.pedrorau.kuotakit.contracts/CustomerInfo.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin.time/Instant = ..., kotlin.collections/Map<kotlin/String, dev.pedrorau.kuotakit.contracts/Entitlement> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin.collections/List<dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase> = ...): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.contracts/CustomerInfo.copy|copy(kotlin.String;kotlin.time.Instant;kotlin.collections.Map<kotlin.String,dev.pedrorau.kuotakit.contracts.Entitlement>;kotlin.collections.List<kotlin.String>;kotlin.collections.List<dev.pedrorau.kuotakit.contracts.NonSubscriptionPurchase>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/CustomerInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/CustomerInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/CustomerInfo.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/CustomerInfo> { // dev.pedrorau.kuotakit.contracts/CustomerInfo.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/CustomerInfo.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/CustomerInfo.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/CustomerInfo.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.contracts/CustomerInfo.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/CustomerInfo) // dev.pedrorau.kuotakit.contracts/CustomerInfo.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.CustomerInfo){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/CustomerInfo.Companion|null[0]
+        final val $childSerializers // dev.pedrorau.kuotakit.contracts/CustomerInfo.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/CustomerInfo> // dev.pedrorau.kuotakit.contracts/CustomerInfo.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/Entitlement { // dev.pedrorau.kuotakit.contracts/Entitlement|null[0]
+    constructor <init>(kotlin/Boolean, kotlin/String, dev.pedrorau.kuotakit.contracts/Store, dev.pedrorau.kuotakit.contracts/PeriodType, kotlin.time/Instant?, kotlin/Boolean, kotlin.time/Instant?) // dev.pedrorau.kuotakit.contracts/Entitlement.<init>|<init>(kotlin.Boolean;kotlin.String;dev.pedrorau.kuotakit.contracts.Store;dev.pedrorau.kuotakit.contracts.PeriodType;kotlin.time.Instant?;kotlin.Boolean;kotlin.time.Instant?){}[0]
+
+    final val billingIssueDetectedAt // dev.pedrorau.kuotakit.contracts/Entitlement.billingIssueDetectedAt|{}billingIssueDetectedAt[0]
+        final fun <get-billingIssueDetectedAt>(): kotlin.time/Instant? // dev.pedrorau.kuotakit.contracts/Entitlement.billingIssueDetectedAt.<get-billingIssueDetectedAt>|<get-billingIssueDetectedAt>(){}[0]
+    final val expiresAt // dev.pedrorau.kuotakit.contracts/Entitlement.expiresAt|{}expiresAt[0]
+        final fun <get-expiresAt>(): kotlin.time/Instant? // dev.pedrorau.kuotakit.contracts/Entitlement.expiresAt.<get-expiresAt>|<get-expiresAt>(){}[0]
+    final val isActive // dev.pedrorau.kuotakit.contracts/Entitlement.isActive|{}isActive[0]
+        final fun <get-isActive>(): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/Entitlement.isActive.<get-isActive>|<get-isActive>(){}[0]
+    final val periodType // dev.pedrorau.kuotakit.contracts/Entitlement.periodType|{}periodType[0]
+        final fun <get-periodType>(): dev.pedrorau.kuotakit.contracts/PeriodType // dev.pedrorau.kuotakit.contracts/Entitlement.periodType.<get-periodType>|<get-periodType>(){}[0]
+    final val productId // dev.pedrorau.kuotakit.contracts/Entitlement.productId|{}productId[0]
+        final fun <get-productId>(): kotlin/String // dev.pedrorau.kuotakit.contracts/Entitlement.productId.<get-productId>|<get-productId>(){}[0]
+    final val store // dev.pedrorau.kuotakit.contracts/Entitlement.store|{}store[0]
+        final fun <get-store>(): dev.pedrorau.kuotakit.contracts/Store // dev.pedrorau.kuotakit.contracts/Entitlement.store.<get-store>|<get-store>(){}[0]
+    final val willRenew // dev.pedrorau.kuotakit.contracts/Entitlement.willRenew|{}willRenew[0]
+        final fun <get-willRenew>(): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/Entitlement.willRenew.<get-willRenew>|<get-willRenew>(){}[0]
+
+    final fun component1(): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/Entitlement.component1|component1(){}[0]
+    final fun component2(): kotlin/String // dev.pedrorau.kuotakit.contracts/Entitlement.component2|component2(){}[0]
+    final fun component3(): dev.pedrorau.kuotakit.contracts/Store // dev.pedrorau.kuotakit.contracts/Entitlement.component3|component3(){}[0]
+    final fun component4(): dev.pedrorau.kuotakit.contracts/PeriodType // dev.pedrorau.kuotakit.contracts/Entitlement.component4|component4(){}[0]
+    final fun component5(): kotlin.time/Instant? // dev.pedrorau.kuotakit.contracts/Entitlement.component5|component5(){}[0]
+    final fun component6(): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/Entitlement.component6|component6(){}[0]
+    final fun component7(): kotlin.time/Instant? // dev.pedrorau.kuotakit.contracts/Entitlement.component7|component7(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/String = ..., dev.pedrorau.kuotakit.contracts/Store = ..., dev.pedrorau.kuotakit.contracts/PeriodType = ..., kotlin.time/Instant? = ..., kotlin/Boolean = ..., kotlin.time/Instant? = ...): dev.pedrorau.kuotakit.contracts/Entitlement // dev.pedrorau.kuotakit.contracts/Entitlement.copy|copy(kotlin.Boolean;kotlin.String;dev.pedrorau.kuotakit.contracts.Store;dev.pedrorau.kuotakit.contracts.PeriodType;kotlin.time.Instant?;kotlin.Boolean;kotlin.time.Instant?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/Entitlement.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/Entitlement.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/Entitlement.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/Entitlement> { // dev.pedrorau.kuotakit.contracts/Entitlement.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/Entitlement.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/Entitlement.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/Entitlement.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/Entitlement // dev.pedrorau.kuotakit.contracts/Entitlement.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/Entitlement) // dev.pedrorau.kuotakit.contracts/Entitlement.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.Entitlement){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/Entitlement.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/Entitlement> // dev.pedrorau.kuotakit.contracts/Entitlement.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/ErrorBody { // dev.pedrorau.kuotakit.contracts/ErrorBody|null[0]
+    constructor <init>(dev.pedrorau.kuotakit.contracts/ErrorCode, kotlin/String) // dev.pedrorau.kuotakit.contracts/ErrorBody.<init>|<init>(dev.pedrorau.kuotakit.contracts.ErrorCode;kotlin.String){}[0]
+
+    final val code // dev.pedrorau.kuotakit.contracts/ErrorBody.code|{}code[0]
+        final fun <get-code>(): dev.pedrorau.kuotakit.contracts/ErrorCode // dev.pedrorau.kuotakit.contracts/ErrorBody.code.<get-code>|<get-code>(){}[0]
+    final val message // dev.pedrorau.kuotakit.contracts/ErrorBody.message|{}message[0]
+        final fun <get-message>(): kotlin/String // dev.pedrorau.kuotakit.contracts/ErrorBody.message.<get-message>|<get-message>(){}[0]
+
+    final fun component1(): dev.pedrorau.kuotakit.contracts/ErrorCode // dev.pedrorau.kuotakit.contracts/ErrorBody.component1|component1(){}[0]
+    final fun component2(): kotlin/String // dev.pedrorau.kuotakit.contracts/ErrorBody.component2|component2(){}[0]
+    final fun copy(dev.pedrorau.kuotakit.contracts/ErrorCode = ..., kotlin/String = ...): dev.pedrorau.kuotakit.contracts/ErrorBody // dev.pedrorau.kuotakit.contracts/ErrorBody.copy|copy(dev.pedrorau.kuotakit.contracts.ErrorCode;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/ErrorBody.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/ErrorBody.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/ErrorBody.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/ErrorBody> { // dev.pedrorau.kuotakit.contracts/ErrorBody.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/ErrorBody.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/ErrorBody.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/ErrorBody.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/ErrorBody // dev.pedrorau.kuotakit.contracts/ErrorBody.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/ErrorBody) // dev.pedrorau.kuotakit.contracts/ErrorBody.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.ErrorBody){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/ErrorBody.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/ErrorBody> // dev.pedrorau.kuotakit.contracts/ErrorBody.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/ErrorResponse { // dev.pedrorau.kuotakit.contracts/ErrorResponse|null[0]
+    constructor <init>(dev.pedrorau.kuotakit.contracts/ErrorBody) // dev.pedrorau.kuotakit.contracts/ErrorResponse.<init>|<init>(dev.pedrorau.kuotakit.contracts.ErrorBody){}[0]
+
+    final val error // dev.pedrorau.kuotakit.contracts/ErrorResponse.error|{}error[0]
+        final fun <get-error>(): dev.pedrorau.kuotakit.contracts/ErrorBody // dev.pedrorau.kuotakit.contracts/ErrorResponse.error.<get-error>|<get-error>(){}[0]
+
+    final fun component1(): dev.pedrorau.kuotakit.contracts/ErrorBody // dev.pedrorau.kuotakit.contracts/ErrorResponse.component1|component1(){}[0]
+    final fun copy(dev.pedrorau.kuotakit.contracts/ErrorBody = ...): dev.pedrorau.kuotakit.contracts/ErrorResponse // dev.pedrorau.kuotakit.contracts/ErrorResponse.copy|copy(dev.pedrorau.kuotakit.contracts.ErrorBody){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/ErrorResponse.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/ErrorResponse.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/ErrorResponse.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/ErrorResponse> { // dev.pedrorau.kuotakit.contracts/ErrorResponse.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/ErrorResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/ErrorResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/ErrorResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/ErrorResponse // dev.pedrorau.kuotakit.contracts/ErrorResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/ErrorResponse) // dev.pedrorau.kuotakit.contracts/ErrorResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.ErrorResponse){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/ErrorResponse.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/ErrorResponse> // dev.pedrorau.kuotakit.contracts/ErrorResponse.Companion.serializer|serializer(){}[0]
+    }
+}
+
 final class dev.pedrorau.kuotakit.contracts/HealthResponse { // dev.pedrorau.kuotakit.contracts/HealthResponse|null[0]
     constructor <init>(kotlin/String) // dev.pedrorau.kuotakit.contracts/HealthResponse.<init>|<init>(kotlin.String){}[0]
 
@@ -31,3 +263,190 @@ final class dev.pedrorau.kuotakit.contracts/HealthResponse { // dev.pedrorau.kuo
         final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/HealthResponse> // dev.pedrorau.kuotakit.contracts/HealthResponse.Companion.serializer|serializer(){}[0]
     }
 }
+
+final class dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase { // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase|null[0]
+    constructor <init>(kotlin/String, dev.pedrorau.kuotakit.contracts/Store, kotlin.time/Instant) // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.<init>|<init>(kotlin.String;dev.pedrorau.kuotakit.contracts.Store;kotlin.time.Instant){}[0]
+
+    final val productId // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.productId|{}productId[0]
+        final fun <get-productId>(): kotlin/String // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.productId.<get-productId>|<get-productId>(){}[0]
+    final val purchasedAt // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.purchasedAt|{}purchasedAt[0]
+        final fun <get-purchasedAt>(): kotlin.time/Instant // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.purchasedAt.<get-purchasedAt>|<get-purchasedAt>(){}[0]
+    final val store // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.store|{}store[0]
+        final fun <get-store>(): dev.pedrorau.kuotakit.contracts/Store // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.store.<get-store>|<get-store>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.component1|component1(){}[0]
+    final fun component2(): dev.pedrorau.kuotakit.contracts/Store // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.component2|component2(){}[0]
+    final fun component3(): kotlin.time/Instant // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., dev.pedrorau.kuotakit.contracts/Store = ..., kotlin.time/Instant = ...): dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.copy|copy(kotlin.String;dev.pedrorau.kuotakit.contracts.Store;kotlin.time.Instant){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase> { // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase) // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.NonSubscriptionPurchase){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase> // dev.pedrorau.kuotakit.contracts/NonSubscriptionPurchase.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/Offering { // dev.pedrorau.kuotakit.contracts/Offering|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/List<dev.pedrorau.kuotakit.contracts/OfferingPackage>) // dev.pedrorau.kuotakit.contracts/Offering.<init>|<init>(kotlin.String;kotlin.collections.List<dev.pedrorau.kuotakit.contracts.OfferingPackage>){}[0]
+
+    final val id // dev.pedrorau.kuotakit.contracts/Offering.id|{}id[0]
+        final fun <get-id>(): kotlin/String // dev.pedrorau.kuotakit.contracts/Offering.id.<get-id>|<get-id>(){}[0]
+    final val packages // dev.pedrorau.kuotakit.contracts/Offering.packages|{}packages[0]
+        final fun <get-packages>(): kotlin.collections/List<dev.pedrorau.kuotakit.contracts/OfferingPackage> // dev.pedrorau.kuotakit.contracts/Offering.packages.<get-packages>|<get-packages>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.contracts/Offering.component1|component1(){}[0]
+    final fun component2(): kotlin.collections/List<dev.pedrorau.kuotakit.contracts/OfferingPackage> // dev.pedrorau.kuotakit.contracts/Offering.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin.collections/List<dev.pedrorau.kuotakit.contracts/OfferingPackage> = ...): dev.pedrorau.kuotakit.contracts/Offering // dev.pedrorau.kuotakit.contracts/Offering.copy|copy(kotlin.String;kotlin.collections.List<dev.pedrorau.kuotakit.contracts.OfferingPackage>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/Offering.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/Offering.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/Offering.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/Offering> { // dev.pedrorau.kuotakit.contracts/Offering.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/Offering.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/Offering.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/Offering.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/Offering // dev.pedrorau.kuotakit.contracts/Offering.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/Offering) // dev.pedrorau.kuotakit.contracts/Offering.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.Offering){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/Offering.Companion|null[0]
+        final val $childSerializers // dev.pedrorau.kuotakit.contracts/Offering.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/Offering> // dev.pedrorau.kuotakit.contracts/Offering.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/OfferingPackage { // dev.pedrorau.kuotakit.contracts/OfferingPackage|null[0]
+    constructor <init>(kotlin/String, dev.pedrorau.kuotakit.contracts/StoreProducts) // dev.pedrorau.kuotakit.contracts/OfferingPackage.<init>|<init>(kotlin.String;dev.pedrorau.kuotakit.contracts.StoreProducts){}[0]
+
+    final val id // dev.pedrorau.kuotakit.contracts/OfferingPackage.id|{}id[0]
+        final fun <get-id>(): kotlin/String // dev.pedrorau.kuotakit.contracts/OfferingPackage.id.<get-id>|<get-id>(){}[0]
+    final val products // dev.pedrorau.kuotakit.contracts/OfferingPackage.products|{}products[0]
+        final fun <get-products>(): dev.pedrorau.kuotakit.contracts/StoreProducts // dev.pedrorau.kuotakit.contracts/OfferingPackage.products.<get-products>|<get-products>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.contracts/OfferingPackage.component1|component1(){}[0]
+    final fun component2(): dev.pedrorau.kuotakit.contracts/StoreProducts // dev.pedrorau.kuotakit.contracts/OfferingPackage.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., dev.pedrorau.kuotakit.contracts/StoreProducts = ...): dev.pedrorau.kuotakit.contracts/OfferingPackage // dev.pedrorau.kuotakit.contracts/OfferingPackage.copy|copy(kotlin.String;dev.pedrorau.kuotakit.contracts.StoreProducts){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/OfferingPackage.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/OfferingPackage.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/OfferingPackage.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/OfferingPackage> { // dev.pedrorau.kuotakit.contracts/OfferingPackage.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/OfferingPackage.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/OfferingPackage.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/OfferingPackage.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/OfferingPackage // dev.pedrorau.kuotakit.contracts/OfferingPackage.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/OfferingPackage) // dev.pedrorau.kuotakit.contracts/OfferingPackage.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.OfferingPackage){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/OfferingPackage.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/OfferingPackage> // dev.pedrorau.kuotakit.contracts/OfferingPackage.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/OfferingsResponse { // dev.pedrorau.kuotakit.contracts/OfferingsResponse|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/List<dev.pedrorau.kuotakit.contracts/Offering>) // dev.pedrorau.kuotakit.contracts/OfferingsResponse.<init>|<init>(kotlin.String;kotlin.collections.List<dev.pedrorau.kuotakit.contracts.Offering>){}[0]
+
+    final val current // dev.pedrorau.kuotakit.contracts/OfferingsResponse.current|{}current[0]
+        final fun <get-current>(): kotlin/String // dev.pedrorau.kuotakit.contracts/OfferingsResponse.current.<get-current>|<get-current>(){}[0]
+    final val offerings // dev.pedrorau.kuotakit.contracts/OfferingsResponse.offerings|{}offerings[0]
+        final fun <get-offerings>(): kotlin.collections/List<dev.pedrorau.kuotakit.contracts/Offering> // dev.pedrorau.kuotakit.contracts/OfferingsResponse.offerings.<get-offerings>|<get-offerings>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.contracts/OfferingsResponse.component1|component1(){}[0]
+    final fun component2(): kotlin.collections/List<dev.pedrorau.kuotakit.contracts/Offering> // dev.pedrorau.kuotakit.contracts/OfferingsResponse.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin.collections/List<dev.pedrorau.kuotakit.contracts/Offering> = ...): dev.pedrorau.kuotakit.contracts/OfferingsResponse // dev.pedrorau.kuotakit.contracts/OfferingsResponse.copy|copy(kotlin.String;kotlin.collections.List<dev.pedrorau.kuotakit.contracts.Offering>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/OfferingsResponse.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/OfferingsResponse.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/OfferingsResponse.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/OfferingsResponse> { // dev.pedrorau.kuotakit.contracts/OfferingsResponse.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/OfferingsResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/OfferingsResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/OfferingsResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/OfferingsResponse // dev.pedrorau.kuotakit.contracts/OfferingsResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/OfferingsResponse) // dev.pedrorau.kuotakit.contracts/OfferingsResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.OfferingsResponse){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/OfferingsResponse.Companion|null[0]
+        final val $childSerializers // dev.pedrorau.kuotakit.contracts/OfferingsResponse.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/OfferingsResponse> // dev.pedrorau.kuotakit.contracts/OfferingsResponse.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest : dev.pedrorau.kuotakit.contracts/ReceiptRequest { // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String) // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val packageName // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.packageName|{}packageName[0]
+        final fun <get-packageName>(): kotlin/String // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.packageName.<get-packageName>|<get-packageName>(){}[0]
+    final val productId // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.productId|{}productId[0]
+        final fun <get-productId>(): kotlin/String // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.productId.<get-productId>|<get-productId>(){}[0]
+    final val purchaseToken // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.purchaseToken|{}purchaseToken[0]
+        final fun <get-purchaseToken>(): kotlin/String // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.purchaseToken.<get-purchaseToken>|<get-purchaseToken>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.component1|component1(){}[0]
+    final fun component2(): kotlin/String // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.component2|component2(){}[0]
+    final fun component3(): kotlin/String // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ...): dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.copy|copy(kotlin.String;kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest> { // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest) // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest> // dev.pedrorau.kuotakit.contracts/PlayStoreReceiptRequest.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.contracts/StoreProducts { // dev.pedrorau.kuotakit.contracts/StoreProducts|null[0]
+    constructor <init>(kotlin/String?, kotlin/String?) // dev.pedrorau.kuotakit.contracts/StoreProducts.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+
+    final val appStore // dev.pedrorau.kuotakit.contracts/StoreProducts.appStore|{}appStore[0]
+        final fun <get-appStore>(): kotlin/String? // dev.pedrorau.kuotakit.contracts/StoreProducts.appStore.<get-appStore>|<get-appStore>(){}[0]
+    final val playStore // dev.pedrorau.kuotakit.contracts/StoreProducts.playStore|{}playStore[0]
+        final fun <get-playStore>(): kotlin/String? // dev.pedrorau.kuotakit.contracts/StoreProducts.playStore.<get-playStore>|<get-playStore>(){}[0]
+
+    final fun component1(): kotlin/String? // dev.pedrorau.kuotakit.contracts/StoreProducts.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // dev.pedrorau.kuotakit.contracts/StoreProducts.component2|component2(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ...): dev.pedrorau.kuotakit.contracts/StoreProducts // dev.pedrorau.kuotakit.contracts/StoreProducts.copy|copy(kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/StoreProducts.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/StoreProducts.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/StoreProducts.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/StoreProducts> { // dev.pedrorau.kuotakit.contracts/StoreProducts.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/StoreProducts.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/StoreProducts.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/StoreProducts.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/StoreProducts // dev.pedrorau.kuotakit.contracts/StoreProducts.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/StoreProducts) // dev.pedrorau.kuotakit.contracts/StoreProducts.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.StoreProducts){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/StoreProducts.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/StoreProducts> // dev.pedrorau.kuotakit.contracts/StoreProducts.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final val dev.pedrorau.kuotakit.contracts/kuotaKitJson // dev.pedrorau.kuotakit.contracts/kuotaKitJson|{}kuotaKitJson[0]
+    final fun <get-kuotaKitJson>(): kotlinx.serialization.json/Json // dev.pedrorau.kuotakit.contracts/kuotaKitJson.<get-kuotaKitJson>|<get-kuotaKitJson>(){}[0]

@@ -1,3 +1,181 @@
+public final class dev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest : dev/pedrorau/kuotakit/contracts/ReceiptRequest {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Ldev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBundleId ()Ljava/lang/String;
+	public final fun getSignedTransaction ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/CustomerInfo {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/CustomerInfo$Companion;
+	public fun <init> (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/Map;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlin/time/Instant;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/Map;Ljava/util/List;Ljava/util/List;)Ldev/pedrorau/kuotakit/contracts/CustomerInfo;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/CustomerInfo;Ljava/lang/String;Lkotlin/time/Instant;Ljava/util/Map;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/CustomerInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActiveSubscriptions ()Ljava/util/List;
+	public final fun getAppUserId ()Ljava/lang/String;
+	public final fun getEntitlements ()Ljava/util/Map;
+	public final fun getNonSubscriptionPurchases ()Ljava/util/List;
+	public final fun getRequestDate ()Lkotlin/time/Instant;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/CustomerInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/CustomerInfo$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/CustomerInfo;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/CustomerInfo;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/CustomerInfo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/Entitlement {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/Entitlement$Companion;
+	public fun <init> (ZLjava/lang/String;Ldev/pedrorau/kuotakit/contracts/Store;Ldev/pedrorau/kuotakit/contracts/PeriodType;Lkotlin/time/Instant;ZLkotlin/time/Instant;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ldev/pedrorau/kuotakit/contracts/Store;
+	public final fun component4 ()Ldev/pedrorau/kuotakit/contracts/PeriodType;
+	public final fun component5 ()Lkotlin/time/Instant;
+	public final fun component6 ()Z
+	public final fun component7 ()Lkotlin/time/Instant;
+	public final fun copy (ZLjava/lang/String;Ldev/pedrorau/kuotakit/contracts/Store;Ldev/pedrorau/kuotakit/contracts/PeriodType;Lkotlin/time/Instant;ZLkotlin/time/Instant;)Ldev/pedrorau/kuotakit/contracts/Entitlement;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/Entitlement;ZLjava/lang/String;Ldev/pedrorau/kuotakit/contracts/Store;Ldev/pedrorau/kuotakit/contracts/PeriodType;Lkotlin/time/Instant;ZLkotlin/time/Instant;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/Entitlement;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBillingIssueDetectedAt ()Lkotlin/time/Instant;
+	public final fun getExpiresAt ()Lkotlin/time/Instant;
+	public final fun getPeriodType ()Ldev/pedrorau/kuotakit/contracts/PeriodType;
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getStore ()Ldev/pedrorau/kuotakit/contracts/Store;
+	public final fun getWillRenew ()Z
+	public fun hashCode ()I
+	public final fun isActive ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/Entitlement$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/Entitlement$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/Entitlement;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/Entitlement;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/Entitlement$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/ErrorBody {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/ErrorBody$Companion;
+	public fun <init> (Ldev/pedrorau/kuotakit/contracts/ErrorCode;Ljava/lang/String;)V
+	public final fun component1 ()Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ldev/pedrorau/kuotakit/contracts/ErrorCode;Ljava/lang/String;)Ldev/pedrorau/kuotakit/contracts/ErrorBody;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/ErrorBody;Ldev/pedrorau/kuotakit/contracts/ErrorCode;Ljava/lang/String;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/ErrorBody;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCode ()Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/ErrorBody$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/ErrorBody$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/ErrorBody;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/ErrorBody;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/ErrorBody$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/ErrorCode : java/lang/Enum {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/ErrorCode$Companion;
+	public static final field FORBIDDEN Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static final field INVALID_PAYLOAD Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static final field NOT_FOUND Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static final field PURCHASE_INVALID Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static final field STORE_UNAVAILABLE Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static final field TOKEN_ALREADY_LINKED Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static final field UNAUTHORIZED Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static final field UNKNOWN Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static fun values ()[Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/ErrorCode$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/ErrorResponse {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/ErrorResponse$Companion;
+	public fun <init> (Ldev/pedrorau/kuotakit/contracts/ErrorBody;)V
+	public final fun component1 ()Ldev/pedrorau/kuotakit/contracts/ErrorBody;
+	public final fun copy (Ldev/pedrorau/kuotakit/contracts/ErrorBody;)Ldev/pedrorau/kuotakit/contracts/ErrorResponse;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/ErrorResponse;Ldev/pedrorau/kuotakit/contracts/ErrorBody;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/ErrorResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ldev/pedrorau/kuotakit/contracts/ErrorBody;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/ErrorResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/ErrorResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/ErrorResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/ErrorResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/ErrorResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class dev/pedrorau/kuotakit/contracts/HealthResponse {
 	public static final field Companion Ldev/pedrorau/kuotakit/contracts/HealthResponse$Companion;
 	public fun <init> (Ljava/lang/String;)V
@@ -23,5 +201,224 @@ public final synthetic class dev/pedrorau/kuotakit/contracts/HealthResponse$$ser
 
 public final class dev/pedrorau/kuotakit/contracts/HealthResponse$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase$Companion;
+	public fun <init> (Ljava/lang/String;Ldev/pedrorau/kuotakit/contracts/Store;Lkotlin/time/Instant;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ldev/pedrorau/kuotakit/contracts/Store;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (Ljava/lang/String;Ldev/pedrorau/kuotakit/contracts/Store;Lkotlin/time/Instant;)Ldev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase;Ljava/lang/String;Ldev/pedrorau/kuotakit/contracts/Store;Lkotlin/time/Instant;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getPurchasedAt ()Lkotlin/time/Instant;
+	public final fun getStore ()Ldev/pedrorau/kuotakit/contracts/Store;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/NonSubscriptionPurchase$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/Offering {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/Offering$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Ldev/pedrorau/kuotakit/contracts/Offering;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/Offering;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/Offering;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getPackages ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/Offering$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/Offering$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/Offering;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/Offering;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/Offering$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/OfferingPackage {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/OfferingPackage$Companion;
+	public fun <init> (Ljava/lang/String;Ldev/pedrorau/kuotakit/contracts/StoreProducts;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ldev/pedrorau/kuotakit/contracts/StoreProducts;
+	public final fun copy (Ljava/lang/String;Ldev/pedrorau/kuotakit/contracts/StoreProducts;)Ldev/pedrorau/kuotakit/contracts/OfferingPackage;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/OfferingPackage;Ljava/lang/String;Ldev/pedrorau/kuotakit/contracts/StoreProducts;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/OfferingPackage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getProducts ()Ldev/pedrorau/kuotakit/contracts/StoreProducts;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/OfferingPackage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/OfferingPackage$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/OfferingPackage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/OfferingPackage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/OfferingPackage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/OfferingsResponse {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/OfferingsResponse$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;)Ldev/pedrorau/kuotakit/contracts/OfferingsResponse;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/OfferingsResponse;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/OfferingsResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCurrent ()Ljava/lang/String;
+	public final fun getOfferings ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/OfferingsResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/OfferingsResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/OfferingsResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/OfferingsResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/OfferingsResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/PeriodType : java/lang/Enum {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/PeriodType$Companion;
+	public static final field INTRO Ldev/pedrorau/kuotakit/contracts/PeriodType;
+	public static final field NORMAL Ldev/pedrorau/kuotakit/contracts/PeriodType;
+	public static final field TRIAL Ldev/pedrorau/kuotakit/contracts/PeriodType;
+	public static final field UNKNOWN Ldev/pedrorau/kuotakit/contracts/PeriodType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Ldev/pedrorau/kuotakit/contracts/PeriodType;
+	public static fun values ()[Ldev/pedrorau/kuotakit/contracts/PeriodType;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/PeriodType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest : dev/pedrorau/kuotakit/contracts/ReceiptRequest {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ldev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPackageName ()Ljava/lang/String;
+	public final fun getProductId ()Ljava/lang/String;
+	public final fun getPurchaseToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/PlayStoreReceiptRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class dev/pedrorau/kuotakit/contracts/ReceiptRequest {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/ReceiptRequest$Companion;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/ReceiptRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/Store : java/lang/Enum {
+	public static final field APP_STORE Ldev/pedrorau/kuotakit/contracts/Store;
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/Store$Companion;
+	public static final field PLAY_STORE Ldev/pedrorau/kuotakit/contracts/Store;
+	public static final field UNKNOWN Ldev/pedrorau/kuotakit/contracts/Store;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Ldev/pedrorau/kuotakit/contracts/Store;
+	public static fun values ()[Ldev/pedrorau/kuotakit/contracts/Store;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/Store$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/StoreProducts {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/StoreProducts$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Ldev/pedrorau/kuotakit/contracts/StoreProducts;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/StoreProducts;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/StoreProducts;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAppStore ()Ljava/lang/String;
+	public final fun getPlayStore ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/StoreProducts$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/StoreProducts$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/StoreProducts;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/StoreProducts;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/StoreProducts$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/WireFormatKt {
+	public static final fun getKuotaKitJson ()Lkotlinx/serialization/json/Json;
 }
 

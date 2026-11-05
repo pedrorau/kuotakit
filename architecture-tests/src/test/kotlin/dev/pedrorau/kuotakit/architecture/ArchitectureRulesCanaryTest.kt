@@ -67,6 +67,42 @@ class ArchitectureRulesCanaryTest :
             }
         }
 
+        val contractsFile = "contracts/src/commonMain/kotlin/Model.kt"
+
+        "contracts code that imports only kotlin and kotlinx is accepted" {
+            val scope =
+                project(
+                    contractsFile to
+                        "import kotlin.time.Instant\nimport kotlinx.serialization.SerialName\n\nclass Model\n",
+                )
+            shouldNotThrowAny { ArchitectureRules.contractsCommonCodeIsPlatformIndependent(scope) }
+        }
+
+        mapOf(
+            "java.time" to "import java.time.Instant",
+            "android" to "import android.os.Build",
+            "okhttp" to "import okhttp3.OkHttpClient",
+        ).forEach { (what, import) ->
+            "contracts code that imports $what is reported" {
+                val scope = project(contractsFile to "$import\n\nclass Model\n")
+                shouldThrowAny { ArchitectureRules.contractsCommonCodeIsPlatformIndependent(scope) }
+            }
+        }
+
+        "contracts code that uses a platform type with its full name and no import is reported" {
+            val scope =
+                project(
+                    contractsFile to "import kotlin.time.Instant\n\nval status: io.ktor.http.HttpStatusCode? = null\n",
+                )
+            shouldThrowAny { ArchitectureRules.contractsCommonCodeIsPlatformIndependent(scope) }
+        }
+
+        "a comment that merely says Java does not trip the contracts rule" {
+            val scope =
+                project(contractsFile to "import kotlin.time.Instant\n\n/** Not the Java way. */\nclass Model\n")
+            shouldNotThrowAny { ArchitectureRules.contractsCommonCodeIsPlatformIndependent(scope) }
+        }
+
         val exposedImport = "import org.jetbrains.exposed.sql.Table\n\nclass Repo\n"
         val web = "backend/src/main/kotlin/web/Handler.kt"
 

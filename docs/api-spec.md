@@ -1,6 +1,15 @@
 # Backend API spec (v1, draft)
 
-The backend is a reference implementation the developer deploys. All responses are JSON. All timestamps are ISO 8601 UTC.
+The backend is a reference implementation the developer deploys. All responses are JSON. All timestamps are ISO 8601 UTC with a `Z`, for example `2026-12-01T12:00:00Z`; a backend may add fractional seconds, and clients accept offsets such as `+01:00` when reading.
+
+**The exact shape of every request and response is [`openapi.json`](api/openapi.json)**, generated from the `contracts/` models (ADR 0007, ADR 0012) and checked in CI. This document explains the behavior; the models and the OpenAPI document are the source of truth for field names and types. The OpenAPI document carries an example for each response and request, built from the models themselves.
+
+Conventions of the JSON:
+- Field names are `snake_case`.
+- A nullable field is **always present**, with `null` when it does not apply (for example `billing_issue_detected_at`). A missing field is an error.
+- Clients ignore fields they do not know, so a newer backend can add fields without breaking older SDKs.
+- `store` is `play_store` or `app_store`; `period_type` is `normal`, `intro` or `trial`; `error.code` is one of the codes below.
+- A client reads a value it does not know (a new store, period type or error code) as `UNKNOWN` instead of failing; backends never send `UNKNOWN`. So adding a value is compatible.
 
 ## Authentication
 
@@ -11,10 +20,28 @@ The backend is a reference implementation the developer deploys. All responses a
 
 Sent as `Authorization: Bearer <key>`. Store webhooks use their own verification (see below).
 
+## Errors
+
+Every non-2xx response has the same body, and the `code` is stable (react to the code, not to the message):
+
+```json
+{ "error": { "code": "token_already_linked", "message": "The purchase token belongs to another user." } }
+```
+
+| Status | `code` | Meaning |
+|---|---|---|
+| 400 | `invalid_payload` | The body or a parameter is malformed |
+| 401 | `unauthorized` | The API key is missing or wrong |
+| 402 | `purchase_invalid` | The store says the purchase is not valid |
+| 403 | `forbidden` | The key is valid but may not do this (an app key acting on another user) |
+| 404 | `not_found` | The subscriber does not exist |
+| 409 | `token_already_linked` | The purchase token is already linked to another user |
+| 502 | `store_unavailable` | The store API is unavailable; access is never granted on failure |
+
 ## Endpoints
 
 ### `GET /v1/offerings`
-Returns offerings defined in `entitlements.yaml`.
+Returns offerings defined in `entitlements.yaml`. Responses: `200` · `401`.
 ```json
 {
   "current": "default",
@@ -36,9 +63,10 @@ Called by the SDK after a store purchase. The backend validates with the store, 
 // iOS
 { "store": "app_store", "bundle_id": "com.acme.app", "signed_transaction": "<JWS from StoreKit 2>" }
 ```
-Responses: `200` CustomerInfo · `400` invalid payload · `402` store says the purchase is not valid · `409` token already linked to another user · `502` store API unavailable (never grants access on failure).
+Responses: `200` CustomerInfo · `400` invalid payload · `401` · `402` store says the purchase is not valid · `403` an app key may only submit purchases for its own user · `409` token already linked to another user · `502` store API unavailable (never grants access on failure). The `store` field tells the two receipt kinds apart.
 
 ### `GET /v1/subscribers/{app_user_id}`
+An app key can read its own user; a secret key can read any user. Responses: `200` CustomerInfo · `401` · `403` · `404`. `non_subscription_purchases` items have `product_id`, `store` and `purchased_at`.
 ```json
 {
   "app_user_id": "$anon_6f1c...",
@@ -60,10 +88,10 @@ Responses: `200` CustomerInfo · `400` invalid payload · `402` store says the p
 ```
 
 ### `POST /v1/webhooks/google`
-Google Play Real-time Developer Notifications via Cloud Pub/Sub push. Verify the Pub/Sub OIDC token, then re-fetch the subscription from the Play Developer API (never trust the notification body alone).
+Google Play Real-time Developer Notifications via Cloud Pub/Sub push. Verify the Pub/Sub OIDC token, then re-fetch the subscription from the Play Developer API (never trust the notification body alone). Responses: `204` processed · `400` · `401` (token verification failed).
 
 ### `POST /v1/webhooks/apple`
-App Store Server Notifications v2. Verify the `signedPayload` JWS against Apple's root certificate chain, then update state.
+App Store Server Notifications v2. Verify the `signedPayload` JWS against Apple's root certificate chain, then update state. Responses: `204` processed · `400` · `401` (signature verification failed). The webhook bodies are defined by the stores; the models for them arrive with the webhook endpoints.
 
 ### `GET /health`
 `200 {"status":"ok"}`. No auth.

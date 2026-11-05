@@ -21,13 +21,14 @@ KuotaKit: open-source, self-hosted in-app purchases and subscriptions. KMP core 
 - Kotlin: official style, ktlint + detekt, coroutines and Flow, no `!!` in library code.
 - Swift: Swift 5.10+, async/await, SwiftLint.
 - Backend: Ktor, kotlinx.serialization, Testcontainers for Postgres. Tests: Kotest (works with Pitest, see ADR 0011).
-- Gradle: the root `settings.gradle.kts` includes only `:contracts`, `:backend` and `:architecture-tests`. Future bridges (`bridges/react-native`, `bridges/flutter`) keep their own build tools and are NOT included in it. Versions live in `gradle/libs.versions.toml`.
+- Gradle: the root `settings.gradle.kts` includes only `:contracts`, `:backend`, `:openapi` and `:architecture-tests`. Future bridges (`bridges/react-native`, `bridges/flutter`) keep their own build tools and are NOT included in it. Versions live in `gradle/libs.versions.toml`.
 - JDK 21 comes from the Gradle toolchain (downloaded automatically); do not rely on the JDK installed on the machine.
 - Every Kotlin, Java, Swift, Dart, TypeScript, JavaScript and Objective-C source file carries the Apache-2.0 license header near the top (ADR 0006); `scripts/ci/check_license_headers.py` enforces it in CI.
 - The public API of `contracts` is dumped in `contracts/api/`. After an intentional change run `./gradlew :contracts:updateKotlinAbi` and commit the diff; it must be called out in the plan (rule 4).
 - Architecture rules live in `architecture-tests/` (Konsist). The rule "SDK core does not depend on platform billing libraries" (ADR 0002) is added with the `sdk/core` module.
 - Store identifiers are always `play_store` and `app_store` (API, YAML, SDK).
-- API models live only in `contracts/`. Never redefine them in the SDK or the backend.
+- API models live only in `contracts/`. Never redefine them in the SDK or the backend. Wire names are `snake_case` via `@SerialName`; a nullable field has no default, so `null` is always sent explicitly. Backends and SDKs use `kuotaKitJson` for these models; every enum has an `UNKNOWN` fallback (`FallbackEnumSerializer`).
+- The OpenAPI document `docs/api/openapi.json` is generated from the models (`:openapi`, ADR 0012), never edited by hand. After changing a model or adding an endpoint (also add it to `ENDPOINTS` in `openapi/`), run `./gradlew :openapi:updateOpenApi` and `:contracts:updateKotlinAbi`, and commit the diffs; `check` fails otherwise.
 - Any backend change must keep the conformance suite green (ADR 0007).
 - Commits: Conventional Commits (`feat(core): ...`, `fix(backend): ...`).
 - Every behavior change comes with a test.
@@ -60,6 +61,7 @@ If a guard blocks you, do not try to work around it. Explain and ask.
 - Run the backend: `./gradlew :backend:run`, then `curl localhost:8080/health`
 - Backend + Postgres: `./gradlew :backend:installDist && cp .env.example .env && docker compose up --build`
 - Architecture tests: `./gradlew :architecture-tests:test`
+- OpenAPI document: `./gradlew :openapi:checkOpenApi` (in `check`) / `./gradlew :openapi:updateOpenApi` after an intentional API change
 - Public API check / update the dump: `./gradlew :contracts:checkKotlinAbi` / `./gradlew :contracts:updateKotlinAbi`
 - License headers: `python3 scripts/ci/check_license_headers.py`
 - Mutation testing (informative, CI runs it in `mutation.yml`): `./gradlew :backend:pitest`; only some classes: `-PpitestTargets='pkg.Foo*,pkg.Bar*'`
@@ -74,4 +76,5 @@ If a guard blocks you, do not try to work around it. Explain and ask.
 - Optional: `docker-compose.yml` is verified by the `compose` job in CI; the maintainer may still install Colima to run it locally.
 - Known gap: an agent could edit `.claude/settings.json` or `scripts/agent/` itself; treat changes to them as a review item.
 - Phase 1, task 3 done (2026-11-04, branch `feat/rules-as-checks`): Konsist architecture tests with canary tests (`architecture-tests/`), public API dump for `contracts` (Kotlin ABI validation, `contracts/api/`), license-header check (`scripts/ci/`), and Pitest reporting in CI (`mutation.yml`, informative until the first domain logic). **Public API:** none added; the first dump records `HealthResponse`.
-- Next: `contracts/` models for the API and the OpenAPI spec, then the backend endpoints (ADR 0007).
+- API contracts task done (2026-11-04, branch `feat/api-contracts`): the `contracts/` models of the whole API (`CustomerInfo`, entitlements, offerings, receipts, errors, enums), the `:openapi` module that generates `docs/api/openapi.json` from them with a drift check (ADR 0012), and a Konsist rule that keeps `contracts/` platform independent. **Public API:** 3 enums (each with an `UNKNOWN` fallback), 11 data classes, the sealed interface `ReceiptRequest` and the shared JSON configuration `kuotaKitJson` added to `contracts` (see `contracts/api/`).
+- Next: the backend endpoints (offerings, subscribers, Google receipts, RTDN webhook) behind the storage interface; the first domain logic switches on the mutation threshold (ADR 0011).

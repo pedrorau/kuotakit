@@ -17,6 +17,7 @@
 package dev.pedrorau.kuotakit.backend
 
 import dev.pedrorau.kuotakit.contracts.HealthResponse
+import dev.pedrorau.kuotakit.contracts.kuotaKitJson
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -26,7 +27,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 
 internal fun Application.module() {
-    install(ContentNegotiation) { json() }
+    install(ContentNegotiation) { json(kuotaKitJson) }
 
     routing {
         get("/health") {

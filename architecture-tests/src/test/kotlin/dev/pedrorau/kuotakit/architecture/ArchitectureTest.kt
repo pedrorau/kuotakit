@@ -25,6 +25,10 @@ class ArchitectureTest :
             ArchitectureRules.serializableTypesLiveOnlyInContracts(Konsist.scopeFromProduction())
         }
 
+        "the common code of contracts imports only Kotlin and kotlinx" {
+            ArchitectureRules.contractsCommonCodeIsPlatformIndependent(Konsist.scopeFromProduction())
+        }
+
         "only the storage package of the backend imports Exposed" {
             ArchitectureRules.exposedIsUsedOnlyByTheStoragePackage(Konsist.scopeFromProduction())
         }

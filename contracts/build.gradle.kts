@@ -24,11 +24,10 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(libs.kotlinx.serialization.core)
+            api(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
-            implementation(libs.kotlinx.serialization.json)
         }
     }
 }
