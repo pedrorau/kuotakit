@@ -29,15 +29,16 @@ def changed_files(base: str) -> list[str]:
     return [f for f in out.split("\0") if f]
 
 
-def targets(files: list[str], module: str) -> list[str]:
+def targets(files: list[str], module: str, only: str = "") -> list[str]:
     prefix = PurePosixPath(module, "src", "main", "kotlin")
     found = set()
     for name in files:
         path = PurePosixPath(name)
         if path.suffix == ".kt" and path.is_relative_to(prefix):
             parts = path.relative_to(prefix).with_suffix("").parts
-            if all(SAFE_PART.fullmatch(part) for part in parts):
-                found.add(".".join(parts) + "*")
+            name = ".".join(parts)
+            if all(SAFE_PART.fullmatch(part) for part in parts) and (not only or name == only or name.startswith(only + ".")):
+                found.add(name + "*")
     return sorted(found)
 
 
@@ -45,8 +46,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--base", required=True, help="the ref the branch is compared with, e.g. origin/main")
     parser.add_argument("--module", default="backend", help="Gradle module directory")
+    parser.add_argument("--only", default="", help="keep only classes whose name starts with this package, e.g. the critical one")
     args = parser.parse_args(argv)
-    print(",".join(targets(changed_files(args.base), args.module)))
+    print(",".join(targets(changed_files(args.base), args.module, args.only)))
     return 0
 
 

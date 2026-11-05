@@ -7,9 +7,8 @@
 
 // Library unique name: <kuotakit:contracts>
 final enum class dev.pedrorau.kuotakit.contracts/ErrorCode : kotlin/Enum<dev.pedrorau.kuotakit.contracts/ErrorCode> { // dev.pedrorau.kuotakit.contracts/ErrorCode|null[0]
-    enum entry FORBIDDEN // dev.pedrorau.kuotakit.contracts/ErrorCode.FORBIDDEN|null[0]
+    enum entry INTERNAL_ERROR // dev.pedrorau.kuotakit.contracts/ErrorCode.INTERNAL_ERROR|null[0]
     enum entry INVALID_PAYLOAD // dev.pedrorau.kuotakit.contracts/ErrorCode.INVALID_PAYLOAD|null[0]
-    enum entry NOT_FOUND // dev.pedrorau.kuotakit.contracts/ErrorCode.NOT_FOUND|null[0]
     enum entry PURCHASE_INVALID // dev.pedrorau.kuotakit.contracts/ErrorCode.PURCHASE_INVALID|null[0]
     enum entry STORE_UNAVAILABLE // dev.pedrorau.kuotakit.contracts/ErrorCode.STORE_UNAVAILABLE|null[0]
     enum entry TOKEN_ALREADY_LINKED // dev.pedrorau.kuotakit.contracts/ErrorCode.TOKEN_ALREADY_LINKED|null[0]
@@ -447,6 +446,9 @@ final class dev.pedrorau.kuotakit.contracts/StoreProducts { // dev.pedrorau.kuot
         final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/StoreProducts> // dev.pedrorau.kuotakit.contracts/StoreProducts.Companion.serializer|serializer(){}[0]
     }
 }
+
+final const val dev.pedrorau.kuotakit.contracts/APP_USER_ID_PATTERN // dev.pedrorau.kuotakit.contracts/APP_USER_ID_PATTERN|{}APP_USER_ID_PATTERN[0]
+    final fun <get-APP_USER_ID_PATTERN>(): kotlin/String // dev.pedrorau.kuotakit.contracts/APP_USER_ID_PATTERN.<get-APP_USER_ID_PATTERN>|<get-APP_USER_ID_PATTERN>(){}[0]
 
 final val dev.pedrorau.kuotakit.contracts/kuotaKitJson // dev.pedrorau.kuotakit.contracts/kuotaKitJson|{}kuotaKitJson[0]
     final fun <get-kuotaKitJson>(): kotlinx.serialization.json/Json // dev.pedrorau.kuotakit.contracts/kuotaKitJson.<get-kuotaKitJson>|<get-kuotaKitJson>(){}[0]

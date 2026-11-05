@@ -65,6 +65,7 @@ yarn-error.log*
 .pub/
 
 # --- Docker (local data) ---
+entitlements.yaml
 postgres-data/
 docker-compose.override.yml
 

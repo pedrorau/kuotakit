@@ -85,11 +85,8 @@ public enum class ErrorCode {
     /** 401: the API key is missing or wrong. Wire name `unauthorized`. */
     UNAUTHORIZED,
 
-    /** 403: the key is valid but may not do this (an app key reading another user). Wire name `forbidden`. */
-    FORBIDDEN,
-
-    /** 404: the subscriber does not exist. Wire name `not_found`. */
-    NOT_FOUND,
+    /** 500: something unexpected went wrong in the backend; access is not granted. Wire name `internal_error`. */
+    INTERNAL_ERROR,
 
     /** A code this version does not know. */
     UNKNOWN,
@@ -103,8 +100,7 @@ internal object ErrorCodeSerializer : FallbackEnumSerializer<ErrorCode>(
         ErrorCode.TOKEN_ALREADY_LINKED to "token_already_linked",
         ErrorCode.STORE_UNAVAILABLE to "store_unavailable",
         ErrorCode.UNAUTHORIZED to "unauthorized",
-        ErrorCode.FORBIDDEN to "forbidden",
-        ErrorCode.NOT_FOUND to "not_found",
+        ErrorCode.INTERNAL_ERROR to "internal_error",
     ),
     ErrorCode.UNKNOWN,
 )

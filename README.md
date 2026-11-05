@@ -82,12 +82,17 @@ if (customerInfo.entitlements["premium"]?.isActive == true) unlockPremium()
 Requirements: a Docker engine (Docker Desktop, Colima, OrbStack or Linux Docker). JDK 21 is downloaded automatically by Gradle.
 
 ```
-./gradlew build                      # compile, test, lint
 ./gradlew :backend:installDist
-cp .env.example .env                 # then set POSTGRES_PASSWORD
+cp .env.example .env                                  # set POSTGRES_PASSWORD and your API keys
+cp entitlements.example.yaml entitlements.yaml        # what you sell and what it unlocks
 docker compose up --build
-curl localhost:8080/health           # {"status":"ok"}
+curl localhost:8080/health                            # {"status":"ok"}
+curl -H "Authorization: Bearer $KUOTAKIT_APP_KEY" localhost:8080/v1/offerings
 ```
+
+To run the tests (they start a real Postgres with Testcontainers, so they need Docker): `./gradlew build`.
+With Colima on macOS: `colima start --network-address`, then set `DOCKER_HOST`, `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE`
+and `TESTCONTAINERS_HOST_OVERRIDE` as described in [AGENTS.md](AGENTS.md).
 
 ## Roadmap
 

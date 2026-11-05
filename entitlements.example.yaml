@@ -1,0 +1,19 @@
+# What your app sells and what each purchase unlocks. Copy to entitlements.yaml and edit; the backend reads it at start-up
+# and refuses to start, naming the line, if something is wrong. Store identifiers are always play_store and app_store.
+
+# entitlements: the access a purchase grants, and the store products that grant it.
+entitlements:
+  premium:
+    products:
+      play_store: [premium_monthly, premium_annual]
+      app_store: [com.acme.premium.monthly, com.acme.premium.annual]
+
+# current_offering: the offering the SDK shows by default.
+current_offering: default
+
+# offerings: what the paywall can sell. Each package maps to one product per store; every product listed here must
+# also grant an entitlement above (a typo would sell something that unlocks nothing).
+offerings:
+  default:
+    monthly: { play_store: premium_monthly, app_store: com.acme.premium.monthly }
+    annual: { play_store: premium_annual, app_store: com.acme.premium.annual }

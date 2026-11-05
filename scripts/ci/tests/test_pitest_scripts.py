@@ -28,6 +28,14 @@ def test_targets_from_changed_files(files: list[str], expected: list[str]) -> No
     assert targets(files, "backend") == expected
 
 
+def test_only_the_critical_package_is_mutated_when_asked() -> None:
+    files = ["backend/src/main/kotlin/dev/acme/domain/Calc.kt", "backend/src/main/kotlin/dev/acme/web/Routes.kt"]
+    assert targets(files, "backend", only="dev.acme.domain") == ["dev.acme.domain.Calc*"]
+    assert targets(files, "backend", only="dev.acme.domain.x") == []
+    assert targets(["backend/src/main/kotlin/dev/acme/domainx/Other.kt"], "backend", only="dev.acme.domain") == []
+    assert targets(files, "backend") == ["dev.acme.domain.Calc*", "dev.acme.web.Routes*"]
+
+
 def test_the_module_is_configurable() -> None:
     assert targets(["sdk/src/main/kotlin/dev/acme/Core.kt"], "sdk") == ["dev.acme.Core*"]
 

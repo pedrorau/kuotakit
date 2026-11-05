@@ -1,5 +1,5 @@
 # Local / self-hosted setup: backend + Postgres. Works with any Docker engine (Docker Desktop, Colima, OrbStack, Linux).
-# Before the first run: ./gradlew :backend:installDist && cp .env.example .env
+# Before the first run: ./gradlew :backend:installDist && cp .env.example .env && cp entitlements.example.yaml entitlements.yaml
 services:
   postgres:
     image: postgres:18
@@ -22,12 +22,23 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+    volumes:
+      # Long syntax on purpose: with the short one Docker creates a *directory* named entitlements.yaml when the file
+      # is missing, and the backend then fails with a confusing message. This way compose stops and says what is missing.
+      - type: bind
+        source: ./entitlements.yaml
+        target: /config/entitlements.yaml
+        read_only: true
+        bind:
+          create_host_path: false
     environment:
       PORT: "8080"
-      # Prepared for the storage layer (ADR 0009); the backend does not use the database yet.
       DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-kuotakit}
       DATABASE_USER: ${POSTGRES_USER:-kuotakit}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env and set POSTGRES_PASSWORD}
+      KUOTAKIT_APP_KEYS: ${KUOTAKIT_APP_KEYS:?Set KUOTAKIT_APP_KEYS in .env}
+      KUOTAKIT_SECRET_KEYS: ${KUOTAKIT_SECRET_KEYS:-}
+      KUOTAKIT_ENTITLEMENTS_FILE: /config/entitlements.yaml
 
 volumes:
   postgres-data:

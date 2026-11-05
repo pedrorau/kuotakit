@@ -20,8 +20,9 @@ KuotaKit: open-source, self-hosted in-app purchases and subscriptions. KMP core 
 ## Conventions
 - Kotlin: official style, ktlint + detekt, coroutines and Flow, no `!!` in library code.
 - Swift: Swift 5.10+, async/await, SwiftLint.
-- Backend: Ktor, kotlinx.serialization, Testcontainers for Postgres. Tests: Kotest (works with Pitest, see ADR 0011).
+- Backend: Ktor, kotlinx.serialization, Exposed + Flyway on Postgres, Testcontainers for the storage tests. Layers: `domain` (pure Kotlin, owns the `PurchaseRepository` interface), `storage` (the only place that touches the database), `config`, `web`. Tests: Kotest (works with Pitest, see ADR 0011).
 - Gradle: the root `settings.gradle.kts` includes only `:contracts`, `:backend`, `:openapi` and `:architecture-tests`. Future bridges (`bridges/react-native`, `bridges/flutter`) keep their own build tools and are NOT included in it. Versions live in `gradle/libs.versions.toml`.
+- Tests that need Docker (the Postgres storage tests): on macOS with Colima run `colima start --network-address` and export `DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"`, `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock` and `TESTCONTAINERS_HOST_OVERRIDE=$(colima ls -j | jq -r .address)`; without Docker those tests fail with a message saying so.
 - JDK 21 comes from the Gradle toolchain (downloaded automatically); do not rely on the JDK installed on the machine.
 - Every Kotlin, Java, Swift, Dart, TypeScript, JavaScript and Objective-C source file carries the Apache-2.0 license header near the top (ADR 0006); `scripts/ci/check_license_headers.py` enforces it in CI.
 - The public API of `contracts` is dumped in `contracts/api/`. After an intentional change run `./gradlew :contracts:updateKotlinAbi` and commit the diff; it must be called out in the plan (rule 4).
@@ -50,7 +51,7 @@ Rules that must always hold are enforced by scripts in `scripts/agent/`, not by 
 - `check_changed.py`: after each edit, formats the changed Kotlin file with ktlint and returns what it cannot fix.
 - `protect_tests.py`: editing or deleting an existing test needs human approval; new test files are allowed. Never weaken a test to make it pass; fix the code or explain why the test is wrong (ADR 0011).
 - `check_tests.py`: when a task ends, runs the checks (tests, ktlint, detekt) of the modules with uncommitted changes; the task cannot be closed while they fail. After 3 blocked attempts in a row it lets the agent stop with a loud warning, so an unfixable failure does not trap a session (ADR 0011).
-- Architecture tests, the public API dump and mutation testing run in CI (ADR 0011). Mutation testing is informative for now; once the first domain logic exists, a dropped mutation score fails the build.
+- Architecture tests, the public API dump and mutation testing run in CI (ADR 0011). Mutation testing keeps a 70 % score on the backend `domain` package (`mutation.yml`); a score below it fails that workflow.
 If a guard blocks you, do not try to work around it. Explain and ask.
 
 ## Commands
@@ -59,12 +60,12 @@ If a guard blocks you, do not try to work around it. Explain and ask.
 - Contracts tests (JVM): `./gradlew :contracts:jvmTest` (iOS simulator tests only run on Apple Silicon or in CI: `:contracts:iosSimulatorArm64Test`)
 - Auto-format: `./gradlew ktlintFormat`
 - Run the backend: `./gradlew :backend:run`, then `curl localhost:8080/health`
-- Backend + Postgres: `./gradlew :backend:installDist && cp .env.example .env && docker compose up --build`
+- Backend + Postgres: `./gradlew :backend:installDist && cp .env.example .env && cp entitlements.example.yaml entitlements.yaml && docker compose up --build`
 - Architecture tests: `./gradlew :architecture-tests:test`
 - OpenAPI document: `./gradlew :openapi:checkOpenApi` (in `check`) / `./gradlew :openapi:updateOpenApi` after an intentional API change
 - Public API check / update the dump: `./gradlew :contracts:checkKotlinAbi` / `./gradlew :contracts:updateKotlinAbi`
 - License headers: `python3 scripts/ci/check_license_headers.py`
-- Mutation testing (informative, CI runs it in `mutation.yml`): `./gradlew :backend:pitest`; only some classes: `-PpitestTargets='pkg.Foo*,pkg.Bar*'`
+- Mutation testing (70 % threshold on the backend `domain` package, CI runs it in `mutation.yml`): `./gradlew :backend:pitest`; only some classes: `-PpitestTargets='pkg.Foo*,pkg.Bar*'`
 - Script tests (`scripts/agent`, `scripts/ci`): `python3 -m venv .venv && .venv/bin/pip install -r scripts/agent/requirements-dev.txt && .venv/bin/python -m pytest scripts`
 - SDK tests: `TBD` (no SDK yet)
 
@@ -73,8 +74,8 @@ If a guard blocks you, do not try to work around it. Explain and ask.
 - Phase 0 wrap-up done (2026-10-31): planning docs at the repo root, NOTICE added (LICENSE came from GitHub). No code yet.
 - Phase 1, task 1 done (2026-11-03, branch `feat/project-skeleton`): Gradle multi-module (`contracts` KMP with jvm/android/iOS targets, `backend` Ktor with `GET /health`), docker-compose with Postgres, ktlint + detekt, GitHub Actions CI. Kotest confirmed to work with Pitest. **Public API:** first public symbol in `contracts`, `HealthResponse(status)`; `explicitApi()` is enabled.
 - Phase 1, task 2 done (2026-11-03, branch `feat/agent-guardrails`): the five guardrail scripts in `scripts/agent/` with 242 pytest cases (also in CI, job `agent-scripts`), Claude Code hooks in `.claude/settings.json`, and the OpenCode and Pi wiring documented in `docs/harnesses/`. Guardrails are active in Claude Code sessions opened inside the repo.
-- Optional: `docker-compose.yml` is verified by the `compose` job in CI; the maintainer may still install Colima to run it locally.
 - Known gap: an agent could edit `.claude/settings.json` or `scripts/agent/` itself; treat changes to them as a review item.
 - Phase 1, task 3 done (2026-11-04, branch `feat/rules-as-checks`): Konsist architecture tests with canary tests (`architecture-tests/`), public API dump for `contracts` (Kotlin ABI validation, `contracts/api/`), license-header check (`scripts/ci/`), and Pitest reporting in CI (`mutation.yml`, informative until the first domain logic). **Public API:** none added; the first dump records `HealthResponse`.
 - API contracts task done (2026-11-04, branch `feat/api-contracts`): the `contracts/` models of the whole API (`CustomerInfo`, entitlements, offerings, receipts, errors, enums), the `:openapi` module that generates `docs/api/openapi.json` from them with a drift check (ADR 0012), and a Konsist rule that keeps `contracts/` platform independent. **Public API:** 3 enums (each with an `UNKNOWN` fallback), 11 data classes, the sealed interface `ReceiptRequest` and the shared JSON configuration `kuotaKitJson` added to `contracts` (see `contracts/api/`).
-- Next: the backend endpoints (offerings, subscribers, Google receipts, RTDN webhook) behind the storage interface; the first domain logic switches on the mutation threshold (ADR 0011).
+- Backend core done (2026-11-05, branch `feat/backend-core`): `domain` (purchases, `PurchaseRepository`, the pure `EntitlementCalculator`), `entitlements.yaml` and environment configuration, `storage` (Postgres with Exposed, Flyway and Hikari, tested with Testcontainers), API-key Bearer auth, `GET /v1/offerings` and `GET /v1/subscribers/{id}` with errors as `ErrorResponse`, docker-compose with a CI smoke test, and the mutation threshold (70 %) on `domain`. **Public API:** `ErrorCode` lost `FORBIDDEN` and `NOT_FOUND` and gained `INTERNAL_ERROR`; `contracts` gained `APP_USER_ID_PATTERN`. An app user id is the secret: any valid key reads any id, and an unknown id is an empty customer info.
+- Next: backend part 2: Google receipt validation (`POST /v1/subscribers/{id}/receipts`) and the RTDN webhook, then the conformance suite (ADR 0007).

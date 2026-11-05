@@ -16,6 +16,7 @@
 
 package dev.pedrorau.kuotakit.openapi
 
+import dev.pedrorau.kuotakit.contracts.APP_USER_ID_PATTERN
 import dev.pedrorau.kuotakit.contracts.CustomerInfo
 import dev.pedrorau.kuotakit.contracts.ErrorCode
 import dev.pedrorau.kuotakit.contracts.ErrorResponse
@@ -38,6 +39,11 @@ class Body(
     val example: JsonElement?,
 )
 
+class PathParameter(
+    val description: String,
+    val pattern: String? = null,
+)
+
 class Response(
     val status: Int,
     val description: String,
@@ -52,7 +58,7 @@ data class Endpoint(
     val summary: String,
     val description: String,
     val auth: Auth,
-    val pathParameters: Map<String, String> = emptyMap(),
+    val pathParameters: Map<String, PathParameter> = emptyMap(),
     val request: Body? = null,
     val responses: List<Response>,
 )
@@ -70,6 +76,12 @@ private fun error(
 ): Response = Response(status, description, model(ErrorResponse.serializer(), Examples.error(code, message)))
 
 private const val HTTP_UNAUTHORIZED = 401
+
+private val APP_USER_ID =
+    PathParameter("The id of the app user, for example `\$anon_6f1c`.", APP_USER_ID_PATTERN)
+
+private val internalError =
+    error(500, ErrorCode.INTERNAL_ERROR, "Something unexpected went wrong; access is not granted.", "Internal error.")
 
 private val unauthorized =
     error(HTTP_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "The API key is missing or wrong.", "Missing or invalid API key.")
@@ -127,6 +139,7 @@ val ENDPOINTS: List<Endpoint> =
                 listOf(
                     Response(200, "The offerings.", model(OfferingsResponse.serializer(), Examples.offerings)),
                     unauthorized,
+                    internalError,
                 ),
         ),
         Endpoint(
@@ -138,9 +151,10 @@ val ENDPOINTS: List<Endpoint> =
             description =
                 "Called by the SDK after a store purchase. The backend validates it with the store, saves it, " +
                     "acknowledges it (Android) and returns the updated customer info. On any store failure it never " +
-                    "grants access (ADR 0003). An app key may only submit purchases for its own user.",
+                    "grants access (ADR 0003). Any valid key can submit a purchase for any app user id: the id is " +
+                    "the secret.",
             auth = Auth.API_KEY,
-            pathParameters = mapOf("app_user_id" to "The id of the app user, for example `\$anon_6f1c`."),
+            pathParameters = mapOf("app_user_id" to APP_USER_ID),
             request = model(ReceiptRequest.serializer(), Examples.playStoreReceipt),
             responses =
                 listOf(
@@ -163,12 +177,6 @@ val ENDPOINTS: List<Endpoint> =
                         "The store rejected the purchase.",
                     ),
                     error(
-                        403,
-                        ErrorCode.FORBIDDEN,
-                        "The key may not act on this user.",
-                        "This key cannot submit purchases for that user.",
-                    ),
-                    error(
                         409,
                         ErrorCode.TOKEN_ALREADY_LINKED,
                         "The purchase token is linked to another user.",
@@ -180,6 +188,7 @@ val ENDPOINTS: List<Endpoint> =
                         "The store API is unavailable; access is not granted.",
                         "The store could not be reached.",
                     ),
+                    internalError,
                 ),
         ),
         Endpoint(
@@ -189,21 +198,17 @@ val ENDPOINTS: List<Endpoint> =
             tag = "Subscribers",
             summary = "Get a subscriber",
             description =
-                "Returns what the user has bought and what they may access. An app key (`pk_`) can read its own " +
-                    "user; a secret key (`sk_`) can read any user.",
+                "Returns what the user has bought and what they may access. Any valid key (`pk_` or `sk_`) " +
+                    "can read any app user id: the random anonymous id is the secret, so ids must never be shown " +
+                    "or shared. A user without purchases gets an empty customer info, not an error.",
             auth = Auth.API_KEY,
-            pathParameters = mapOf("app_user_id" to "The id of the app user, for example `\$anon_6f1c`."),
+            pathParameters = mapOf("app_user_id" to APP_USER_ID),
             responses =
                 listOf(
                     Response(200, "The customer info.", model(CustomerInfo.serializer(), Examples.customerInfo)),
+                    error(400, ErrorCode.INVALID_PAYLOAD, "The app user id is not valid.", "Invalid app user id."),
                     unauthorized,
-                    error(
-                        403,
-                        ErrorCode.FORBIDDEN,
-                        "An app key asked for another user.",
-                        "This key cannot read that user.",
-                    ),
-                    error(404, ErrorCode.NOT_FOUND, "The user does not exist.", "No subscriber with that id."),
+                    internalError,
                 ),
         ),
         Endpoint(
@@ -222,6 +227,7 @@ val ENDPOINTS: List<Endpoint> =
                     Response(204, "The notification was processed."),
                     error(400, ErrorCode.INVALID_PAYLOAD, "The body is malformed.", "Not a Pub/Sub push message."),
                     webhookUnauthorized("Pub/Sub OIDC token"),
+                    internalError,
                 ),
         ),
         Endpoint(
@@ -240,6 +246,7 @@ val ENDPOINTS: List<Endpoint> =
                     Response(204, "The notification was processed."),
                     error(400, ErrorCode.INVALID_PAYLOAD, "The body is malformed.", "Missing signedPayload."),
                     webhookUnauthorized("signedPayload JWS"),
+                    internalError,
                 ),
         ),
     )

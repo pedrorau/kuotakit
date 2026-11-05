@@ -85,14 +85,17 @@ object OpenApiDocument {
             put("operationId", endpoint.operationId)
             if (endpoint.pathParameters.isNotEmpty()) {
                 putJsonArray("parameters") {
-                    endpoint.pathParameters.forEach { (name, description) ->
+                    endpoint.pathParameters.forEach { (name, parameter) ->
                         add(
                             buildJsonObject {
                                 put("name", name)
                                 put("in", "path")
                                 put("required", true)
-                                put("description", description)
-                                putJsonObject("schema") { put("type", "string") }
+                                put("description", parameter.description)
+                                putJsonObject("schema") {
+                                    put("type", "string")
+                                    parameter.pattern?.let { put("pattern", it) }
+                                }
                             },
                         )
                     }

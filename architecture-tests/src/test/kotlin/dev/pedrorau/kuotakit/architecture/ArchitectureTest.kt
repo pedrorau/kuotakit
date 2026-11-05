@@ -29,7 +29,11 @@ class ArchitectureTest :
             ArchitectureRules.contractsCommonCodeIsPlatformIndependent(Konsist.scopeFromProduction())
         }
 
-        "only the storage package of the backend imports Exposed" {
-            ArchitectureRules.exposedIsUsedOnlyByTheStoragePackage(Konsist.scopeFromProduction())
+        "only the storage package of the backend uses the persistence libraries" {
+            ArchitectureRules.persistenceLibrariesAreUsedOnlyByTheStoragePackage(Konsist.scopeFromProduction())
+        }
+
+        "the domain of the backend knows neither Ktor nor the web and storage packages" {
+            ArchitectureRules.domainDoesNotDependOnTheWebOrStorage(Konsist.scopeFromProduction())
         }
     })
