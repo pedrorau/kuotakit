@@ -57,6 +57,8 @@ class ReceiptService(
 
         val now = clock.now()
         val existing = if (owner == null) null else purchases.purchasesOf(appUserId).firstOrNull { it.token == token }
+        // Refunded or revoked for good: resubmitting the receipt changes nothing and must not acknowledge it again.
+        if (existing?.status?.isFinal() == true) return
         val purchase = PlaySubscriptionMapper.toPurchase(subscription, receipt.productId, token, existing, now)
 
         // Google refunds a purchase that is not acknowledged within three days, so a purchase that grants access is.

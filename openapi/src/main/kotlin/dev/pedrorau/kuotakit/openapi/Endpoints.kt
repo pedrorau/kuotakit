@@ -219,14 +219,26 @@ val ENDPOINTS: List<Endpoint> =
             summary = "Google Play real-time developer notification",
             description =
                 "Cloud Pub/Sub push of a Play RTDN. The backend verifies the Pub/Sub OIDC token, then re-fetches the " +
-                    "subscription from the Play Developer API: the notification body alone is never trusted.",
+                    "subscription from the Play Developer API: the notification body alone never gives access. A " +
+                    "refund or a revocation takes access away straight from the verified message. Notifications " +
+                    "that can never succeed (another app, a test message, an unknown purchase, a body that cannot " +
+                    "be read) are acknowledged with 204.",
             auth = Auth.NONE,
             request = storeNotification("The Pub/Sub push envelope, as defined by Google."),
             responses =
                 listOf(
-                    Response(204, "The notification was processed."),
-                    error(400, ErrorCode.INVALID_PAYLOAD, "The body is malformed.", "Not a Pub/Sub push message."),
+                    Response(
+                        204,
+                        "The notification was processed, or it can never be processed and is acknowledged so that " +
+                            "Pub/Sub does not send it again.",
+                    ),
                     webhookUnauthorized("Pub/Sub OIDC token"),
+                    error(
+                        502,
+                        ErrorCode.STORE_UNAVAILABLE,
+                        "Google Play could not be asked; the notification was not applied and Pub/Sub retries it.",
+                        "The store could not be reached; access is not granted.",
+                    ),
                     internalError,
                 ),
         ),

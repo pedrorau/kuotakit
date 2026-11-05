@@ -20,7 +20,8 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.timestamp
 
 /**
- * The tables of `db/migration/V1__subscribers_and_purchases.sql`. Flyway creates them; Exposed only reads and writes.
+ * The tables of `db/migration` (V1 subscribers and purchases, V3 store events). Flyway creates them; Exposed only
+ * reads and writes.
  */
 internal object Subscribers : Table("subscribers") {
     val appUserId = text("app_user_id")
@@ -45,4 +46,12 @@ internal object Purchases : Table("purchases") {
     val updatedAt = timestamp("updated_at")
 
     override val primaryKey = PrimaryKey(id)
+}
+
+internal object StoreEvents : Table("store_events") {
+    val store = text("store")
+    val messageId = text("message_id")
+    val receivedAt = timestamp("received_at")
+
+    override val primaryKey = PrimaryKey(store, messageId)
 }

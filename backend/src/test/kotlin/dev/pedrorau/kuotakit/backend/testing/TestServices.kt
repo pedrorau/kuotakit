@@ -19,8 +19,11 @@ package dev.pedrorau.kuotakit.backend.testing
 import dev.pedrorau.kuotakit.backend.Services
 import dev.pedrorau.kuotakit.backend.domain.CONFIG
 import dev.pedrorau.kuotakit.backend.domain.NOW
+import dev.pedrorau.kuotakit.backend.domain.PlayNotificationService
 import dev.pedrorau.kuotakit.backend.domain.PlayStoreApi
+import dev.pedrorau.kuotakit.backend.domain.ProcessedEventRepository
 import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
+import dev.pedrorau.kuotakit.backend.domain.PushTokenVerifier
 import dev.pedrorau.kuotakit.backend.domain.ReceiptService
 import dev.pedrorau.kuotakit.backend.web.ApiKeys
 import kotlin.time.Clock
@@ -41,10 +44,14 @@ const val ANDROID_PACKAGE = "com.acme.app"
 fun testServices(
     purchases: PurchaseRepository = InMemoryPurchaseRepository(),
     playStore: PlayStoreApi? = FakePlayStoreApi(),
+    events: ProcessedEventRepository = InMemoryProcessedEvents(),
+    pushVerifier: PushTokenVerifier? = null,
 ) = Services(
     entitlements = CONFIG,
     apiKeys = ApiKeys(listOf(APP_KEY), listOf(SECRET_KEY)),
     purchases = purchases,
     receipts = ReceiptService(playStore, ANDROID_PACKAGE, purchases, FixedClock()),
+    notifications = PlayNotificationService(playStore, ANDROID_PACKAGE, purchases, events, FixedClock()),
+    pushVerifier = pushVerifier,
     clock = FixedClock(),
 )

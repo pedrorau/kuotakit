@@ -29,6 +29,7 @@ import io.ktor.server.application.install
 import io.ktor.server.application.log
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.response.respond
 
 fun errorResponse(
@@ -51,32 +52,7 @@ internal fun Application.installErrorHandling() {
                 errorResponse(ErrorCode.INVALID_PAYLOAD, "The request is malformed."),
             )
         }
-        // The messages of these four are written by this backend and never carry a purchase token.
-        exception<InvalidReceiptException> { call, cause ->
-            call.respond(HttpStatusCode.BadRequest, errorResponse(ErrorCode.INVALID_PAYLOAD, cause.message.orEmpty()))
-        }
-        exception<PurchaseInvalidException> { call, cause ->
-            call.respond(
-                HttpStatusCode.PaymentRequired,
-                errorResponse(ErrorCode.PURCHASE_INVALID, cause.message.orEmpty()),
-            )
-        }
-        exception<TokenAlreadyLinkedException> { call, _ ->
-            call.respond(
-                HttpStatusCode.Conflict,
-                errorResponse(ErrorCode.TOKEN_ALREADY_LINKED, "The purchase token belongs to another user."),
-            )
-        }
-        exception<StoreUnavailableException> { call, cause ->
-            call.application.log.warn(
-                "Store unavailable on ${call.request.local.method.value} ${redactedPath(call.request.local.uri)}: " +
-                    "${cause.message} ${cause.cause?.javaClass?.simpleName.orEmpty()}",
-            )
-            call.respond(
-                HttpStatusCode.BadGateway,
-                errorResponse(ErrorCode.STORE_UNAVAILABLE, "The store could not be reached; access is not granted."),
-            )
-        }
+        storeErrors()
         // Fail closed: an unexpected error is a 500 that grants nothing, and the details stay in the log.
         exception<Throwable> { call, cause ->
             call.application.log.error(
@@ -92,3 +68,40 @@ private val SUBSCRIBER_PATH = Regex("^(/v1/subscribers/)[^/?]*")
 
 /** The path for the log: an app user id is a secret (docs/api-spec.md) and must never be logged. */
 internal fun redactedPath(uri: String): String = uri.replace(SUBSCRIBER_PATH, "$1{app_user_id}").substringBefore('?')
+
+/** The errors of receipts and store notifications. */
+private fun StatusPagesConfig.storeErrors() {
+    exception<PushUnauthorizedException> { call, cause ->
+        call.application.log.warn("Webhook push refused: ${cause.message}")
+        call.respond(
+            HttpStatusCode.Unauthorized,
+            errorResponse(ErrorCode.UNAUTHORIZED, "Notification verification failed."),
+        )
+    }
+    // The messages of these four are written by this backend and never carry a purchase token.
+    exception<InvalidReceiptException> { call, cause ->
+        call.respond(HttpStatusCode.BadRequest, errorResponse(ErrorCode.INVALID_PAYLOAD, cause.message.orEmpty()))
+    }
+    exception<PurchaseInvalidException> { call, cause ->
+        call.respond(
+            HttpStatusCode.PaymentRequired,
+            errorResponse(ErrorCode.PURCHASE_INVALID, cause.message.orEmpty()),
+        )
+    }
+    exception<TokenAlreadyLinkedException> { call, _ ->
+        call.respond(
+            HttpStatusCode.Conflict,
+            errorResponse(ErrorCode.TOKEN_ALREADY_LINKED, "The purchase token belongs to another user."),
+        )
+    }
+    exception<StoreUnavailableException> { call, cause ->
+        call.application.log.warn(
+            "Store unavailable on ${call.request.local.method.value} ${redactedPath(call.request.local.uri)}: " +
+                "${cause.message} ${cause.cause?.javaClass?.simpleName.orEmpty()}",
+        )
+        call.respond(
+            HttpStatusCode.BadGateway,
+            errorResponse(ErrorCode.STORE_UNAVAILABLE, "The store could not be reached; access is not granted."),
+        )
+    }
+}

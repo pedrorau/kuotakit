@@ -17,16 +17,22 @@
 package dev.pedrorau.kuotakit.backend
 
 import dev.pedrorau.kuotakit.backend.domain.EntitlementsConfig
+import dev.pedrorau.kuotakit.backend.domain.PlayNotificationService
 import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
+import dev.pedrorau.kuotakit.backend.domain.PushTokenVerifier
 import dev.pedrorau.kuotakit.backend.domain.ReceiptService
 import dev.pedrorau.kuotakit.backend.web.ApiKeys
 import kotlin.time.Clock
 
 /** Everything the HTTP layer needs, built by `main` (or by a test with fakes). */
+@Suppress("LongParameterList") // a plain holder of what `main` wires: one field per thing the routes use
 class Services(
     val entitlements: EntitlementsConfig,
     val apiKeys: ApiKeys,
     val purchases: PurchaseRepository,
     val receipts: ReceiptService,
+    val notifications: PlayNotificationService,
+    /** `null` when the webhook is not configured: it then refuses every push, because it cannot verify any. */
+    val pushVerifier: PushTokenVerifier?,
     val clock: Clock = Clock.System,
 )
