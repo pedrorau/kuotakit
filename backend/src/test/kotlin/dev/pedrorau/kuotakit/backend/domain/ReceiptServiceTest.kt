@@ -149,6 +149,8 @@ class ReceiptServiceTest :
             shouldThrow<InvalidReceiptException> { s.submit(productId = "p".repeat(4097)) }
             s.log shouldBe emptyList()
             s.submit(token = "t".repeat(4096)) // the longest allowed
+            s.google.subscription = { playSubscription(productId = "p".repeat(4096)) }
+            s.submit(productId = "p".repeat(4096), token = "token-2") // the longest allowed
         }
 
         "a token that belongs to another user cannot be claimed, and is not acknowledged" {
