@@ -10,7 +10,7 @@ Estimates assume ~10 hours per week. Each phase ends with an exit criterion that
 ## Phase 1 — Backend + Android (4–6 weeks) ← current
 - Task 1: monorepo skeleton (Gradle, `contracts/`, backend with `/health`, docker-compose with Postgres, CI). LICENSE and NOTICE already added (Phase 0 wrap-up).
 - Task 2: agent guardrail scripts in `scripts/agent/` + Claude Code hooks (ADR 0010), including the protected-tests and tests-must-pass guards (they only need the Gradle tests from task 1, so there is no reason to wait).
-- Task 3: rules as checks (ADR 0011): Konsist architecture tests, Binary Compatibility Validator, license-header check; Pitest mutation testing enabled with the first real domain logic (entitlement computation).
+- Task 3: rules as checks (ADR 0011): Konsist architecture tests, public API dump (Kotlin ABI validation), license-header check, and Pitest reporting in CI. The mutation score threshold is switched on with the first real domain logic (entitlement computation).
 - `contracts/` module with the API models; OpenAPI spec generated from it.
 - Backend (Ktor): `POST /v1/subscribers/{id}/receipts` (Google), `GET /v1/subscribers/{id}`, `GET /v1/offerings`, Google RTDN webhook, docker-compose.
 - Conformance suite: first scenarios (valid purchase, invalid purchase, refund, store failure, token reuse), running in CI.

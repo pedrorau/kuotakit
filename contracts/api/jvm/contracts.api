@@ -1,0 +1,27 @@
+public final class dev/pedrorau/kuotakit/contracts/HealthResponse {
+	public static final field Companion Ldev/pedrorau/kuotakit/contracts/HealthResponse$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Ldev/pedrorau/kuotakit/contracts/HealthResponse;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/contracts/HealthResponse;Ljava/lang/String;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/contracts/HealthResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStatus ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class dev/pedrorau/kuotakit/contracts/HealthResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/contracts/HealthResponse$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ldev/pedrorau/kuotakit/contracts/HealthResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ldev/pedrorau/kuotakit/contracts/HealthResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class dev/pedrorau/kuotakit/contracts/HealthResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

@@ -8,16 +8,18 @@ Coding agents sometimes ignore written rules, or make a failing test pass by wea
 ## Decision
 Every rule that can be broken silently is turned into an automated check:
 - **Static rules → linters.** detekt rules (e.g. no `!!` in library code).
-- **Architecture rules → architecture tests** (Konsist), for example:
+- **Architecture rules → architecture tests** (Konsist 0.18.1, module `architecture-tests/`), for example:
   - only the `storage` package of the `backend` module may depend on Exposed (ADR 0009);
   - API models (`@Serializable` request/response types) exist only in `contracts/` (ADR 0004);
-  - SDK core does not depend on platform billing libraries (ADR 0002).
-- **License headers → a CI check** that every source file has the Apache-2.0 header (ADR 0006).
-- **Public API → Binary Compatibility Validator.** Public API changes fail the build until the `.api` dump is updated, so they are always visible in review.
+  - SDK core does not depend on platform billing libraries (ADR 0002): added together with the `sdk/core` module, which does not exist yet.
+
+  Each rule is a function that takes the code to check, so the real project must pass it and "canary" tests prove it still fails on a small project that breaks it (a rule that silently stops matching is worse than no rule). The rules read the text of each file, so they also catch `@Serializable` on an object or an interface, an import alias and a fully qualified use without an import. Rules use `strict = true`, and the test task declares the project's sources as inputs: Konsist reads them at run time, so without that Gradle would hide a violation behind an up-to-date test task.
+- **License headers → `scripts/ci/check_license_headers.py`**, a CI job that requires the Apache-2.0 header (ADR 0006) in the tracked Kotlin, Java, Swift, Dart, TypeScript, JavaScript and Objective-C sources (and fails when it finds none, so it cannot silently check nothing). Gradle scripts (`.kts`), Python scripts and generated files are out of scope. A script covers every language with one mechanism, unlike a detekt rule (Kotlin only) or Spotless (another plugin).
+- **Public API → the Kotlin Gradle plugin's ABI validation** (`abiValidation()`, `checkKotlinAbi`/`updateKotlinAbi`), enabled in `contracts` with the dumps in `contracts/api/` (jvm, android and klib for iOS). It replaces the Binary Compatibility Validator, which is in maintenance mode. It is still experimental in Kotlin 2.4, so the macOS `ios` CI job also runs `checkKotlinAbi` to prove the dump is identical on both hosts. A public API change fails the build until `./gradlew :contracts:updateKotlinAbi` is run, so it is always visible in review.
 - **Protected tests.** A guard script (`scripts/agent/protect_tests.py`) asks for human approval before an agent edits or deletes an existing test file. New test files are allowed.
 - **No "done" in red.** At the end of an agent task, a guard (`scripts/agent/check_tests.py`) runs the relevant checks (tests, ktlint, detekt) of the modules with uncommitted changes; the task cannot be closed while they fail. To avoid an endless loop it blocks up to 3 times in a row per session and then lets the agent stop with a loud warning; CI and the branch ruleset are the final gate.
-- **Mutation testing (Pitest, JVM).** Runs on changed code in every PR and on the whole backend and core weekly. Critical modules (purchase validation, entitlement computation) must keep a minimum mutation score, starting at 70% and raised over time.
-- The two guard scripts (`protect_tests.py`, `check_tests.py`) ship in Phase 1, task 2 with the other agent guardrails; the remaining checks above ship in task 3.
+- **Mutation testing (Pitest, JVM).** A separate workflow (`mutation.yml`) mutates only the classes a PR changes (computed by `scripts/ci/pitest_targets.py`, the free alternative to the commercial Arcmutate git plugin) and the whole backend every week, and publishes the report. It is **informative for now, not a required check**: the threshold is switched on together with the first real domain logic. Critical modules (purchase validation, entitlement computation) must then keep a minimum mutation score, starting at 70% and raised over time.
+- The two guard scripts (`protect_tests.py`, `check_tests.py`) shipped in Phase 1, task 2 with the other agent guardrails; the remaining checks above shipped in task 3.
 - All of these run in CI as well, so they apply to any harness or to humans.
 
 ## Consequences
@@ -26,4 +28,5 @@ Every rule that can be broken silently is turned into an automated check:
 - Mutation testing is slow; it is scoped to changed code in PRs. Kotlin/Native-only code is not covered; critical logic lives in the backend and `commonMain`, which run on the JVM.
 - Test framework: **Kotest**. A spike in Phase 1, task 1 ran `./gradlew :backend:pitest` (Kotest 6.2.6, `kotest-extensions-pitest`, gradle-pitest-plugin 1.19.0, pitest-junit5-plugin 1.2.3) and Pitest discovered and ran the Kotest specs. Mutation noise from Kotlin-generated bytecode is expected; tuning the score thresholds belongs to Phase 1, task 3.
 - detekt's `!!` rule (`UnsafeCallOnNullableType`) needs type resolution, so the build runs `detektMain`/`detektMainJvm` (not only the plain `detekt` task) as part of `check`; otherwise the rule silently does nothing. Known gap: code that exists only in iOS source sets (`iosMain`) is covered by the `*SourceSet` tasks, which have no type resolution, so `!!` is not caught there. There is no such code yet; the rule is that critical logic lives in `commonMain`, which the JVM tasks analyze. Revisit when the first `iosMain` code appears.
-- Mutation testing is enabled once there is real domain logic to mutate (Phase 1, task 3), not on the skeleton.
+- Mutation testing gets its threshold once there is real domain logic to mutate (the entitlement computation), not on the skeleton: Phase 1, task 3 only sets up the reporting.
+- Values that come from a pull request (file and branch names) never go straight into a workflow's shell: they pass through environment variables, and `pitest_targets.py` accepts only plain identifiers.

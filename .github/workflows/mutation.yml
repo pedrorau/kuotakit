@@ -1,0 +1,72 @@
+name: Mutation testing
+
+# Informative for now (ADR 0011): reports the mutation score without failing anything. The 70 % threshold for the
+# critical modules is switched on with the first real domain logic (entitlement computation). Not a required check.
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'contracts/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'scripts/ci/pitest_*.py'
+      - '.github/workflows/mutation.yml'
+  schedule:
+    - cron: '0 6 * * 1' # every Monday: the whole backend
+  workflow_dispatch:
+
+concurrency:
+  group: mutation-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pitest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the diff against the base branch needs its history
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      # Values that come from a pull request (branch and file names) go through env vars, never straight into the
+      # script, so a crafted name cannot inject shell commands.
+      - name: Choose what to mutate
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            targets=$(python3 scripts/ci/pitest_targets.py --base "origin/$BASE_REF" --module backend)
+            echo "A pull request: mutating only the classes it changes: ${targets:-none}"
+            echo "run=$([ -n "$targets" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+            echo "targets=$targets" >> "$GITHUB_OUTPUT"
+          else
+            echo "Scheduled or manual run: mutating the whole backend"
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "targets=" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run Pitest
+        if: steps.scope.outputs.run == 'true'
+        env:
+          TARGETS: ${{ steps.scope.outputs.targets }}
+        run: |
+          if [ -n "$TARGETS" ]; then
+            ./gradlew :backend:pitest "-PpitestTargets=$TARGETS"
+          else
+            ./gradlew :backend:pitest
+          fi
+      - name: Summary
+        if: always() && steps.scope.outputs.run == 'true'
+        run: python3 scripts/ci/pitest_summary.py backend/build/reports/pitest >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.scope.outputs.run == 'true'
+        with:
+          name: pitest-report
+          path: backend/build/reports/pitest

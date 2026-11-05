@@ -48,6 +48,7 @@ KuotaKit is for teams that want to:
 ```
 contracts/            Shared KMP module: API models, used by the SDK and the backend
 backend/              Reference backend (Ktor, Postgres, docker-compose)
+architecture-tests/   Konsist tests for the architecture rules (ADR 0011)
 conformance/          Black-box test suite any backend must pass
 sdk/core/             Kotlin Multiplatform core
 sdk/android/          Play Billing adapter

@@ -1,0 +1,33 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <kuotakit:contracts>
+final class dev.pedrorau.kuotakit.contracts/HealthResponse { // dev.pedrorau.kuotakit.contracts/HealthResponse|null[0]
+    constructor <init>(kotlin/String) // dev.pedrorau.kuotakit.contracts/HealthResponse.<init>|<init>(kotlin.String){}[0]
+
+    final val status // dev.pedrorau.kuotakit.contracts/HealthResponse.status|{}status[0]
+        final fun <get-status>(): kotlin/String // dev.pedrorau.kuotakit.contracts/HealthResponse.status.<get-status>|<get-status>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.contracts/HealthResponse.component1|component1(){}[0]
+    final fun copy(kotlin/String = ...): dev.pedrorau.kuotakit.contracts/HealthResponse // dev.pedrorau.kuotakit.contracts/HealthResponse.copy|copy(kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.contracts/HealthResponse.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.contracts/HealthResponse.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.contracts/HealthResponse.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<dev.pedrorau.kuotakit.contracts/HealthResponse> { // dev.pedrorau.kuotakit.contracts/HealthResponse.$serializer|null[0]
+        final val descriptor // dev.pedrorau.kuotakit.contracts/HealthResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // dev.pedrorau.kuotakit.contracts/HealthResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // dev.pedrorau.kuotakit.contracts/HealthResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): dev.pedrorau.kuotakit.contracts/HealthResponse // dev.pedrorau.kuotakit.contracts/HealthResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, dev.pedrorau.kuotakit.contracts/HealthResponse) // dev.pedrorau.kuotakit.contracts/HealthResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;dev.pedrorau.kuotakit.contracts.HealthResponse){}[0]
+    }
+
+    final object Companion { // dev.pedrorau.kuotakit.contracts/HealthResponse.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<dev.pedrorau.kuotakit.contracts/HealthResponse> // dev.pedrorau.kuotakit.contracts/HealthResponse.Companion.serializer|serializer(){}[0]
+    }
+}

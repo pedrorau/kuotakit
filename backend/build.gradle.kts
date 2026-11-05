@@ -32,7 +32,21 @@ tasks.test {
 }
 
 pitest {
-    targetClasses.set(listOf("dev.pedrorau.kuotakit.backend.*"))
+    // `-PpitestTargets=pkg.A*,pkg.B*` limits the run to some classes (CI mutates only the code a PR changed).
+    targetClasses.set(
+        providers
+            .gradleProperty("pitestTargets")
+            .map {
+                it.split(",").toSet()
+            }.orElse(setOf("dev.pedrorau.kuotakit.backend.*")),
+    )
     junit5PluginVersion.set(libs.versions.pitest.junit5)
     outputFormats.set(listOf("HTML", "XML"))
+    failWhenNoMutations.set(false)
+    // Kotlin generates bytecode that has no logic of its own; mutating it only produces noise.
+    avoidCallsTo.set(setOf("kotlin.jvm.internal", "kotlinx.coroutines"))
+    excludedMethods.set(setOf("component*", "copy", "hashCode", "equals", "toString", "*\$default"))
+    excludedClasses.set(setOf("*\$Companion", "*\$WhenMappings", "*\$\$serializer"))
+    // No mutationThreshold yet: it is switched on (70 % for the critical modules, ADR 0011) together with the
+    // first real domain logic, the entitlement computation. Until then the reports are informative only.
 }

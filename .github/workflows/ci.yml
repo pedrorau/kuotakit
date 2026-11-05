@@ -42,6 +42,7 @@ jobs:
               - *build
               - 'contracts/**'
               - 'backend/**'
+              - 'architecture-tests/**'
             ios:
               - *build
               - 'contracts/**'
@@ -68,7 +69,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
-      # Compiles, runs tests, ktlint and detekt (JVM and Android targets; iOS targets need macOS, see `ios`).
+      # Compiles, runs tests (including the Konsist architecture tests), ktlint, detekt and the public API check
+      # (JVM and Android targets; iOS targets need macOS, see `ios`).
       - run: ./gradlew build
 
   ios:
@@ -82,7 +84,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
-      - run: ./gradlew :contracts:iosSimulatorArm64Test :contracts:compileKotlinIosArm64
+      # checkKotlinAbi also proves the public API dump is the same on macOS as on the Linux `jvm` job.
+      - run: ./gradlew :contracts:iosSimulatorArm64Test :contracts:compileKotlinIosArm64 :contracts:checkKotlinAbi
 
   compose:
     needs: changes
@@ -119,10 +122,16 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r scripts/agent/requirements-dev.txt
-      - run: python -m pytest scripts/agent -q
+      - run: python -m pytest scripts -q
+
+  license-headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: python3 scripts/ci/check_license_headers.py
 
   ci:
-    needs: [changes, jvm, ios, compose, agent-scripts]
+    needs: [changes, jvm, ios, compose, agent-scripts, license-headers]
     if: always()
     runs-on: ubuntu-latest
     steps:

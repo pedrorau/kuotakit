@@ -2,7 +2,8 @@
 """Stop check: a task cannot be closed while the checks of the code it changed fail (ADR 0011).
 
 Looks at the uncommitted changes, runs `./gradlew :<module>:check` (tests, ktlint, detekt) for each Gradle module
-touched, `./gradlew check` when shared build files changed, and pytest when the agent scripts changed. Docs-only
+touched (plus the architecture tests when Kotlin changed), `./gradlew check` when shared build files changed, the
+license-header check when a source file changed, and pytest when anything under `scripts/` changed. Docs-only
 changes run nothing. If something fails (or cannot run) the stop is blocked and the output goes back to the agent.
 
 To avoid an endless loop, it blocks up to MAX_BLOCKS times in a row per session and then lets the agent stop with
@@ -28,6 +29,8 @@ TIME_BUDGET_SECONDS = 800  # the Stop hook in .claude/settings.json has a 900 s 
 TAIL_LINES = 60
 SHARED_BUILD_FILES = ("build.gradle.kts", "settings.gradle.kts", "gradle.properties", ".editorconfig")
 SHARED_BUILD_DIRS = ("gradle/", "config/")
+# Keep in sync with SOURCE_SUFFIXES in scripts/ci/check_license_headers.py (a test compares them).
+LICENSE_SUFFIXES = (".kt", ".java", ".swift", ".dart", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts", ".m", ".mm", ".h")
 
 
 def changed_files(root: Path) -> list[str]:
@@ -66,8 +69,15 @@ def plan(files: list[str], root: Path) -> list[list[str]]:
     else:
         modules = sorted({m for f in files if (m := gradle_module(f, root))})
         commands += [[gradle, f"{m}:check", "--console=plain"] for m in modules]
-    if any(f.startswith("scripts/agent/") and f.endswith(".py") for f in files):
-        commands.append([python_for_tests(root), "-m", "pytest", "scripts/agent", "-q"])
+        # Konsist reads every module's sources, so any Kotlin change can break an architecture rule.
+        architecture = (root / "architecture-tests" / "build.gradle.kts").is_file()
+        if architecture and ":architecture-tests" not in modules and any(f.endswith(".kt") for f in files):
+            commands.append([gradle, ":architecture-tests:test", "--console=plain"])
+    license_script = root / "scripts" / "ci" / "check_license_headers.py"
+    if license_script.is_file() and any(f.endswith(LICENSE_SUFFIXES) for f in files):
+        commands.append([sys.executable, str(license_script)])
+    if any(f.startswith("scripts/") and f.endswith(".py") for f in files):
+        commands.append([python_for_tests(root), "-m", "pytest", "scripts", "-q"])
     return commands
 
 
