@@ -18,6 +18,7 @@ package dev.pedrorau.kuotakit.backend.testing
 
 import dev.pedrorau.kuotakit.backend.Services
 import dev.pedrorau.kuotakit.backend.domain.CONFIG
+import dev.pedrorau.kuotakit.backend.domain.EntitlementsConfig
 import dev.pedrorau.kuotakit.backend.domain.NOW
 import dev.pedrorau.kuotakit.backend.domain.PlayNotificationService
 import dev.pedrorau.kuotakit.backend.domain.PlayStoreApi
@@ -26,6 +27,7 @@ import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
 import dev.pedrorau.kuotakit.backend.domain.PushTokenVerifier
 import dev.pedrorau.kuotakit.backend.domain.ReceiptService
 import dev.pedrorau.kuotakit.backend.web.ApiKeys
+import dev.pedrorau.kuotakit.contracts.Store
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -46,11 +48,15 @@ fun testServices(
     playStore: PlayStoreApi? = FakePlayStoreApi(),
     events: ProcessedEventRepository = InMemoryProcessedEvents(),
     pushVerifier: PushTokenVerifier? = null,
+    entitlements: EntitlementsConfig = CONFIG,
 ) = Services(
-    entitlements = CONFIG,
+    entitlements = entitlements,
     apiKeys = ApiKeys(listOf(APP_KEY), listOf(SECRET_KEY)),
     purchases = purchases,
-    receipts = ReceiptService(playStore, ANDROID_PACKAGE, purchases, FixedClock()),
+    receipts =
+        ReceiptService(playStore, ANDROID_PACKAGE, purchases, FixedClock()) {
+            entitlements.isOneTime(Store.PLAY_STORE, it)
+        },
     notifications = PlayNotificationService(playStore, ANDROID_PACKAGE, purchases, events, FixedClock()),
     pushVerifier = pushVerifier,
     clock = FixedClock(),

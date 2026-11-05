@@ -38,6 +38,8 @@ internal object PubSubPushParser {
     private val PRICE_ONLY_TYPES = setOf(8, 19, 22)
     private const val TYPE_REVOKED = 12
     private const val PRODUCT_TYPE_SUBSCRIPTION = 1
+    private const val PRODUCT_TYPE_ONE_TIME = 2
+    private const val REFUND_TYPE_PARTIAL = 2
 
     /** Throws [InvalidNotificationException] when this is not a push from Pub/Sub carrying a notification. */
     fun parse(body: String): PlayPush =
@@ -59,11 +61,30 @@ internal object PubSubPushParser {
         val subscription = notification["subscriptionNotification"]
         val voided = notification["voidedPurchaseNotification"]
         return when {
-            subscription != null -> subscription(obj(subscription, "subscriptionNotification"))
-            voided != null -> voided(obj(voided, "voidedPurchaseNotification"))
-            notification["testNotification"] != null -> PlayNotification.Ignored("test notification")
-            notification["oneTimeProductNotification"] != null -> PlayNotification.Ignored("one-time products")
-            else -> PlayNotification.Ignored("not a subscription or voided purchase notification")
+            subscription != null -> {
+                subscription(obj(subscription, "subscriptionNotification"))
+            }
+
+            voided != null -> {
+                voided(obj(voided, "voidedPurchaseNotification"))
+            }
+
+            notification["testNotification"] != null -> {
+                PlayNotification.Ignored("test notification")
+            }
+
+            notification["oneTimeProductNotification"] != null -> {
+                PlayNotification.OneTimeChanged(
+                    text(
+                        obj(notification["oneTimeProductNotification"], "oneTimeProductNotification")["purchaseToken"],
+                        "purchaseToken",
+                    ),
+                )
+            }
+
+            else -> {
+                PlayNotification.Ignored("not a subscription or voided purchase notification")
+            }
         }
     }
 
@@ -79,12 +100,30 @@ internal object PubSubPushParser {
         }
     }
 
-    private fun voided(n: JsonObject): PlayNotification =
-        if (number(n["productType"], "productType") == PRODUCT_TYPE_SUBSCRIPTION) {
-            PlayNotification.PurchaseVoided(text(n["purchaseToken"], "purchaseToken"))
-        } else {
-            PlayNotification.Ignored("voided one-time purchase")
+    private fun voided(n: JsonObject): PlayNotification {
+        val token = text(n["purchaseToken"], "purchaseToken")
+        val partial = (n["refundType"] as? JsonPrimitive)?.intOrNull == REFUND_TYPE_PARTIAL
+        return when (number(n["productType"], "productType")) {
+            PRODUCT_TYPE_SUBSCRIPTION -> {
+                PlayNotification.PurchaseVoided(token)
+            }
+
+            // Some of several units refunded: read the purchase again to see how much is left.
+            PRODUCT_TYPE_ONE_TIME -> {
+                if (partial) {
+                    PlayNotification.OneTimeChanged(
+                        token,
+                    )
+                } else {
+                    PlayNotification.PurchaseVoided(token)
+                }
+            }
+
+            else -> {
+                PlayNotification.Ignored("voided purchase of an unknown type")
+            }
         }
+    }
 
     private fun decode(data: String): JsonElement =
         Json.parseToJsonElement(String(Base64.getMimeDecoder().decode(data), Charsets.UTF_8))

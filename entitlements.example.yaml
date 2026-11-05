@@ -8,6 +8,11 @@ entitlements:
       play_store: [premium_monthly, premium_annual]
       app_store: [com.acme.premium.monthly, com.acme.premium.annual]
 
+# one_time_products (optional): the products bought once and kept, such as a lifetime unlock. Every other product is a
+# subscription. Each one must also grant an entitlement above. Consumables are not supported yet.
+# one_time_products:
+#   play_store: [lifetime_unlock]
+
 # current_offering: the offering the SDK shows by default.
 current_offering: default
 

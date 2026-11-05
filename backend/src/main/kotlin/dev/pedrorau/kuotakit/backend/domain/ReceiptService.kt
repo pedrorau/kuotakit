@@ -21,18 +21,25 @@ import dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.ReceiptRequest
 import dev.pedrorau.kuotakit.contracts.Store
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Validates a purchase with the store and records it (`POST /v1/subscribers/{id}/receipts`, ADR 0003). The order is
  * deliberate: nothing is saved unless the store confirmed the purchase and, when it must be acknowledged, the
  * acknowledgement worked, so a store failure leaves no trace and the app can simply retry.
+ *
+ * [isOneTime] says which Google products are bought once (`one_time_products` in entitlements.yaml); every other
+ * product is read as a subscription. The server decides, not the app (docs/adr/0015).
  */
 class ReceiptService(
     private val playStore: PlayStoreApi?,
     private val androidPackageName: String?,
     private val purchases: PurchaseRepository,
     private val clock: Clock,
+    private val isOneTime: (productId: String) -> Boolean = { false },
 ) {
+    private val linked = LinkedPurchases(purchases)
+
     suspend fun submit(
         appUserId: String,
         receipt: ReceiptRequest,
@@ -43,29 +50,71 @@ class ReceiptService(
         }
     }
 
+    /** What Google said about a token, in the terms [accept] needs, whatever kind of product it is. */
+    private class Read(
+        val attachedUser: String?,
+        val acknowledged: Boolean,
+        val linkedToken: String?,
+        val build: (existing: Purchase?, now: Instant) -> Purchase,
+        val acknowledge: suspend () -> Unit,
+    )
+
     private suspend fun submitPlayStore(
         appUserId: String,
         receipt: PlayStoreReceiptRequest,
     ) {
         val api = playStore ?: throw StoreUnavailableException("Google Play is not configured on this backend")
         checkFields(receipt)
-
         val token = receipt.purchaseToken
-        val subscription = api.subscription(token)
+        val productId = receipt.productId
+        val read =
+            if (isOneTime(productId)) {
+                val purchase = api.oneTimePurchase(token)
+                Read(
+                    attachedUser = purchase.obfuscatedAccountId,
+                    acknowledged = purchase.acknowledged,
+                    linkedToken = null,
+                    build = {
+                        existing,
+                        now,
+                        ->
+                        PlayOneTimeMapper.toPurchase(purchase, productId, token, existing, now)
+                    },
+                    acknowledge = { api.acknowledgeOneTime(productId, token) },
+                )
+            } else {
+                val subscription = api.subscription(token)
+                Read(
+                    attachedUser = subscription.obfuscatedAccountId,
+                    acknowledged = subscription.acknowledged,
+                    linkedToken = subscription.linkedPurchaseToken,
+                    build = { existing, now ->
+                        PlaySubscriptionMapper.toPurchase(subscription, productId, token, existing, now)
+                    },
+                    acknowledge = { api.acknowledge(productId, token) },
+                )
+            }
+        accept(appUserId, token, read)
+    }
+
+    private suspend fun accept(
+        appUserId: String,
+        token: String,
+        read: Read,
+    ) {
         val owner = purchases.ownerOf(Store.PLAY_STORE, token)
-        checkOwnership(appUserId, token, subscription.obfuscatedAccountId, owner)
+        checkOwnership(appUserId, token, read.attachedUser, owner)
 
         val now = clock.now()
         val existing = if (owner == null) null else purchases.purchasesOf(appUserId).firstOrNull { it.token == token }
         // Refunded or revoked for good: resubmitting the receipt changes nothing and must not acknowledge it again.
         if (existing?.status?.isFinal() == true) return
-        val purchase = PlaySubscriptionMapper.toPurchase(subscription, receipt.productId, token, existing, now)
+        val purchase = read.build(existing, now)
 
         // Google refunds a purchase that is not acknowledged within three days, so a purchase that grants access is.
-        if (!subscription.acknowledged && purchase.grantsAccessAt(now)) {
-            api.acknowledge(receipt.productId, token)
-        }
+        if (!read.acknowledged && purchase.grantsAccessAt(now)) read.acknowledge()
         purchases.save(appUserId, purchase)
+        linked.expire(read.linkedToken, token, now)
     }
 
     /** Cheap checks first: nothing malformed or meant for another app costs a call to Google. */

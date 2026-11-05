@@ -15,7 +15,8 @@ Estimates assume ~10 hours per week. Each phase ends with an exit criterion that
 - Backend (Ktor), part 1 ✅: storage interface with Postgres, entitlement computation, `entitlements.yaml`, API keys, `GET /v1/offerings` and `GET /v1/subscribers/{id}`, docker-compose.
 - Backend (Ktor), part 2a (done): `POST /v1/subscribers/{id}/receipts` for Google subscriptions (ADR 0013).
 - Backend (Ktor), part 2b (done): the Google RTDN webhook (ADR 0014).
-- Backend (Ktor), part 2c: one-time products, `linkedPurchaseToken` and rate limiting.
+- Backend (Ktor), part 2c (done): one-time products and `linkedPurchaseToken` (ADR 0015).
+- Backend (Ktor), part 2d: rate limiting and refunds that arrive before the first receipt.
 - Before the SDK: require the `obfuscatedExternalAccountId` on Google receipts (today a token without one can be claimed by whoever sends it first, ADR 0013); the SDK will always set it.
 - Conformance suite: first scenarios (valid purchase, invalid purchase, refund, store failure, token reuse), running in CI.
 - SDK core (KMP) + Android adapter: configure, getOfferings, purchase, restore, getCustomerInfo, customer info listener.

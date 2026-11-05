@@ -25,6 +25,7 @@ import dev.pedrorau.kuotakit.backend.google.GooglePlayStoreApi
 import dev.pedrorau.kuotakit.backend.google.GooglePushTokenVerifier
 import dev.pedrorau.kuotakit.backend.storage.PostgresStorage
 import dev.pedrorau.kuotakit.backend.web.ApiKeys
+import dev.pedrorau.kuotakit.contracts.Store
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import java.io.IOException
@@ -58,7 +59,10 @@ fun main() {
                     exitProcess(1)
                 }
             }
-        val receipts = ReceiptService(playStore, config.google?.packageName, storage.purchases, Clock.System)
+        val receipts =
+            ReceiptService(playStore, config.google?.packageName, storage.purchases, Clock.System) {
+                entitlements.isOneTime(Store.PLAY_STORE, it)
+            }
         val notifications =
             PlayNotificationService(
                 playStore,

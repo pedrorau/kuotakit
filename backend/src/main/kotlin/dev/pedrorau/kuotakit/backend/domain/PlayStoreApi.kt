@@ -52,6 +52,26 @@ data class PlaySubscription(
     val acknowledged: Boolean,
     /** The account id the app attached to the purchase (`obfuscatedExternalAccountId`), if it did. */
     val obfuscatedAccountId: String?,
+    /** The token of the purchase this one replaced (an upgrade or a new sign-up): that one must stop giving access. */
+    val linkedPurchaseToken: String? = null,
+)
+
+/** The state of a one-time purchase (`purchaseStateContext.purchaseState` of `productsv2`). */
+enum class PlayOneTimeState { PURCHASED, CANCELLED, PENDING, UNKNOWN }
+
+/** One product of a one-time purchase. [refundableQuantity] is what has not been refunded yet, if Google says. */
+data class PlayOneTimeItem(
+    val productId: String,
+    val refundableQuantity: Int?,
+)
+
+/** What Google Play says about a one-time purchase token. */
+data class PlayOneTimePurchase(
+    val state: PlayOneTimeState,
+    val completionTime: Instant?,
+    val items: List<PlayOneTimeItem>,
+    val acknowledged: Boolean,
+    val obfuscatedAccountId: String?,
 )
 
 /**
@@ -64,6 +84,15 @@ interface PlayStoreApi {
 
     /** Confirms the purchase to Google; without it Google refunds the purchase after three days. */
     suspend fun acknowledge(
+        productId: String,
+        purchaseToken: String,
+    )
+
+    /** Reads a one-time purchase (`purchases.productsv2.getproductpurchasev2`). Fails like [subscription]. */
+    suspend fun oneTimePurchase(purchaseToken: String): PlayOneTimePurchase
+
+    /** Confirms a one-time purchase (`purchases.products.acknowledge`); without it Google refunds it after 3 days. */
+    suspend fun acknowledgeOneTime(
         productId: String,
         purchaseToken: String,
     )

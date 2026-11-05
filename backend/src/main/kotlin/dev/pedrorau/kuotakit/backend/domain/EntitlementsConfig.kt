@@ -38,4 +38,11 @@ data class EntitlementsConfig(
     val entitlements: Map<String, EntitlementDefinition>,
     val currentOffering: String,
     val offerings: Map<String, OfferingDefinition>,
-)
+    /** The products bought once and kept (`one_time_products:`); every other product is a subscription. */
+    val oneTimeProducts: Map<Store, Set<String>> = emptyMap(),
+) {
+    fun isOneTime(
+        store: Store,
+        productId: String,
+    ): Boolean = productId in oneTimeProducts[store].orEmpty()
+}

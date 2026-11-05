@@ -37,6 +37,7 @@ import java.nio.file.Path
  */
 object EntitlementsYaml {
     private val STORE_KEYS = mapOf("play_store" to Store.PLAY_STORE, "app_store" to Store.APP_STORE)
+    private val TOP_LEVEL_KEYS = listOf("entitlements", "current_offering", "offerings", "one_time_products")
 
     fun load(path: Path): EntitlementsConfig {
         if (!Files.isRegularFile(path)) throw ConfigException("The entitlements file $path does not exist")
@@ -60,9 +61,9 @@ object EntitlementsYaml {
                 }
             if (root == null) fail(null, "the file is empty")
             val top = mapping(root, "the file")
-            val unknown = top.keys - setOf("entitlements", "current_offering", "offerings")
+            val unknown = top.keys - TOP_LEVEL_KEYS
             unknown.firstOrNull()?.let {
-                fail(top.getValue(it).first, "unknown key '$it' (expected entitlements, current_offering, offerings)")
+                fail(top.getValue(it).first, "unknown key '$it' (expected ${TOP_LEVEL_KEYS.joinToString()})")
             }
 
             val entitlements = entitlements(required(top, "entitlements", root))
@@ -76,7 +77,35 @@ object EntitlementsYaml {
                 )
             }
             checkOfferedProductsGrantSomething(entitlements, offerings, top)
-            return EntitlementsConfig(entitlements, current, offerings)
+            val oneTime = top["one_time_products"]?.let { oneTimeProducts(it.second, entitlements) }.orEmpty()
+            return EntitlementsConfig(entitlements, current, offerings, oneTime)
+        }
+
+        /** The products bought once. Like the offered ones, each must grant something: a typo here sells nothing. */
+        private fun oneTimeProducts(
+            node: Node,
+            entitlements: Map<String, EntitlementDefinition>,
+        ): Map<Store, Set<String>> {
+            val result = linkedMapOf<Store, Set<String>>()
+            mapping(node, "one_time_products").forEach { (storeKey, entry) ->
+                val store = store(storeKey, entry.first)
+                val nodes = sequence(entry.second, "one_time_products.$storeKey")
+                if (nodes.isEmpty()) fail(entry.second, "the one-time product list of '$storeKey' is empty")
+                val granting = entitlements.values.flatMap { it.products[store].orEmpty() }.toSet()
+                result[store] =
+                    nodes
+                        .map { productNode ->
+                            val product = scalar(productNode, "a product id")
+                            if (product !in granting) {
+                                fail(
+                                    productNode,
+                                    "one-time product '$product' ($storeKey) is not part of any entitlement",
+                                )
+                            }
+                            product
+                        }.toCollection(linkedSetOf())
+            }
+            return result
         }
 
         private fun entitlements(node: Node): Map<String, EntitlementDefinition> {

@@ -42,6 +42,8 @@ class PlayNotificationService(
             process(push).also { events.record(Store.PLAY_STORE, push.messageId, clock.now()) }
         }
 
+    private val linked = LinkedPurchases(purchases)
+
     private suspend fun process(push: PlayPush): NotificationOutcome {
         if (push.packageName != androidPackageName) return NotificationOutcome.OTHER_APP
         return when (val notification = push.notification) {
@@ -49,6 +51,7 @@ class PlayNotificationService(
             is PlayNotification.SubscriptionRevoked -> end(notification.token, PurchaseStatus.REVOKED)
             is PlayNotification.PurchaseVoided -> end(notification.token, PurchaseStatus.REFUNDED)
             is PlayNotification.SubscriptionChanged -> refresh(notification.token)
+            is PlayNotification.OneTimeChanged -> refresh(notification.token)
         }
     }
 
@@ -92,14 +95,30 @@ class PlayNotificationService(
     ): NotificationOutcome {
         val api = playStore ?: throw StoreUnavailableException("Google Play is not configured on this backend")
         val now = clock.now()
+        val stored = known.purchase
         return try {
-            val subscription = api.subscription(token)
-            val purchase =
-                PlaySubscriptionMapper.toPurchase(subscription, known.purchase.productId, token, known.purchase, now)
-            purchases.save(known.owner, purchase)
+            if (stored.kind == PurchaseKind.NON_CONSUMABLE) {
+                val oneTime = api.oneTimePurchase(token)
+                purchases.save(known.owner, PlayOneTimeMapper.toPurchase(oneTime, stored.productId, token, stored, now))
+            } else {
+                val subscription = api.subscription(token)
+                purchases.save(
+                    known.owner,
+                    PlaySubscriptionMapper.toPurchase(subscription, stored.productId, token, stored, now),
+                )
+                // Only once the new purchase is safely stored does the one it replaced stop giving access.
+                linked.expire(subscription.linkedPurchaseToken, token, now)
+            }
             NotificationOutcome.UPDATED
         } catch (ignored: PurchaseInvalidException) {
-            // Google no longer describes it as a purchase we understand. The stored end date still limits access.
+            // Google no longer describes it as a purchase we understand. A subscription is bounded by its stored end
+            // date; a one-time purchase has none, so it stops giving access until a later read confirms it again.
+            if (stored.kind == PurchaseKind.NON_CONSUMABLE) {
+                purchases.save(
+                    known.owner,
+                    stored.copy(status = PurchaseStatus.EXPIRED, expiresAt = now, updatedAt = now),
+                )
+            }
             NotificationOutcome.STORE_REJECTED
         }
     }

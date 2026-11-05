@@ -27,7 +27,7 @@ After ADR 0013 the backend only learns about a subscription when the app sends i
 - **Never run against the real Pub/Sub or the real Play.** Tested with tokens signed by a throw-away RSA key and the client library's mock transport. The real check needs a public HTTPS URL and an app on an internal test track (end of Phase 1).
 - Whether `subscriptionsv2` reports a refund immediately, and whether `expiryTime` moves during a grace period, is unconfirmed; the refund path does not depend on the first.
 - A notification for a purchase whose plan changed (`SUBSCRIPTION_ITEMS_CHANGED`) can be rejected by the mapper because the stored product is no longer in the subscription; the stored end date still limits access. Plan changes arrive with `linkedPurchaseToken` (next task).
-- One-time products and rate limiting are not part of this task.
+- One-time products arrived later (ADR 0015); rate limiting is not part of this task.
 - Pub/Sub's retry policy (backoff, dead-letter topic) is configured in the subscription, not here.
 
 ## Alternatives considered
