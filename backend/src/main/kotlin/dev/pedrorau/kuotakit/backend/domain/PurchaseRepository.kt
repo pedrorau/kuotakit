@@ -31,7 +31,8 @@ interface PurchaseRepository {
 
     /**
      * Creates the purchase, or replaces the one with the same store and token. Throws [TokenAlreadyLinkedException]
-     * when that token already belongs to another user.
+     * when that token already belongs to another user. A purchase that already ended for good
+     * ([PurchaseStatus.isFinal]) is never changed: the write is ignored, so a slow update cannot undo a refund.
      */
     suspend fun save(
         appUserId: String,

@@ -33,6 +33,12 @@ data class GoogleConfig(
     val serviceAccountFile: Path,
 )
 
+/** How a Pub/Sub push proves it is ours: the audience set in the subscription and the account that signs the token. */
+data class PubSubConfig(
+    val audience: String,
+    val serviceAccountEmail: String,
+)
+
 /**
  * The backend's settings, read once from the environment at start-up (docker-compose passes them from `.env`). It
  * stops with every problem listed at once instead of failing one variable at a time.
@@ -44,11 +50,12 @@ data class AppConfig(
     val secretKeys: List<String>,
     val entitlementsFile: Path,
     val google: GoogleConfig? = null,
+    val pubSub: PubSubConfig? = null,
 ) {
     // The generated toString would print the password and every API key the moment someone logs the configuration.
     override fun toString(): String =
         "AppConfig(port=$port, database=$database, appKeys=${appKeys.size} keys, secretKeys=${secretKeys.size} keys, " +
-            "entitlementsFile=$entitlementsFile, google=$google)"
+            "entitlementsFile=$entitlementsFile, google=$google, pubSub=$pubSub)"
 
     companion object {
         const val DEFAULT_PORT = 8080
@@ -80,6 +87,7 @@ data class AppConfig(
                     "set KUOTAKIT_APP_KEYS (the key the SDK uses) and, for your own servers, KUOTAKIT_SECRET_KEYS"
             }
             val google = google(env, problems)
+            val pubSub = pubSub(env, google, problems)
             if (problems.isNotEmpty()) {
                 throw ConfigException("Invalid configuration:\n" + problems.joinToString("\n") { " - $it" })
             }
@@ -91,7 +99,34 @@ data class AppConfig(
                 entitlementsFile =
                     Path.of(env["KUOTAKIT_ENTITLEMENTS_FILE"]?.takeIf { it.isNotBlank() } ?: DEFAULT_ENTITLEMENTS_FILE),
                 google = google,
+                pubSub = pubSub,
             )
+        }
+
+        /** The push proof for the webhook. Both or none, and only with Google Play configured. */
+        private fun pubSub(
+            env: Map<String, String>,
+            google: GoogleConfig?,
+            problems: MutableList<String>,
+        ): PubSubConfig? {
+            val audience = env["KUOTAKIT_GOOGLE_PUBSUB_AUDIENCE"]?.trim().orEmpty()
+            val email = env["KUOTAKIT_GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL"]?.trim().orEmpty()
+            if (audience.isEmpty() && email.isEmpty()) return null
+            if (audience.isEmpty()) {
+                problems +=
+                    "KUOTAKIT_GOOGLE_PUBSUB_AUDIENCE is required with the service account email"
+            }
+            if (email.isEmpty()) {
+                problems +=
+                    "KUOTAKIT_GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL is required with the audience"
+            }
+            if (email.isNotEmpty() && '@' !in email) {
+                problems += "KUOTAKIT_GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL must be an email address"
+            }
+            if (google == null) {
+                problems += "KUOTAKIT_GOOGLE_PUBSUB_* need KUOTAKIT_GOOGLE_PACKAGE_NAME and the service account file"
+            }
+            return if (audience.isEmpty() || email.isEmpty()) null else PubSubConfig(audience, email)
         }
 
         /** Both or none: half a Google configuration is a mistake, not "Google is off". */

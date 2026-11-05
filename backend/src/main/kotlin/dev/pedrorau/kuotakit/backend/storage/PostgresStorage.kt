@@ -19,6 +19,7 @@ package dev.pedrorau.kuotakit.backend.storage
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import dev.pedrorau.kuotakit.backend.config.DatabaseConfig
+import dev.pedrorau.kuotakit.backend.domain.ProcessedEventRepository
 import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -30,7 +31,9 @@ import org.jetbrains.exposed.v1.jdbc.Database
 class PostgresStorage private constructor(
     private val pool: HikariDataSource,
 ) : AutoCloseable {
-    val purchases: PurchaseRepository = PostgresPurchaseRepository(Database.connect(pool))
+    private val database = Database.connect(pool)
+    val purchases: PurchaseRepository = PostgresPurchaseRepository(database)
+    val events: ProcessedEventRepository = PostgresProcessedEventRepository(database)
 
     override fun close() = pool.close()
 

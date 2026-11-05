@@ -35,3 +35,9 @@ class StoreUnavailableException(
 class InvalidReceiptException(
     message: String,
 ) : RuntimeException(message)
+
+/** What arrived is not a Pub/Sub push from Google Play at all (HTTP 400, `invalid_payload`). */
+class InvalidNotificationException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

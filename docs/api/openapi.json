@@ -415,7 +415,7 @@
           "Webhooks"
         ],
         "summary": "Google Play real-time developer notification",
-        "description": "Cloud Pub/Sub push of a Play RTDN. The backend verifies the Pub/Sub OIDC token, then re-fetches the subscription from the Play Developer API: the notification body alone is never trusted.",
+        "description": "Cloud Pub/Sub push of a Play RTDN. The backend verifies the Pub/Sub OIDC token, then re-fetches the subscription from the Play Developer API: the notification body alone never gives access. A refund or a revocation takes access away straight from the verified message. Notifications that can never succeed (another app, a test message, an unknown purchase, a body that cannot be read) are acknowledged with 204.",
         "operationId": "receiveGoogleNotification",
         "security": [],
         "requestBody": {
@@ -432,23 +432,7 @@
         },
         "responses": {
           "204": {
-            "description": "The notification was processed."
-          },
-          "400": {
-            "description": "The body is malformed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "error": {
-                    "code": "invalid_payload",
-                    "message": "Not a Pub/Sub push message."
-                  }
-                }
-              }
-            }
+            "description": "The notification was processed, or it can never be processed and is acknowledged so that Pub/Sub does not send it again."
           },
           "401": {
             "description": "The Pub/Sub OIDC token could not be verified.",
@@ -461,6 +445,22 @@
                   "error": {
                     "code": "unauthorized",
                     "message": "Notification verification failed."
+                  }
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Google Play could not be asked; the notification was not applied and Pub/Sub retries it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "store_unavailable",
+                    "message": "The store could not be reached; access is not granted."
                   }
                 }
               }

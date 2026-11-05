@@ -18,6 +18,8 @@ package dev.pedrorau.kuotakit.backend
 
 import dev.pedrorau.kuotakit.backend.domain.EntitlementCalculator
 import dev.pedrorau.kuotakit.backend.domain.toOfferingsResponse
+import dev.pedrorau.kuotakit.backend.google.PubSubPushParser
+import dev.pedrorau.kuotakit.backend.web.PushUnauthorizedException
 import dev.pedrorau.kuotakit.backend.web.errorResponse
 import dev.pedrorau.kuotakit.backend.web.installErrorHandling
 import dev.pedrorau.kuotakit.contracts.APP_USER_ID_PATTERN
@@ -25,11 +27,13 @@ import dev.pedrorau.kuotakit.contracts.ErrorCode
 import dev.pedrorau.kuotakit.contracts.HealthResponse
 import dev.pedrorau.kuotakit.contracts.ReceiptRequest
 import dev.pedrorau.kuotakit.contracts.kuotaKitJson
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
+import io.ktor.server.application.log
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.bearer
@@ -48,17 +52,14 @@ import kotlinx.serialization.SerializationException
 private const val API_AUTH = "api"
 private val APP_USER_ID = Regex(APP_USER_ID_PATTERN)
 
-/** Far more than any receipt needs; stops a huge body from being buffered before its fields are checked. */
-private const val MAX_RECEIPT_BODY_BYTES = 16L * 1024
-
 private suspend fun ApplicationCall.receiveReceipt(): ReceiptRequest? {
-    val bytes = receiveChannel().readBuffer(MAX_RECEIPT_BODY_BYTES + 1).readByteArray()
-    if (bytes.size > MAX_RECEIPT_BODY_BYTES) {
+    val body = readBoundedText()
+    if (body == null) {
         respond(HttpStatusCode.BadRequest, errorResponse(ErrorCode.INVALID_PAYLOAD, "The request body is too large."))
         return null
     }
     return try {
-        kuotaKitJson.decodeFromString(ReceiptRequest.serializer(), bytes.decodeToString())
+        kuotaKitJson.decodeFromString(ReceiptRequest.serializer(), body)
     } catch (e: SerializationException) {
         throw BadRequestException("The receipt is malformed.", e)
     }
@@ -81,6 +82,8 @@ internal fun Application.module(services: Services) {
         get("/health") {
             call.respond(HealthResponse(status = "ok"))
         }
+
+        googleWebhook(services)
 
         authenticate(API_AUTH) {
             get("/v1/offerings") {

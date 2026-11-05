@@ -14,3 +14,6 @@ services:
     environment:
       KUOTAKIT_GOOGLE_PACKAGE_NAME: ${KUOTAKIT_GOOGLE_PACKAGE_NAME:?Set KUOTAKIT_GOOGLE_PACKAGE_NAME in .env}
       KUOTAKIT_GOOGLE_SERVICE_ACCOUNT_FILE: /run/secrets/play-service-account.json
+      # The Play notifications webhook (docs/google-play-setup.md). Optional; both or none.
+      KUOTAKIT_GOOGLE_PUBSUB_AUDIENCE: ${KUOTAKIT_GOOGLE_PUBSUB_AUDIENCE:-}
+      KUOTAKIT_GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL: ${KUOTAKIT_GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL:-}

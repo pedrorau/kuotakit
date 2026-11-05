@@ -30,6 +30,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.notInList
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.select
@@ -37,6 +38,8 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.upsert
 import kotlin.time.Clock
+
+private val FINAL_STATUSES = PurchaseStatus.entries.filter { it.isFinal() }.map { it.name.lowercase() }
 
 /** [PurchaseRepository] on Postgres. Only this package knows about Exposed, Flyway and JDBC (ADR 0009). */
 internal class PostgresPurchaseRepository(
@@ -66,7 +69,9 @@ internal class PostgresPurchaseRepository(
             Purchases.upsert(
                 keys = arrayOf(Purchases.store, Purchases.purchaseToken),
                 onUpdateExclude = listOf(Purchases.id, Purchases.appUserId, Purchases.store, Purchases.purchaseToken),
-                where = { Purchases.appUserId eq appUserId },
+                // A refund or a revocation is the end of a purchase: nothing written later may bring it back. The check
+                // is in the same statement as the write, so a slow update cannot undo a refund that happened meanwhile.
+                where = { (Purchases.appUserId eq appUserId) and (Purchases.status notInList FINAL_STATUSES) },
             ) {
                 it[Purchases.appUserId] = appUserId
                 it[store] = purchase.store.wire()
@@ -81,20 +86,26 @@ internal class PostgresPurchaseRepository(
                 it[billingIssueDetectedAt] = purchase.billingIssueDetectedAt
                 it[updatedAt] = purchase.updatedAt
             }
-        if (written.insertedCount == 0) throw TokenAlreadyLinkedException(purchase.store, purchase.token)
+        // Nothing written: either the token belongs to another user, or its owner's purchase had ended for good.
+        if (written.insertedCount == 0 && ownerOfInTransaction(purchase.store, purchase.token) != appUserId) {
+            throw TokenAlreadyLinkedException(purchase.store, purchase.token)
+        }
     }
 
     override suspend fun ownerOf(
         store: Store,
         token: String,
+    ): String? = inTransaction { ownerOfInTransaction(store, token) }
+
+    private fun ownerOfInTransaction(
+        store: Store,
+        token: String,
     ): String? =
-        inTransaction {
-            Purchases
-                .select(Purchases.appUserId)
-                .where { (Purchases.store eq store.wire()) and (Purchases.purchaseToken eq token) }
-                .singleOrNull()
-                ?.get(Purchases.appUserId)
-        }
+        Purchases
+            .select(Purchases.appUserId)
+            .where { (Purchases.store eq store.wire()) and (Purchases.purchaseToken eq token) }
+            .singleOrNull()
+            ?.get(Purchases.appUserId)
 
     private suspend fun <T> inTransaction(block: suspend () -> T): T =
         withContext(dispatcher) { suspendTransaction(database) { block() } }
@@ -116,7 +127,7 @@ internal class PostgresPurchaseRepository(
 }
 
 // The database stores the same names the API uses on the wire.
-private fun Store.wire(): String = if (this == Store.PLAY_STORE) "play_store" else "app_store"
+internal fun Store.wire(): String = if (this == Store.PLAY_STORE) "play_store" else "app_store"
 
 private fun storeOf(value: String): Store =
     Store.entries.firstOrNull { it != Store.UNKNOWN && it.wire() == value }

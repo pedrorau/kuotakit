@@ -23,7 +23,18 @@ import kotlin.time.Instant
 enum class PurchaseKind { SUBSCRIPTION, NON_CONSUMABLE }
 
 /** What the store last said about a purchase. */
-enum class PurchaseStatus { ACTIVE, EXPIRED, ON_HOLD, PAUSED, REFUNDED, REVOKED }
+enum class PurchaseStatus {
+    ACTIVE,
+    EXPIRED,
+    ON_HOLD,
+    PAUSED,
+    REFUNDED,
+    REVOKED,
+    ;
+
+    /** A refund or a revocation is the end of the purchase: nothing the store says afterwards brings it back. */
+    fun isFinal(): Boolean = this == REFUNDED || this == REVOKED
+}
 
 /**
  * A purchase validated with a store. [token] is the Play purchase token or the App Store original transaction id.

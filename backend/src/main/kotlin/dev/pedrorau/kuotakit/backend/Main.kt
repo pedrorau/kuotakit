@@ -19,8 +19,10 @@ package dev.pedrorau.kuotakit.backend
 import dev.pedrorau.kuotakit.backend.config.AppConfig
 import dev.pedrorau.kuotakit.backend.config.ConfigException
 import dev.pedrorau.kuotakit.backend.config.EntitlementsYaml
+import dev.pedrorau.kuotakit.backend.domain.PlayNotificationService
 import dev.pedrorau.kuotakit.backend.domain.ReceiptService
 import dev.pedrorau.kuotakit.backend.google.GooglePlayStoreApi
+import dev.pedrorau.kuotakit.backend.google.GooglePushTokenVerifier
 import dev.pedrorau.kuotakit.backend.storage.PostgresStorage
 import dev.pedrorau.kuotakit.backend.web.ApiKeys
 import io.ktor.server.engine.embeddedServer
@@ -57,7 +59,24 @@ fun main() {
                 }
             }
         val receipts = ReceiptService(playStore, config.google?.packageName, storage.purchases, Clock.System)
-        val services = Services(entitlements, ApiKeys(config.appKeys, config.secretKeys), storage.purchases, receipts)
+        val notifications =
+            PlayNotificationService(
+                playStore,
+                config.google?.packageName,
+                storage.purchases,
+                storage.events,
+                Clock.System,
+            )
+        val pushVerifier = config.pubSub?.let { GooglePushTokenVerifier.create(it.audience, it.serviceAccountEmail) }
+        val services =
+            Services(
+                entitlements,
+                ApiKeys(config.appKeys, config.secretKeys),
+                storage.purchases,
+                receipts,
+                notifications,
+                pushVerifier,
+            )
         embeddedServer(Netty, port = config.port, host = "0.0.0.0") { module(services) }.start(wait = true)
     }
 }

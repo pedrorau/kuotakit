@@ -23,6 +23,7 @@ import dev.pedrorau.kuotakit.backend.domain.PlaySubscriptionItem
 import dev.pedrorau.kuotakit.backend.domain.PlaySubscriptionState
 import dev.pedrorau.kuotakit.backend.domain.Purchase
 import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
+import kotlinx.coroutines.yield
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
@@ -54,7 +55,10 @@ class FakePlayStoreApi(
 
     val calls: List<String> get() = log
 
+    fun forgetCalls() = log.clear()
+
     override suspend fun subscription(purchaseToken: String): PlaySubscription {
+        yield() // a real call suspends; so must the fake, or the code after it never runs "resumed"
         log += "get:$purchaseToken"
         return subscription()
     }
@@ -63,6 +67,7 @@ class FakePlayStoreApi(
         productId: String,
         purchaseToken: String,
     ) {
+        yield()
         log += "acknowledge:$productId:$purchaseToken"
         acknowledgeFailure?.let { throw it }
     }

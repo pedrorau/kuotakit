@@ -22,32 +22,44 @@ import dev.pedrorau.kuotakit.backend.domain.TokenAlreadyLinkedException
 import dev.pedrorau.kuotakit.contracts.Store
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.yield
 
-/** A [PurchaseRepository] in memory, for tests of everything that is not storage. It passes the same contract. */
+/**
+ * A [PurchaseRepository] in memory, for tests of everything that is not storage. It passes the same contract. Each
+ * call yields first: real storage suspends, and a fake that never does would hide the code that runs after resuming.
+ */
 class InMemoryPurchaseRepository : PurchaseRepository {
     private val mutex = Mutex()
     private val rows = mutableMapOf<Pair<Store, String>, Pair<String, Purchase>>()
 
-    override suspend fun purchasesOf(appUserId: String): List<Purchase> =
-        mutex.withLock {
+    override suspend fun purchasesOf(appUserId: String): List<Purchase> {
+        yield()
+        return mutex.withLock {
             rows.values
                 .filter { (owner, _) -> owner == appUserId }
                 .map { (_, purchase) -> purchase }
                 .sortedWith(compareBy({ it.purchasedAt }, { it.token }))
         }
+    }
 
     override suspend fun save(
         appUserId: String,
         purchase: Purchase,
-    ) = mutex.withLock {
-        val key = purchase.store to purchase.token
-        val owner = rows[key]?.first
-        if (owner != null && owner != appUserId) throw TokenAlreadyLinkedException(purchase.store, purchase.token)
-        rows[key] = appUserId to purchase
+    ) {
+        yield()
+        mutex.withLock {
+            val key = purchase.store to purchase.token
+            val owner = rows[key]?.first
+            if (owner != null && owner != appUserId) throw TokenAlreadyLinkedException(purchase.store, purchase.token)
+            if (rows[key]?.second?.status?.isFinal() != true) rows[key] = appUserId to purchase
+        }
     }
 
     override suspend fun ownerOf(
         store: Store,
         token: String,
-    ): String? = mutex.withLock { rows[store to token]?.first }
+    ): String? {
+        yield()
+        return mutex.withLock { rows[store to token]?.first }
+    }
 }
