@@ -6,6 +6,7 @@ ktor = "3.6.1"
 kotlinx-serialization = "1.12.0"
 logback = "1.6.6"
 kotest = "6.2.6"
+konsist = "0.18.1"
 pitest-plugin = "1.19.0"
 pitest-junit5 = "1.2.3"
 ktlint-gradle-plugin = "14.2.0"
@@ -24,6 +25,7 @@ ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotest-extensions-pitest = { module = "io.kotest:kotest-extensions-pitest", version.ref = "kotest" }
 
 [plugins]

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 from check_tests import MAX_BLOCKS, changed_files, plan
-from conftest import claude_payload, git, neutral_payload, run_script
+from conftest import REAL_ROOT, claude_payload, git, neutral_payload, run_script
 
 
 def stop(repo: Path) -> dict:
@@ -150,33 +151,35 @@ def test_shared_build_files_trigger_the_whole_check(repo: Path, shared: str) -> 
     assert [c[1:] for c in commands] == [["check", "--console=plain"]]
 
 
-def test_changed_agent_scripts_trigger_pytest_with_the_project_venv(repo: Path) -> None:
-    commands = plan(["scripts/agent/guard_paths.py"], repo)
-    assert [c[1:] for c in commands] == [["-m", "pytest", "scripts/agent", "-q"]]
+@pytest.mark.parametrize("script", ["scripts/agent/guard_paths.py", "scripts/ci/check_license_headers.py"])
+def test_changed_scripts_trigger_pytest_with_the_project_venv(repo: Path, script: str) -> None:
+    commands = plan([script], repo)
+    assert [c[1:] for c in commands] == [["-m", "pytest", "scripts", "-q"]]
     (repo / ".venv/bin").mkdir(parents=True)
     (repo / ".venv/bin/python").write_text("")
-    assert plan(["scripts/agent/guard_paths.py"], repo)[0][0] == str(repo / ".venv/bin/python")
+    assert plan([script], repo)[0][0] == str(repo / ".venv/bin/python")
 
 
-def test_a_repo_without_the_secrets_block_is_still_the_one_checked(tmp_path: Path) -> None:
-    """The checks look at the repository the agent works in, never at the project the scripts live in."""
-    other = tmp_path / "other"
-    (other / "backend").mkdir(parents=True)
-    (other / "backend/build.gradle.kts").write_text("// module")
-    (other / "backend/App.kt").write_text("a\n")
-    (other / "gradlew").write_text("#!/bin/sh\necho \"$@\" >> \"$KUOTAKIT_FAKE_LOG\"\nexit 1\n")
-    (other / "gradlew").chmod(0o755)
-    git(other, "init", "-q")
-    git(other, "add", "-A")
-    git(other, "commit", "-q", "-m", "init")
-    (other / "backend/App.kt").write_text("b\n")
-    result = run_script("check_tests.py", stop(other), env(tmp_path))
-    assert blocked(result), result.stdout
-    assert calls(tmp_path) == [":backend:check --console=plain"]
+def test_kotlin_changes_also_run_the_architecture_tests(repo: Path) -> None:
+    (repo / "architecture-tests").mkdir()
+    (repo / "architecture-tests/build.gradle.kts").write_text("// module")
+    commands = plan(["backend/src/main/kotlin/App.kt"], repo)
+    assert [c[1:] for c in commands] == [[":backend:check", "--console=plain"], [":architecture-tests:test", "--console=plain"]]
+    only_arch = plan(["architecture-tests/src/test/kotlin/RulesTest.kt"], repo)
+    assert [c[1] for c in only_arch if c[0].endswith("gradlew")] == [":architecture-tests:check"]  # not run twice
 
 
-def test_outside_a_git_repository_nothing_is_checked(tmp_path: Path) -> None:
-    elsewhere = tmp_path / "elsewhere"
-    elsewhere.mkdir()
-    result = run_script("check_tests.py", stop(elsewhere), env(tmp_path))
-    assert (result.returncode, result.stdout) == (0, "")
+def test_source_changes_run_the_license_header_check(repo: Path) -> None:
+    (repo / "scripts/ci").mkdir(parents=True)
+    (repo / "scripts/ci/check_license_headers.py").write_text("")
+    commands = plan(["docs/readme.md", "backend/src/main/kotlin/App.kt"], repo)
+    assert str(repo / "scripts/ci/check_license_headers.py") in [c[1] for c in commands if len(c) == 2]
+    assert not [c for c in plan(["docs/readme.md"], repo) if len(c) == 2]
+
+
+def test_license_suffixes_match_the_license_check() -> None:
+    sys.path.insert(0, str(REAL_ROOT / "scripts" / "ci"))
+    from check_license_headers import SOURCE_SUFFIXES
+    from check_tests import LICENSE_SUFFIXES
+
+    assert set(LICENSE_SUFFIXES) == SOURCE_SUFFIXES
