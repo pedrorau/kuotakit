@@ -1,7 +1,8 @@
 name: Mutation testing
 
-# Informative for now (ADR 0011): reports the mutation score without failing anything. The 70 % threshold for the
-# critical modules is switched on with the first real domain logic (entitlement computation). Not a required check.
+# Mutation testing of the critical logic (ADR 0011): the `domain` package of the backend must keep a mutation score of
+# at least 70 %. A PR mutates only the domain classes it changes; every Monday the whole domain is mutated.
+# Not a required check (the ruleset does not wait for it), but a red run is a regression to fix.
 on:
   pull_request:
     paths:
@@ -43,12 +44,12 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if [ "$EVENT" = "pull_request" ]; then
-            targets=$(python3 scripts/ci/pitest_targets.py --base "origin/$BASE_REF" --module backend)
+            targets=$(python3 scripts/ci/pitest_targets.py --base "origin/$BASE_REF" --module backend --only dev.pedrorau.kuotakit.backend.domain)
             echo "A pull request: mutating only the classes it changes: ${targets:-none}"
             echo "run=$([ -n "$targets" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
             echo "targets=$targets" >> "$GITHUB_OUTPUT"
           else
-            echo "Scheduled or manual run: mutating the whole backend"
+            echo "Scheduled or manual run: mutating the whole domain package"
             echo "run=true" >> "$GITHUB_OUTPUT"
             echo "targets=" >> "$GITHUB_OUTPUT"
           fi

@@ -16,6 +16,7 @@
 
 package dev.pedrorau.kuotakit.backend
 
+import dev.pedrorau.kuotakit.backend.testing.testServices
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
@@ -29,7 +30,7 @@ class HealthRouteTest :
     StringSpec({
         "GET /health returns 200 and the documented body" {
             testApplication {
-                application { module() }
+                application { module(testServices()) }
 
                 val response = client.get("/health")
 

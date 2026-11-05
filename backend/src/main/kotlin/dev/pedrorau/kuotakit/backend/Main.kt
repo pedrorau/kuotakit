@@ -16,12 +16,28 @@
 
 package dev.pedrorau.kuotakit.backend
 
+import dev.pedrorau.kuotakit.backend.config.AppConfig
+import dev.pedrorau.kuotakit.backend.config.ConfigException
+import dev.pedrorau.kuotakit.backend.config.EntitlementsYaml
+import dev.pedrorau.kuotakit.backend.storage.PostgresStorage
+import dev.pedrorau.kuotakit.backend.web.ApiKeys
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-
-private const val DEFAULT_PORT = 8080
+import kotlin.system.exitProcess
 
 fun main() {
-    val port = System.getenv("PORT")?.toIntOrNull() ?: DEFAULT_PORT
-    embeddedServer(Netty, port = port, host = "0.0.0.0") { module() }.start(wait = true)
+    val (config, entitlements) =
+        try {
+            val config = AppConfig.fromEnv(System.getenv())
+            config to EntitlementsYaml.load(config.entitlementsFile)
+        } catch (e: ConfigException) {
+            // A wrong configuration is not a crash: say what is wrong, once, and stop.
+            System.err.println(e.message)
+            exitProcess(1)
+        }
+
+    PostgresStorage.open(config.database).use { storage ->
+        val services = Services(entitlements, ApiKeys(config.appKeys, config.secretKeys), storage.purchases)
+        embeddedServer(Netty, port = config.port, host = "0.0.0.0") { module(services) }.start(wait = true)
+    }
 }

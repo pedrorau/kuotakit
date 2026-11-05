@@ -15,14 +15,16 @@ Conventions of the JSON:
 
 | Key | Prefix | Where it lives | Can do |
 |---|---|---|---|
-| App key | `pk_` | Inside the mobile app (public) | Read offerings, read own subscriber, submit purchases |
-| Secret key | `sk_` | Developer's servers only | Everything, including admin reads |
+| App key | `pk_` | Inside the mobile app (public) | Read offerings, read a subscriber, submit purchases |
+| Secret key | `sk_` | Developer's servers only | The same today; reserved for admin endpoints later |
+
+**The app user id is the secret.** An app key is the same for every user of the app, so the backend cannot tell "whose" user an id is: any valid key can read or write any `app_user_id`. Anonymous ids are long random strings (`$anon_...`) and must never be shown, logged or shared. An `app_user_id` is 1 to 128 letters, digits and `_ . $ -`; anything else is a `400`.
 
 Sent as `Authorization: Bearer <key>`. Store webhooks use their own verification (see below).
 
 ## Errors
 
-Every non-2xx response has the same body, and the `code` is stable (react to the code, not to the message):
+Every non-2xx response of an endpoint has the same body, and the `code` is stable (react to the code, not to the message). A path or method that is not part of the API gets the web framework's plain `404` or `405`, with no body:
 
 ```json
 { "error": { "code": "token_already_linked", "message": "The purchase token belongs to another user." } }
@@ -33,15 +35,14 @@ Every non-2xx response has the same body, and the `code` is stable (react to the
 | 400 | `invalid_payload` | The body or a parameter is malformed |
 | 401 | `unauthorized` | The API key is missing or wrong |
 | 402 | `purchase_invalid` | The store says the purchase is not valid |
-| 403 | `forbidden` | The key is valid but may not do this (an app key acting on another user) |
-| 404 | `not_found` | The subscriber does not exist |
 | 409 | `token_already_linked` | The purchase token is already linked to another user |
+| 500 | `internal_error` | Something unexpected went wrong; access is never granted on failure |
 | 502 | `store_unavailable` | The store API is unavailable; access is never granted on failure |
 
 ## Endpoints
 
 ### `GET /v1/offerings`
-Returns offerings defined in `entitlements.yaml`. Responses: `200` · `401`.
+Returns offerings defined in `entitlements.yaml`. Responses: `200` · `401` · `500`.
 ```json
 {
   "current": "default",
@@ -63,10 +64,10 @@ Called by the SDK after a store purchase. The backend validates with the store, 
 // iOS
 { "store": "app_store", "bundle_id": "com.acme.app", "signed_transaction": "<JWS from StoreKit 2>" }
 ```
-Responses: `200` CustomerInfo · `400` invalid payload · `401` · `402` store says the purchase is not valid · `403` an app key may only submit purchases for its own user · `409` token already linked to another user · `502` store API unavailable (never grants access on failure). The `store` field tells the two receipt kinds apart.
+Responses: `200` CustomerInfo · `400` invalid payload · `401` · `402` store says the purchase is not valid · `409` token already linked to another user · `500` · `502` store API unavailable (never grants access on failure). The `store` field tells the two receipt kinds apart.
 
 ### `GET /v1/subscribers/{app_user_id}`
-An app key can read its own user; a secret key can read any user. Responses: `200` CustomerInfo · `401` · `403` · `404`. `non_subscription_purchases` items have `product_id`, `store` and `purchased_at`.
+Any valid key can read any user (see "The app user id is the secret"). A user without purchases gets an empty `CustomerInfo` (no entitlements, no subscriptions), not an error: that is what a new app user looks like. Responses: `200` CustomerInfo · `400` invalid app user id · `401` · `500`. `non_subscription_purchases` items have `product_id`, `store` and `purchased_at`.
 ```json
 {
   "app_user_id": "$anon_6f1c...",
@@ -88,10 +89,10 @@ An app key can read its own user; a secret key can read any user. Responses: `20
 ```
 
 ### `POST /v1/webhooks/google`
-Google Play Real-time Developer Notifications via Cloud Pub/Sub push. Verify the Pub/Sub OIDC token, then re-fetch the subscription from the Play Developer API (never trust the notification body alone). Responses: `204` processed · `400` · `401` (token verification failed).
+Google Play Real-time Developer Notifications via Cloud Pub/Sub push. Verify the Pub/Sub OIDC token, then re-fetch the subscription from the Play Developer API (never trust the notification body alone). Responses: `204` processed · `400` · `401` (token verification failed) · `500` (the store retries).
 
 ### `POST /v1/webhooks/apple`
-App Store Server Notifications v2. Verify the `signedPayload` JWS against Apple's root certificate chain, then update state. Responses: `204` processed · `400` · `401` (signature verification failed). The webhook bodies are defined by the stores; the models for them arrive with the webhook endpoints.
+App Store Server Notifications v2. Verify the `signedPayload` JWS against Apple's root certificate chain, then update state. Responses: `204` processed · `400` · `401` (signature verification failed) · `500` (the store retries). The webhook bodies are defined by the stores; the models for them arrive with the webhook endpoints.
 
 ### `GET /health`
 `200 {"status":"ok"}`. No auth.

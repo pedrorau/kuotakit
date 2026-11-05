@@ -150,8 +150,7 @@ class ModelsJsonTest {
                 "token_already_linked",
                 "store_unavailable",
                 "unauthorized",
-                "forbidden",
-                "not_found",
+                "internal_error",
                 "unknown",
             ),
             names,
@@ -171,9 +170,9 @@ class ModelsJsonTest {
         val lenient = Json { ignoreUnknownKeys = true }
         val parsed =
             lenient.decodeFromString<ErrorResponse>(
-                """{"error":{"code":"not_found","message":"m","hint":"new field"}}""",
+                """{"error":{"code":"unauthorized","message":"m","hint":"new field"}}""",
             )
-        assertEquals(ErrorCode.NOT_FOUND, parsed.error.code)
+        assertEquals(ErrorCode.UNAUTHORIZED, parsed.error.code)
     }
 
     @Test
@@ -210,7 +209,7 @@ class ModelsJsonTest {
     fun theKnownWireNamesStillDecodeToTheirMembers() {
         assertEquals(Store.APP_STORE, json.decodeFromString<Store>("\"app_store\""))
         assertEquals(PeriodType.INTRO, json.decodeFromString<PeriodType>("\"intro\""))
-        assertEquals(ErrorCode.FORBIDDEN, json.decodeFromString<ErrorCode>("\"forbidden\""))
+        assertEquals(ErrorCode.INTERNAL_ERROR, json.decodeFromString<ErrorCode>("\"internal_error\""))
     }
 
     @Test

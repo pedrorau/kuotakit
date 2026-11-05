@@ -12,7 +12,8 @@ Estimates assume ~10 hours per week. Each phase ends with an exit criterion that
 - Task 2: agent guardrail scripts in `scripts/agent/` + Claude Code hooks (ADR 0010), including the protected-tests and tests-must-pass guards (they only need the Gradle tests from task 1, so there is no reason to wait).
 - Task 3: rules as checks (ADR 0011): Konsist architecture tests, public API dump (Kotlin ABI validation), license-header check, and Pitest reporting in CI. The mutation score threshold is switched on with the first real domain logic (entitlement computation).
 - `contracts/` module with the API models; OpenAPI spec generated from it (`docs/api/openapi.json`, ADR 0012). ✅
-- Backend (Ktor): `POST /v1/subscribers/{id}/receipts` (Google), `GET /v1/subscribers/{id}`, `GET /v1/offerings`, Google RTDN webhook, docker-compose.
+- Backend (Ktor), part 1 ✅: storage interface with Postgres, entitlement computation, `entitlements.yaml`, API keys, `GET /v1/offerings` and `GET /v1/subscribers/{id}`, docker-compose.
+- Backend (Ktor), part 2: `POST /v1/subscribers/{id}/receipts` (Google validation and acknowledgement) and the Google RTDN webhook.
 - Conformance suite: first scenarios (valid purchase, invalid purchase, refund, store failure, token reuse), running in CI.
 - SDK core (KMP) + Android adapter: configure, getOfferings, purchase, restore, getCustomerInfo, customer info listener.
 - Example Android app against a Play Console internal-testing track.

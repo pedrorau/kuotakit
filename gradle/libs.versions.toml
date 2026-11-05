@@ -7,6 +7,12 @@ kotlinx-serialization = "1.12.0"
 logback = "1.6.6"
 kotest = "6.2.6"
 konsist = "0.18.1"
+exposed = "1.6.1"
+flyway = "13.12.0"
+postgresql-driver = "42.7.14"
+hikaricp = "7.1.0"
+snakeyaml-engine = "3.2"
+testcontainers = "2.0.5"
 swagger-request-validator = "3.0.0"
 pitest-plugin = "1.19.0"
 pitest-junit5 = "1.2.3"
@@ -27,6 +33,17 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 swagger-request-validator-core = { module = "com.atlassian.oai:swagger-request-validator-core", version.ref = "swagger-request-validator" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql-driver" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeyaml-engine" }
+ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainers" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 kotest-extensions-pitest = { module = "io.kotest:kotest-extensions-pitest", version.ref = "kotest" }
 

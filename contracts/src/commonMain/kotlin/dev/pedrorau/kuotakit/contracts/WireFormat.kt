@@ -20,6 +20,13 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 
 /**
+ * What an `app_user_id` may look like: 1 to 128 letters, digits and `_ . $ -` (anonymous ids look like `$anon_6f1c`),
+ * but not only dots (`.` and `..` are path segments, not ids).
+ * The same pattern is in the OpenAPI document and checked by the backend (HTTP 400 `invalid_payload` otherwise).
+ */
+public const val APP_USER_ID_PATTERN: String = "^(?!\\.+$)[A-Za-z0-9_.$-]{1,128}$"
+
+/**
  * The JSON configuration every KuotaKit backend and SDK uses for the models of this module. The wire format
  * (docs/api-spec.md) depends on these settings, so they live next to the models:
  * - `ignoreUnknownKeys`: a newer backend can add fields without breaking older clients;

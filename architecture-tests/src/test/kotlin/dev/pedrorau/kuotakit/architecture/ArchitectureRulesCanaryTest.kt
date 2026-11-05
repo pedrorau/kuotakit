@@ -106,7 +106,7 @@ class ArchitectureRulesCanaryTest :
         val exposedImport = "import org.jetbrains.exposed.sql.Table\n\nclass Repo\n"
         val web = "backend/src/main/kotlin/web/Handler.kt"
 
-        "importing Exposed inside the storage package is accepted" {
+        "using the persistence libraries inside the storage package is accepted" {
             val scope =
                 project(
                     "backend/src/main/kotlin/storage/Repo.kt" to
@@ -115,7 +115,7 @@ class ArchitectureRulesCanaryTest :
                         "package dev.pedrorau.kuotakit.backend.storage.postgres\n\n$exposedImport",
                     web to "package dev.pedrorau.kuotakit.backend.web\n\nclass Handler\n",
                 )
-            shouldNotThrowAny { ArchitectureRules.exposedIsUsedOnlyByTheStoragePackage(scope) }
+            shouldNotThrowAny { ArchitectureRules.persistenceLibrariesAreUsedOnlyByTheStoragePackage(scope) }
         }
 
         mapOf(
@@ -126,7 +126,68 @@ class ArchitectureRulesCanaryTest :
         ).forEach { (what, source) ->
             "using Exposed $what is reported" {
                 val scope = project(web to source)
-                shouldThrowAny { ArchitectureRules.exposedIsUsedOnlyByTheStoragePackage(scope) }
+                shouldThrowAny { ArchitectureRules.persistenceLibrariesAreUsedOnlyByTheStoragePackage(scope) }
+            }
+        }
+
+        mapOf(
+            "Flyway" to "import org.flywaydb.core.Flyway",
+            "the connection pool" to "import com.zaxxer.hikari.HikariDataSource",
+            "the JDBC driver" to "import org.postgresql.Driver",
+            "java.sql" to "import java.sql.Connection",
+        ).forEach { (what, import) ->
+            "using $what outside the storage package is reported" {
+                val scope = project(web to "package dev.pedrorau.kuotakit.backend.web\n\n$import\n\nclass Handler\n")
+                shouldThrowAny { ArchitectureRules.persistenceLibrariesAreUsedOnlyByTheStoragePackage(scope) }
+            }
+        }
+
+        val domainFile = "backend/src/main/kotlin/domain/Calculator.kt"
+
+        "a sub-package of the domain is checked too" {
+            val scope =
+                project(
+                    "backend/src/main/kotlin/domain/sub/Deep.kt" to
+                        "package dev.pedrorau.kuotakit.backend.domain.sub\n\n" +
+                        "import io.ktor.http.HttpStatusCode\n\nclass Deep\n",
+                )
+            shouldThrowAny { ArchitectureRules.domainDoesNotDependOnTheWebOrStorage(scope) }
+        }
+
+        "a look-alike package is not the domain" {
+            val scope =
+                project(
+                    "backend/src/main/kotlin/domainx/Other.kt" to
+                        "package dev.pedrorau.kuotakit.backend.domainx\n\n" +
+                        "import io.ktor.http.HttpStatusCode\n\nclass Other\n",
+                    domainFile to "package dev.pedrorau.kuotakit.backend.domain\n\nclass Calculator\n",
+                )
+            shouldNotThrowAny { ArchitectureRules.domainDoesNotDependOnTheWebOrStorage(scope) }
+        }
+
+        "a domain that depends only on Kotlin is accepted" {
+            val scope =
+                project(
+                    domainFile to
+                        "package dev.pedrorau.kuotakit.backend.domain\n\n" +
+                        "import kotlin.time.Instant\n\nclass Calculator\n",
+                )
+            shouldNotThrowAny { ArchitectureRules.domainDoesNotDependOnTheWebOrStorage(scope) }
+        }
+
+        mapOf(
+            "Ktor" to "import io.ktor.server.application.Application",
+            "the storage package" to "import dev.pedrorau.kuotakit.backend.storage.PostgresStorage",
+            "the web package" to "import dev.pedrorau.kuotakit.backend.web.ApiKeys",
+            "the configuration package" to "import dev.pedrorau.kuotakit.backend.config.AppConfig",
+            "SnakeYAML" to "import org.snakeyaml.engine.v2.api.Load",
+        ).forEach { (what, import) ->
+            "a domain that depends on $what is reported" {
+                val scope =
+                    project(
+                        domainFile to "package dev.pedrorau.kuotakit.backend.domain\n\n$import\n\nclass Calculator\n",
+                    )
+                shouldThrowAny { ArchitectureRules.domainDoesNotDependOnTheWebOrStorage(scope) }
             }
         }
     })

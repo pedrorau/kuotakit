@@ -54,6 +54,7 @@ jobs:
               - 'backend/**'
               - 'docker-compose.yml'
               - '.env.example'
+              - 'entitlements.example.yaml'
             agent:
               - 'scripts/**'
               - '.claude/**'
@@ -101,7 +102,10 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew :backend:installDist
-      - run: cp .env.example .env
+      - name: Prepare the configuration (the placeholder API keys are rejected on purpose)
+        run: |
+          cp .env.example .env && cp entitlements.example.yaml entitlements.yaml
+          sed -i "s/change_me_to_a_long_random_value/$(openssl rand -hex 24)/" .env
       - run: docker compose up -d --build
       - name: Wait for /health
         run: |
@@ -111,6 +115,12 @@ jobs:
           done
           docker compose logs
           exit 1
+      - name: Query the API like an app would
+        run: |
+          key=$(grep '^KUOTAKIT_APP_KEYS=' .env | cut -d= -f2)
+          curl -fsS -H "Authorization: Bearer $key" localhost:8080/v1/offerings | tee /dev/stderr | grep -q '"current":"default"'
+          curl -fsS -H "Authorization: Bearer $key" 'localhost:8080/v1/subscribers/$anon_ci' | tee /dev/stderr | grep -q '"entitlements":{}'
+          test "$(curl -s -o /dev/null -w '%{http_code}' localhost:8080/v1/offerings)" = 401
       - if: always() && hashFiles('.env') != ''
         run: docker compose down -v
 

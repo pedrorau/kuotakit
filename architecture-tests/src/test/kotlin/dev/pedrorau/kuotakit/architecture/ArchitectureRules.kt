@@ -32,7 +32,17 @@ import com.lemonappdev.konsist.api.verify.assertTrue
 object ArchitectureRules {
     private const val STORAGE_PACKAGE = "dev.pedrorau.kuotakit.backend.storage"
     private const val SERIALIZABLE = "kotlinx.serialization.Serializable"
-    private const val EXPOSED = "org.jetbrains.exposed"
+    private const val DOMAIN_PACKAGE = "dev.pedrorau.kuotakit.backend.domain"
+    private val PERSISTENCE_LIBRARIES =
+        listOf("org.jetbrains.exposed", "org.flywaydb", "com.zaxxer.hikari", "org.postgresql", "java.sql", "javax.sql")
+    private val NOT_FOR_THE_DOMAIN =
+        listOf(
+            "io.ktor",
+            "org.snakeyaml",
+            "dev.pedrorau.kuotakit.backend.storage",
+            "dev.pedrorau.kuotakit.backend.web",
+            "dev.pedrorau.kuotakit.backend.config",
+        )
     private val PLATFORM_REFERENCE = Regex("""(^|[^\w.])(java|javax|android|androidx|io\.ktor|okhttp3)\.[a-z]""")
 
     /** API models are defined only in `contracts/` (ADR 0004): nothing else may use `@Serializable`. */
@@ -42,11 +52,21 @@ object ArchitectureRules {
             .assertFalse(strict = true) { it.text.contains(SERIALIZABLE) }
     }
 
-    /** The backend talks to the database only through its storage package (ADR 0009). */
-    fun exposedIsUsedOnlyByTheStoragePackage(scope: KoScope) {
+    /**
+     * The backend talks to the database only through its storage package (ADR 0009): Exposed, Flyway, the connection
+     * pool and JDBC itself stay there.
+     */
+    fun persistenceLibrariesAreUsedOnlyByTheStoragePackage(scope: KoScope) {
         scope.files
             .filterNot { it.isInBackendStoragePackage() }
-            .assertFalse(strict = true) { it.text.contains(EXPOSED) }
+            .assertFalse(strict = true) { file -> PERSISTENCE_LIBRARIES.any { file.text.contains(it) } }
+    }
+
+    /** The domain is plain Kotlin: it knows neither the web framework nor how things are stored (ADR 0009). */
+    fun domainDoesNotDependOnTheWebOrStorage(scope: KoScope) {
+        scope.files
+            .filter { it.isInBackendDomainPackage() }
+            .assertFalse(strict = true) { file -> NOT_FOR_THE_DOMAIN.any { file.text.contains(it) } }
     }
 
     /**
@@ -61,6 +81,12 @@ object ArchitectureRules {
                 // Also a fully qualified use without an import, such as `io.ktor.http.HttpStatusCode`.
                 imports && !PLATFORM_REFERENCE.containsMatchIn(file.text)
             }
+    }
+
+    /** True for `...backend.domain` and its sub-packages. */
+    private fun com.lemonappdev.konsist.api.declaration.KoFileDeclaration.isInBackendDomainPackage(): Boolean {
+        val name = packagee?.name ?: return false
+        return path.contains("/backend/src/") && (name == DOMAIN_PACKAGE || name.startsWith("$DOMAIN_PACKAGE."))
     }
 
     /** True for `...backend.storage` and its sub-packages, but not for a look-alike such as `...backend.storagex`. */
