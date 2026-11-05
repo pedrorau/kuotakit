@@ -1,0 +1,827 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "KuotaKit API",
+    "version": "0.1.0-draft",
+    "description": "The HTTP API of a KuotaKit backend. Generated from the `contracts` module; any backend that implements it and passes the conformance suite is a valid KuotaKit backend.",
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "Offerings"
+    },
+    {
+      "name": "Subscribers"
+    },
+    {
+      "name": "Webhooks"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Liveness check",
+        "description": "Answers 200 while the backend is running. It needs no API key.",
+        "operationId": "getHealth",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The backend is up.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/offerings": {
+      "get": {
+        "tags": [
+          "Offerings"
+        ],
+        "summary": "List the offerings",
+        "description": "Returns the offerings defined in `entitlements.yaml`. Any API key can call it.",
+        "operationId": "getOfferings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The offerings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferingsResponse"
+                },
+                "example": {
+                  "current": "default",
+                  "offerings": [
+                    {
+                      "id": "default",
+                      "packages": [
+                        {
+                          "id": "monthly",
+                          "products": {
+                            "play_store": "premium_monthly",
+                            "app_store": "com.acme.premium.monthly"
+                          }
+                        },
+                        {
+                          "id": "annual",
+                          "products": {
+                            "play_store": "premium_annual",
+                            "app_store": "com.acme.premium.annual"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The API key is missing or wrong.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "unauthorized",
+                    "message": "Missing or invalid API key."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscribers/{app_user_id}/receipts": {
+      "post": {
+        "tags": [
+          "Subscribers"
+        ],
+        "summary": "Submit a purchase",
+        "description": "Called by the SDK after a store purchase. The backend validates it with the store, saves it, acknowledges it (Android) and returns the updated customer info. On any store failure it never grants access (ADR 0003). An app key may only submit purchases for its own user.",
+        "operationId": "postReceipt",
+        "parameters": [
+          {
+            "name": "app_user_id",
+            "in": "path",
+            "required": true,
+            "description": "The id of the app user, for example `$anon_6f1c`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptRequest"
+              },
+              "example": {
+                "store": "play_store",
+                "package_name": "com.acme.app",
+                "product_id": "premium_monthly",
+                "purchase_token": "opaque-purchase-token"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The purchase is valid; the updated customer info.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerInfo"
+                },
+                "example": {
+                  "app_user_id": "$anon_6f1c",
+                  "request_date": "2026-11-01T12:00:00Z",
+                  "entitlements": {
+                    "premium": {
+                      "is_active": true,
+                      "product_id": "premium_monthly",
+                      "store": "play_store",
+                      "period_type": "normal",
+                      "expires_at": "2026-12-01T12:00:00Z",
+                      "will_renew": true,
+                      "billing_issue_detected_at": null
+                    }
+                  },
+                  "active_subscriptions": [
+                    "premium_monthly"
+                  ],
+                  "non_subscription_purchases": []
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The body is malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "invalid_payload",
+                    "message": "The receipt is missing purchase_token."
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The API key is missing or wrong.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "unauthorized",
+                    "message": "Missing or invalid API key."
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The store says the purchase is not valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "purchase_invalid",
+                    "message": "The store rejected the purchase."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The key may not act on this user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "forbidden",
+                    "message": "This key cannot submit purchases for that user."
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The purchase token is linked to another user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "token_already_linked",
+                    "message": "The purchase token belongs to another user."
+                  }
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The store API is unavailable; access is not granted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "store_unavailable",
+                    "message": "The store could not be reached."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subscribers/{app_user_id}": {
+      "get": {
+        "tags": [
+          "Subscribers"
+        ],
+        "summary": "Get a subscriber",
+        "description": "Returns what the user has bought and what they may access. An app key (`pk_`) can read its own user; a secret key (`sk_`) can read any user.",
+        "operationId": "getSubscriber",
+        "parameters": [
+          {
+            "name": "app_user_id",
+            "in": "path",
+            "required": true,
+            "description": "The id of the app user, for example `$anon_6f1c`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The customer info.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerInfo"
+                },
+                "example": {
+                  "app_user_id": "$anon_6f1c",
+                  "request_date": "2026-11-01T12:00:00Z",
+                  "entitlements": {
+                    "premium": {
+                      "is_active": true,
+                      "product_id": "premium_monthly",
+                      "store": "play_store",
+                      "period_type": "normal",
+                      "expires_at": "2026-12-01T12:00:00Z",
+                      "will_renew": true,
+                      "billing_issue_detected_at": null
+                    }
+                  },
+                  "active_subscriptions": [
+                    "premium_monthly"
+                  ],
+                  "non_subscription_purchases": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The API key is missing or wrong.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "unauthorized",
+                    "message": "Missing or invalid API key."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "An app key asked for another user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "forbidden",
+                    "message": "This key cannot read that user."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The user does not exist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "not_found",
+                    "message": "No subscriber with that id."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/webhooks/google": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Google Play real-time developer notification",
+        "description": "Cloud Pub/Sub push of a Play RTDN. The backend verifies the Pub/Sub OIDC token, then re-fetches the subscription from the Play Developer API: the notification body alone is never trusted.",
+        "operationId": "receiveGoogleNotification",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "The Pub/Sub push envelope, as defined by Google.",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The notification was processed."
+          },
+          "400": {
+            "description": "The body is malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "invalid_payload",
+                    "message": "Not a Pub/Sub push message."
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The Pub/Sub OIDC token could not be verified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "unauthorized",
+                    "message": "Notification verification failed."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/webhooks/apple": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "App Store server notification v2",
+        "description": "App Store Server Notification v2. The backend verifies the `signedPayload` JWS against Apple's root certificate chain before updating any state.",
+        "operationId": "receiveAppleNotification",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "`{\"signedPayload\": \"<JWS>\"}`, as defined by Apple.",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The notification was processed."
+          },
+          "400": {
+            "description": "The body is malformed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "invalid_payload",
+                    "message": "Missing signedPayload."
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The signedPayload JWS could not be verified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "unauthorized",
+                    "message": "Notification verification failed."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "`Authorization: Bearer <key>`. An app key (`pk_`) lives inside the mobile app and can read offerings, read its own subscriber and submit purchases. A secret key (`sk_`) stays on the developer's servers and can do everything."
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "OfferingsResponse": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": "string"
+          },
+          "offerings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Offering"
+            }
+          }
+        },
+        "required": [
+          "current",
+          "offerings"
+        ]
+      },
+      "Offering": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OfferingPackage"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "packages"
+        ]
+      },
+      "OfferingPackage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "products": {
+            "$ref": "#/components/schemas/StoreProducts"
+          }
+        },
+        "required": [
+          "id",
+          "products"
+        ]
+      },
+      "StoreProducts": {
+        "type": "object",
+        "properties": {
+          "play_store": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "app_store": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "play_store",
+          "app_store"
+        ]
+      },
+      "ReceiptRequest": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AppStoreReceiptRequest"
+          },
+          {
+            "$ref": "#/components/schemas/PlayStoreReceiptRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "store",
+          "mapping": {
+            "app_store": "#/components/schemas/AppStoreReceiptRequest",
+            "play_store": "#/components/schemas/PlayStoreReceiptRequest"
+          }
+        }
+      },
+      "PlayStoreReceiptRequest": {
+        "type": "object",
+        "properties": {
+          "store": {
+            "type": "string",
+            "enum": [
+              "play_store"
+            ]
+          },
+          "package_name": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "purchase_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "store",
+          "package_name",
+          "product_id",
+          "purchase_token"
+        ]
+      },
+      "AppStoreReceiptRequest": {
+        "type": "object",
+        "properties": {
+          "store": {
+            "type": "string",
+            "enum": [
+              "app_store"
+            ]
+          },
+          "bundle_id": {
+            "type": "string"
+          },
+          "signed_transaction": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "store",
+          "bundle_id",
+          "signed_transaction"
+        ]
+      },
+      "CustomerInfo": {
+        "type": "object",
+        "properties": {
+          "app_user_id": {
+            "type": "string"
+          },
+          "request_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "entitlements": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Entitlement"
+            }
+          },
+          "active_subscriptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "non_subscription_purchases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NonSubscriptionPurchase"
+            }
+          }
+        },
+        "required": [
+          "app_user_id",
+          "request_date",
+          "entitlements",
+          "active_subscriptions",
+          "non_subscription_purchases"
+        ]
+      },
+      "Entitlement": {
+        "type": "object",
+        "properties": {
+          "is_active": {
+            "type": "boolean"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "store": {
+            "$ref": "#/components/schemas/Store"
+          },
+          "period_type": {
+            "$ref": "#/components/schemas/PeriodType"
+          },
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "will_renew": {
+            "type": "boolean"
+          },
+          "billing_issue_detected_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "is_active",
+          "product_id",
+          "store",
+          "period_type",
+          "expires_at",
+          "will_renew",
+          "billing_issue_detected_at"
+        ]
+      },
+      "NonSubscriptionPurchase": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string"
+          },
+          "store": {
+            "$ref": "#/components/schemas/Store"
+          },
+          "purchased_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "product_id",
+          "store",
+          "purchased_at"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "ErrorBody": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/ErrorCode"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "Store": {
+        "type": "string",
+        "enum": [
+          "play_store",
+          "app_store"
+        ]
+      },
+      "PeriodType": {
+        "type": "string",
+        "enum": [
+          "normal",
+          "intro",
+          "trial"
+        ]
+      },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "invalid_payload",
+          "purchase_invalid",
+          "token_already_linked",
+          "store_unavailable",
+          "unauthorized",
+          "forbidden",
+          "not_found"
+        ]
+      }
+    }
+  }
+}

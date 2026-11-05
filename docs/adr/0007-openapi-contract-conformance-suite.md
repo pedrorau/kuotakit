@@ -7,7 +7,7 @@ Some teams will prefer a backend in their own stack (TypeScript, Python, Go). Ma
 
 ## Decision
 - v0 ships a single reference backend (Ktor, ADR 0004).
-- The HTTP API is published as an OpenAPI spec, generated from the shared `contracts/` module and versioned with the project.
+- The HTTP API is published as an OpenAPI spec, generated from the shared `contracts/` module and versioned with the project (`docs/api/openapi.json`; how it is generated and checked is in [ADR 0012](0012-openapi-generated-from-contracts.md)).
 - A **conformance suite** (`conformance/`) runs black-box tests against any backend URL and checks behavior, not implementation. Examples:
   - a valid purchase grants the configured entitlement;
   - an invalid or forged purchase grants nothing;

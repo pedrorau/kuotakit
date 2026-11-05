@@ -21,5 +21,5 @@ import kotlinx.serialization.Serializable
 /** Response of `GET /health` (docs/api-spec.md). */
 @Serializable
 public data class HealthResponse(
-    public val status: String,
+    val status: String,
 )

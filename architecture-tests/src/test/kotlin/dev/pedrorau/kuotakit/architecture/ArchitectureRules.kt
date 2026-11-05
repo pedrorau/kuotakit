@@ -18,6 +18,7 @@ package dev.pedrorau.kuotakit.architecture
 
 import com.lemonappdev.konsist.api.container.KoScope
 import com.lemonappdev.konsist.api.verify.assertFalse
+import com.lemonappdev.konsist.api.verify.assertTrue
 
 /**
  * Architecture rules of the project (ADR 0011). Each rule takes the code to check, so the real project must
@@ -32,6 +33,7 @@ object ArchitectureRules {
     private const val STORAGE_PACKAGE = "dev.pedrorau.kuotakit.backend.storage"
     private const val SERIALIZABLE = "kotlinx.serialization.Serializable"
     private const val EXPOSED = "org.jetbrains.exposed"
+    private val PLATFORM_REFERENCE = Regex("""(^|[^\w.])(java|javax|android|androidx|io\.ktor|okhttp3)\.[a-z]""")
 
     /** API models are defined only in `contracts/` (ADR 0004): nothing else may use `@Serializable`. */
     fun serializableTypesLiveOnlyInContracts(scope: KoScope) {
@@ -45,6 +47,20 @@ object ArchitectureRules {
         scope.files
             .filterNot { it.isInBackendStoragePackage() }
             .assertFalse(strict = true) { it.text.contains(EXPOSED) }
+    }
+
+    /**
+     * `contracts/` is shared by the backend and by every SDK platform, so its common code may only use Kotlin and
+     * kotlinx: no `java.*`, no `android.*`, no platform library (ADR 0002, ADR 0004).
+     */
+    fun contractsCommonCodeIsPlatformIndependent(scope: KoScope) {
+        scope.files
+            .filter { it.path.contains("/contracts/src/commonMain/") }
+            .assertTrue(strict = true) { file ->
+                val imports = file.imports.all { it.name.startsWith("kotlin.") || it.name.startsWith("kotlinx.") }
+                // Also a fully qualified use without an import, such as `io.ktor.http.HttpStatusCode`.
+                imports && !PLATFORM_REFERENCE.containsMatchIn(file.text)
+            }
     }
 
     /** True for `...backend.storage` and its sub-packages, but not for a look-alike such as `...backend.storagex`. */

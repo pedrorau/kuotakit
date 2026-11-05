@@ -43,6 +43,8 @@ jobs:
               - 'contracts/**'
               - 'backend/**'
               - 'architecture-tests/**'
+              - 'openapi/**'
+              - 'docs/api/**'
             ios:
               - *build
               - 'contracts/**'

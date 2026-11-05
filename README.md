@@ -48,6 +48,7 @@ KuotaKit is for teams that want to:
 ```
 contracts/            Shared KMP module: API models, used by the SDK and the backend
 backend/              Reference backend (Ktor, Postgres, docker-compose)
+openapi/              Generates docs/api/openapi.json from the contracts models (ADR 0012)
 architecture-tests/   Konsist tests for the architecture rules (ADR 0011)
 conformance/          Black-box test suite any backend must pass
 sdk/core/             Kotlin Multiplatform core
@@ -95,7 +96,7 @@ See [docs/roadmap.md](docs/roadmap.md). In short: backend + Android → iOS → 
 ## Docs
 
 - [Roadmap](docs/roadmap.md)
-- [Backend API spec](docs/api-spec.md)
+- [Backend API spec](docs/api-spec.md) · [OpenAPI document](docs/api/openapi.json)
 - [Architecture decisions](docs/adr/)
 - [How this project uses AI](docs/ai-workflow.md) · [review checklist](docs/review-checklist.md) · [store docs rules](docs/store-docs-rules.md) · [harness setup](docs/harnesses/)
 - [Session log](docs/session-log.md)
