@@ -27,6 +27,12 @@ data class DatabaseConfig(
     override fun toString(): String = "DatabaseConfig(url=$url, user=$user, password=***)"
 }
 
+/** Where Google Play is asked about purchases: the app it serves and the service account that may read them. */
+data class GoogleConfig(
+    val packageName: String,
+    val serviceAccountFile: Path,
+)
+
 /**
  * The backend's settings, read once from the environment at start-up (docker-compose passes them from `.env`). It
  * stops with every problem listed at once instead of failing one variable at a time.
@@ -37,11 +43,12 @@ data class AppConfig(
     val appKeys: List<String>,
     val secretKeys: List<String>,
     val entitlementsFile: Path,
+    val google: GoogleConfig? = null,
 ) {
     // The generated toString would print the password and every API key the moment someone logs the configuration.
     override fun toString(): String =
         "AppConfig(port=$port, database=$database, appKeys=${appKeys.size} keys, secretKeys=${secretKeys.size} keys, " +
-            "entitlementsFile=$entitlementsFile)"
+            "entitlementsFile=$entitlementsFile, google=$google)"
 
     companion object {
         const val DEFAULT_PORT = 8080
@@ -72,6 +79,7 @@ data class AppConfig(
                 problems +=
                     "set KUOTAKIT_APP_KEYS (the key the SDK uses) and, for your own servers, KUOTAKIT_SECRET_KEYS"
             }
+            val google = google(env, problems)
             if (problems.isNotEmpty()) {
                 throw ConfigException("Invalid configuration:\n" + problems.joinToString("\n") { " - $it" })
             }
@@ -82,7 +90,24 @@ data class AppConfig(
                 secretKeys = secretKeys,
                 entitlementsFile =
                     Path.of(env["KUOTAKIT_ENTITLEMENTS_FILE"]?.takeIf { it.isNotBlank() } ?: DEFAULT_ENTITLEMENTS_FILE),
+                google = google,
             )
+        }
+
+        /** Both or none: half a Google configuration is a mistake, not "Google is off". */
+        private fun google(
+            env: Map<String, String>,
+            problems: MutableList<String>,
+        ): GoogleConfig? {
+            val packageName = env["KUOTAKIT_GOOGLE_PACKAGE_NAME"]?.trim().orEmpty()
+            val file = env["KUOTAKIT_GOOGLE_SERVICE_ACCOUNT_FILE"]?.trim().orEmpty()
+            if (packageName.isEmpty() && file.isEmpty()) return null
+            if (packageName.isEmpty()) {
+                problems +=
+                    "KUOTAKIT_GOOGLE_PACKAGE_NAME is required with the service account file"
+            }
+            if (file.isEmpty()) problems += "KUOTAKIT_GOOGLE_SERVICE_ACCOUNT_FILE is required with the package name"
+            return if (packageName.isEmpty() || file.isEmpty()) null else GoogleConfig(packageName, Path.of(file))
         }
 
         private fun keys(

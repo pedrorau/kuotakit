@@ -1,0 +1,16 @@
+# Adds Google Play to the backend. Use it on top of the main file:
+#   docker compose -f docker-compose.yml -f docker-compose.google.yml up --build
+# Needs KUOTAKIT_GOOGLE_PACKAGE_NAME in .env and the service account key at ./secrets/play-service-account.json
+# (git-ignored). Setup: docs/google-play-setup.md.
+services:
+  backend:
+    volumes:
+      - type: bind
+        source: ./secrets/play-service-account.json
+        target: /run/secrets/play-service-account.json
+        read_only: true
+        bind:
+          create_host_path: false
+    environment:
+      KUOTAKIT_GOOGLE_PACKAGE_NAME: ${KUOTAKIT_GOOGLE_PACKAGE_NAME:?Set KUOTAKIT_GOOGLE_PACKAGE_NAME in .env}
+      KUOTAKIT_GOOGLE_SERVICE_ACCOUNT_FILE: /run/secrets/play-service-account.json

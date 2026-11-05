@@ -19,7 +19,9 @@ package dev.pedrorau.kuotakit.backend.testing
 import dev.pedrorau.kuotakit.backend.Services
 import dev.pedrorau.kuotakit.backend.domain.CONFIG
 import dev.pedrorau.kuotakit.backend.domain.NOW
+import dev.pedrorau.kuotakit.backend.domain.PlayStoreApi
 import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
+import dev.pedrorau.kuotakit.backend.domain.ReceiptService
 import dev.pedrorau.kuotakit.backend.web.ApiKeys
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -34,10 +36,15 @@ class FixedClock(
     override fun now(): Instant = instant
 }
 
-fun testServices(purchases: PurchaseRepository = InMemoryPurchaseRepository()) =
-    Services(
-        entitlements = CONFIG,
-        apiKeys = ApiKeys(listOf(APP_KEY), listOf(SECRET_KEY)),
-        purchases = purchases,
-        clock = FixedClock(),
-    )
+const val ANDROID_PACKAGE = "com.acme.app"
+
+fun testServices(
+    purchases: PurchaseRepository = InMemoryPurchaseRepository(),
+    playStore: PlayStoreApi? = FakePlayStoreApi(),
+) = Services(
+    entitlements = CONFIG,
+    apiKeys = ApiKeys(listOf(APP_KEY), listOf(SECRET_KEY)),
+    purchases = purchases,
+    receipts = ReceiptService(playStore, ANDROID_PACKAGE, purchases, FixedClock()),
+    clock = FixedClock(),
+)

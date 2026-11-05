@@ -66,6 +66,8 @@ Called by the SDK after a store purchase. The backend validates with the store, 
 ```
 Responses: `200` CustomerInfo · `400` invalid payload · `401` · `402` store says the purchase is not valid · `409` token already linked to another user · `500` · `502` store API unavailable (never grants access on failure). The `store` field tells the two receipt kinds apart.
 
+Android receipts (subscriptions only for now, ADR 0013): the `package_name` must be the app the backend serves (`400` otherwise), the purchase is read from Google and acknowledged before it is saved, and the answer is the customer info after saving. `ON_HOLD`/`PAUSED`/expired subscriptions are saved and grant nothing; a payment still pending is a `402`. A backend without Google Play configured answers `502`. iOS receipts answer `400` until Phase 2.
+
 ### `GET /v1/subscribers/{app_user_id}`
 Any valid key can read any user (see "The app user id is the secret"). A user without purchases gets an empty `CustomerInfo` (no entitlements, no subscriptions), not an error: that is what a new app user looks like. Responses: `200` CustomerInfo · `400` invalid app user id · `401` · `500`. `non_subscription_purchases` items have `product_id`, `store` and `purchased_at`.
 ```json

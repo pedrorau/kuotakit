@@ -33,6 +33,7 @@ object ArchitectureRules {
     private const val STORAGE_PACKAGE = "dev.pedrorau.kuotakit.backend.storage"
     private const val SERIALIZABLE = "kotlinx.serialization.Serializable"
     private const val DOMAIN_PACKAGE = "dev.pedrorau.kuotakit.backend.domain"
+    private const val GOOGLE_PACKAGE = "dev.pedrorau.kuotakit.backend.google"
     private val PERSISTENCE_LIBRARIES =
         listOf("org.jetbrains.exposed", "org.flywaydb", "com.zaxxer.hikari", "org.postgresql", "java.sql", "javax.sql")
     private val NOT_FOR_THE_DOMAIN =
@@ -42,6 +43,8 @@ object ArchitectureRules {
             "dev.pedrorau.kuotakit.backend.storage",
             "dev.pedrorau.kuotakit.backend.web",
             "dev.pedrorau.kuotakit.backend.config",
+            "dev.pedrorau.kuotakit.backend.google",
+            "com.google",
         )
     private val PLATFORM_REFERENCE = Regex("""(^|[^\w.])(java|javax|android|androidx|io\.ktor|okhttp3)\.[a-z]""")
 
@@ -60,6 +63,16 @@ object ArchitectureRules {
         scope.files
             .filterNot { it.isInBackendStoragePackage() }
             .assertFalse(strict = true) { file -> PERSISTENCE_LIBRARIES.any { file.text.contains(it) } }
+    }
+
+    /**
+     * Google's client libraries stay in the `google` package of the backend: the rest of the code sees Google Play only
+     * through the `PlayStoreApi` interface of the domain, so it can be faked and swapped.
+     */
+    fun googleLibrariesAreUsedOnlyByTheGooglePackage(scope: KoScope) {
+        scope.files
+            .filterNot { it.isInBackendGooglePackage() }
+            .assertFalse(strict = true) { it.text.contains("com.google.") }
     }
 
     /** The domain is plain Kotlin: it knows neither the web framework nor how things are stored (ADR 0009). */
@@ -87,6 +100,12 @@ object ArchitectureRules {
     private fun com.lemonappdev.konsist.api.declaration.KoFileDeclaration.isInBackendDomainPackage(): Boolean {
         val name = packagee?.name ?: return false
         return path.contains("/backend/src/") && (name == DOMAIN_PACKAGE || name.startsWith("$DOMAIN_PACKAGE."))
+    }
+
+    /** True for `...backend.google` and its sub-packages. */
+    private fun com.lemonappdev.konsist.api.declaration.KoFileDeclaration.isInBackendGooglePackage(): Boolean {
+        val name = packagee?.name ?: return false
+        return path.contains("/backend/src/") && (name == GOOGLE_PACKAGE || name.startsWith("$GOOGLE_PACKAGE."))
     }
 
     /** True for `...backend.storage` and its sub-packages, but not for a look-alike such as `...backend.storagex`. */
