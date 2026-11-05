@@ -23,22 +23,46 @@ import dev.pedrorau.kuotakit.backend.web.installErrorHandling
 import dev.pedrorau.kuotakit.contracts.APP_USER_ID_PATTERN
 import dev.pedrorau.kuotakit.contracts.ErrorCode
 import dev.pedrorau.kuotakit.contracts.HealthResponse
+import dev.pedrorau.kuotakit.contracts.ReceiptRequest
 import dev.pedrorau.kuotakit.contracts.kuotaKitJson
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.bearer
 import io.ktor.server.auth.parseAuthorizationHeader
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import io.ktor.utils.io.readBuffer
+import kotlinx.io.readByteArray
+import kotlinx.serialization.SerializationException
 
 private const val API_AUTH = "api"
 private val APP_USER_ID = Regex(APP_USER_ID_PATTERN)
+
+/** Far more than any receipt needs; stops a huge body from being buffered before its fields are checked. */
+private const val MAX_RECEIPT_BODY_BYTES = 16L * 1024
+
+private suspend fun ApplicationCall.receiveReceipt(): ReceiptRequest? {
+    val bytes = receiveChannel().readBuffer(MAX_RECEIPT_BODY_BYTES + 1).readByteArray()
+    if (bytes.size > MAX_RECEIPT_BODY_BYTES) {
+        respond(HttpStatusCode.BadRequest, errorResponse(ErrorCode.INVALID_PAYLOAD, "The request body is too large."))
+        return null
+    }
+    return try {
+        kuotaKitJson.decodeFromString(ReceiptRequest.serializer(), bytes.decodeToString())
+    } catch (e: SerializationException) {
+        throw BadRequestException("The receipt is malformed.", e)
+    }
+}
 
 internal fun Application.module(services: Services) {
     install(ContentNegotiation) { json(kuotaKitJson) }
@@ -72,6 +96,21 @@ internal fun Application.module(services: Services) {
                     )
                     return@get
                 }
+                val purchases = services.purchases.purchasesOf(appUserId)
+                call.respond(calculator.customerInfo(appUserId, purchases, services.clock.now()))
+            }
+
+            post("/v1/subscribers/{app_user_id}/receipts") {
+                val appUserId = call.parameters["app_user_id"].orEmpty()
+                if (!APP_USER_ID.matches(appUserId)) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        errorResponse(ErrorCode.INVALID_PAYLOAD, "Invalid app user id."),
+                    )
+                    return@post
+                }
+                val receipt = call.receiveReceipt() ?: return@post
+                services.receipts.submit(appUserId, receipt)
                 val purchases = services.purchases.purchasesOf(appUserId)
                 call.respond(calculator.customerInfo(appUserId, purchases, services.clock.now()))
             }

@@ -13,7 +13,9 @@ Estimates assume ~10 hours per week. Each phase ends with an exit criterion that
 - Task 3: rules as checks (ADR 0011): Konsist architecture tests, public API dump (Kotlin ABI validation), license-header check, and Pitest reporting in CI. The mutation score threshold is switched on with the first real domain logic (entitlement computation).
 - `contracts/` module with the API models; OpenAPI spec generated from it (`docs/api/openapi.json`, ADR 0012). ✅
 - Backend (Ktor), part 1 ✅: storage interface with Postgres, entitlement computation, `entitlements.yaml`, API keys, `GET /v1/offerings` and `GET /v1/subscribers/{id}`, docker-compose.
-- Backend (Ktor), part 2: `POST /v1/subscribers/{id}/receipts` (Google validation and acknowledgement) and the Google RTDN webhook.
+- Backend (Ktor), part 2a (done): `POST /v1/subscribers/{id}/receipts` for Google subscriptions (ADR 0013).
+- Backend (Ktor), part 2b: the Google RTDN webhook, one-time products, `linkedPurchaseToken` and rate limiting.
+- Before the SDK: require the `obfuscatedExternalAccountId` on Google receipts (today a token without one can be claimed by whoever sends it first, ADR 0013); the SDK will always set it.
 - Conformance suite: first scenarios (valid purchase, invalid purchase, refund, store failure, token reuse), running in CI.
 - SDK core (KMP) + Android adapter: configure, getOfferings, purchase, restore, getCustomerInfo, customer info listener.
 - Example Android app against a Play Console internal-testing track.

@@ -19,11 +19,16 @@ package dev.pedrorau.kuotakit.backend
 import dev.pedrorau.kuotakit.backend.config.AppConfig
 import dev.pedrorau.kuotakit.backend.config.ConfigException
 import dev.pedrorau.kuotakit.backend.config.EntitlementsYaml
+import dev.pedrorau.kuotakit.backend.domain.ReceiptService
+import dev.pedrorau.kuotakit.backend.google.GooglePlayStoreApi
 import dev.pedrorau.kuotakit.backend.storage.PostgresStorage
 import dev.pedrorau.kuotakit.backend.web.ApiKeys
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.io.IOException
+import java.nio.file.Files
 import kotlin.system.exitProcess
+import kotlin.time.Clock
 
 fun main() {
     val (config, entitlements) =
@@ -37,7 +42,22 @@ fun main() {
         }
 
     PostgresStorage.open(config.database).use { storage ->
-        val services = Services(entitlements, ApiKeys(config.appKeys, config.secretKeys), storage.purchases)
+        val playStore =
+            config.google?.let { google ->
+                try {
+                    GooglePlayStoreApi.fromServiceAccount(
+                        Files.newInputStream(google.serviceAccountFile),
+                        google.packageName,
+                    )
+                } catch (e: IOException) {
+                    System.err.println(
+                        "Cannot read the Google service account ${google.serviceAccountFile}: ${e.message}",
+                    )
+                    exitProcess(1)
+                }
+            }
+        val receipts = ReceiptService(playStore, config.google?.packageName, storage.purchases, Clock.System)
+        val services = Services(entitlements, ApiKeys(config.appKeys, config.secretKeys), storage.purchases, receipts)
         embeddedServer(Netty, port = config.port, host = "0.0.0.0") { module(services) }.start(wait = true)
     }
 }

@@ -12,6 +12,8 @@ flyway = "13.12.0"
 postgresql-driver = "42.7.14"
 hikaricp = "7.1.0"
 snakeyaml-engine = "3.2"
+# Google's generated Play Developer API client; v3-rev20260924-2.0.0 checked to have subscriptionsv2 and subscriptions.acknowledge.
+google-androidpublisher = "v3-rev20260924-2.0.0"
 testcontainers = "2.0.5"
 swagger-request-validator = "3.0.0"
 pitest-plugin = "1.19.0"
@@ -40,6 +42,7 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql-driver" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+google-api-services-androidpublisher = { module = "com.google.apis:google-api-services-androidpublisher", version.ref = "google-androidpublisher" }
 snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeyaml-engine" }
 ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
 ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }

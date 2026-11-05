@@ -16,6 +16,10 @@
 
 package dev.pedrorau.kuotakit.backend.web
 
+import dev.pedrorau.kuotakit.backend.domain.InvalidReceiptException
+import dev.pedrorau.kuotakit.backend.domain.PurchaseInvalidException
+import dev.pedrorau.kuotakit.backend.domain.StoreUnavailableException
+import dev.pedrorau.kuotakit.backend.domain.TokenAlreadyLinkedException
 import dev.pedrorau.kuotakit.contracts.ErrorBody
 import dev.pedrorau.kuotakit.contracts.ErrorCode
 import dev.pedrorau.kuotakit.contracts.ErrorResponse
@@ -45,6 +49,32 @@ internal fun Application.installErrorHandling() {
             call.respond(
                 HttpStatusCode.BadRequest,
                 errorResponse(ErrorCode.INVALID_PAYLOAD, "The request is malformed."),
+            )
+        }
+        // The messages of these four are written by this backend and never carry a purchase token.
+        exception<InvalidReceiptException> { call, cause ->
+            call.respond(HttpStatusCode.BadRequest, errorResponse(ErrorCode.INVALID_PAYLOAD, cause.message.orEmpty()))
+        }
+        exception<PurchaseInvalidException> { call, cause ->
+            call.respond(
+                HttpStatusCode.PaymentRequired,
+                errorResponse(ErrorCode.PURCHASE_INVALID, cause.message.orEmpty()),
+            )
+        }
+        exception<TokenAlreadyLinkedException> { call, _ ->
+            call.respond(
+                HttpStatusCode.Conflict,
+                errorResponse(ErrorCode.TOKEN_ALREADY_LINKED, "The purchase token belongs to another user."),
+            )
+        }
+        exception<StoreUnavailableException> { call, cause ->
+            call.application.log.warn(
+                "Store unavailable on ${call.request.local.method.value} ${redactedPath(call.request.local.uri)}: " +
+                    "${cause.message} ${cause.cause?.javaClass?.simpleName.orEmpty()}",
+            )
+            call.respond(
+                HttpStatusCode.BadGateway,
+                errorResponse(ErrorCode.STORE_UNAVAILABLE, "The store could not be reached; access is not granted."),
             )
         }
         // Fail closed: an unexpected error is a 500 that grants nothing, and the details stay in the log.

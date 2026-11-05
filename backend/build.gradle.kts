@@ -30,6 +30,7 @@ dependencies {
     runtimeOnly(libs.flyway.database.postgresql)
     runtimeOnly(libs.postgresql.driver)
     implementation(libs.hikaricp)
+    implementation(libs.google.api.services.androidpublisher)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotest.runner.junit5)

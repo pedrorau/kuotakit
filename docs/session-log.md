@@ -55,3 +55,12 @@ One entry per working session. Template in [ai-workflow.md](ai-workflow.md).
 - Validation done: 76 backend tests, including the repository contract against a real Postgres 18.6 (a race of four users for one token: exactly one wins) and every response of the routes validated against `docs/api/openapi.json`; Pitest on `domain` 91 % against a 70 % threshold, and the threshold really fails (95 % made the build fail); `docker compose up` on Colima with a purchase inserted into Postgres and read back through the API; negative tests for the new Konsist rules.
 - Public API: `ErrorCode` lost `FORBIDDEN` and `NOT_FOUND` and gained `INTERNAL_ERROR`; `contracts` gained `APP_USER_ID_PATTERN`.
 - Time spent: n/a · Diff accepted as-is: pending
+
+## 2026-11-04 — Backend part 2a (Google Play subscription receipts)
+- Goal: `POST /v1/subscribers/{id}/receipts` validating Google Play subscriptions (ADR 0013); the RTDN webhook and one-time products are part 2b.
+- What the agent proposed / what I chose: two PRs (receipts first), subscriptions only; the official generated Google client isolated behind a domain port; validate, acknowledge, then save, so a failure leaves nothing behind; `ON_HOLD` and `PAUSED` as their own stored statuses (migration V2).
+- What I had to correct: a first test run looked green while ktlint had failed before any test ran; I deleted the results and re-ran from clean. My local test helper was suspending in a non-suspend function (compile error) and one line was too long: fixed in the tests, no expectation changed.
+- Validation done: backend tests green (mapper 10, service 16, Google adapter 7 with the library's mock transport, route 12 checked against `docs/api/openapi.json`, config 4, every `PurchaseStatus` saved into real Postgres); the migration test fails without V2 (checked by moving the file); Konsist rule + 9 canaries; Pitest on `domain` 77 % (threshold 70 %).
+- Not validated: the real Google. The error-status mapping (400/404/410 vs the rest) is an inference; the real check needs an app on a Play internal testing track.
+- Public API: none.
+- Time spent: n/a · Diff accepted as-is: pending

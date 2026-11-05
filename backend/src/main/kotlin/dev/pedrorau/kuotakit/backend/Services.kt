@@ -18,6 +18,7 @@ package dev.pedrorau.kuotakit.backend
 
 import dev.pedrorau.kuotakit.backend.domain.EntitlementsConfig
 import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
+import dev.pedrorau.kuotakit.backend.domain.ReceiptService
 import dev.pedrorau.kuotakit.backend.web.ApiKeys
 import kotlin.time.Clock
 
@@ -26,5 +27,6 @@ class Services(
     val entitlements: EntitlementsConfig,
     val apiKeys: ApiKeys,
     val purchases: PurchaseRepository,
+    val receipts: ReceiptService,
     val clock: Clock = Clock.System,
 )
