@@ -17,6 +17,9 @@
 package dev.pedrorau.kuotakit.backend.testing
 
 import dev.pedrorau.kuotakit.backend.domain.PlayOfferPhase
+import dev.pedrorau.kuotakit.backend.domain.PlayOneTimeItem
+import dev.pedrorau.kuotakit.backend.domain.PlayOneTimePurchase
+import dev.pedrorau.kuotakit.backend.domain.PlayOneTimeState
 import dev.pedrorau.kuotakit.backend.domain.PlayStoreApi
 import dev.pedrorau.kuotakit.backend.domain.PlaySubscription
 import dev.pedrorau.kuotakit.backend.domain.PlaySubscriptionItem
@@ -38,10 +41,29 @@ fun playSubscription(
     acknowledged: Boolean = false,
     obfuscatedAccountId: String? = null,
     startTime: Instant? = dev.pedrorau.kuotakit.backend.domain.NOW - 20.days,
+    linkedPurchaseToken: String? = null,
 ) = PlaySubscription(
     state = state,
     startTime = startTime,
     items = listOf(PlaySubscriptionItem(productId, expiryTime, autoRenewing, offerPhase)),
+    acknowledged = acknowledged,
+    obfuscatedAccountId = obfuscatedAccountId,
+    linkedPurchaseToken = linkedPurchaseToken,
+)
+
+/** What a one-time purchase looks like unless a test says otherwise: bought, not refunded, not acknowledged. */
+@Suppress("LongParameterList") // a builder with defaults: the long list is what keeps the tests short
+fun playOneTime(
+    state: PlayOneTimeState = PlayOneTimeState.PURCHASED,
+    productId: String = "lifetime_unlock",
+    refundableQuantity: Int? = 1,
+    acknowledged: Boolean = false,
+    obfuscatedAccountId: String? = null,
+    completionTime: Instant? = dev.pedrorau.kuotakit.backend.domain.NOW - 2.days,
+) = PlayOneTimePurchase(
+    state = state,
+    completionTime = completionTime,
+    items = listOf(PlayOneTimeItem(productId, refundableQuantity)),
     acknowledged = acknowledged,
     obfuscatedAccountId = obfuscatedAccountId,
 )
@@ -51,6 +73,7 @@ class FakePlayStoreApi(
     private val log: MutableList<String> = mutableListOf(),
 ) : PlayStoreApi {
     var subscription: () -> PlaySubscription = { playSubscription() }
+    var oneTime: () -> PlayOneTimePurchase = { playOneTime() }
     var acknowledgeFailure: Exception? = null
 
     val calls: List<String> get() = log
@@ -69,6 +92,21 @@ class FakePlayStoreApi(
     ) {
         yield()
         log += "acknowledge:$productId:$purchaseToken"
+        acknowledgeFailure?.let { throw it }
+    }
+
+    override suspend fun oneTimePurchase(purchaseToken: String): PlayOneTimePurchase {
+        yield()
+        log += "getOneTime:$purchaseToken"
+        return oneTime()
+    }
+
+    override suspend fun acknowledgeOneTime(
+        productId: String,
+        purchaseToken: String,
+    ) {
+        yield()
+        log += "acknowledgeOneTime:$productId:$purchaseToken"
         acknowledgeFailure?.let { throw it }
     }
 }

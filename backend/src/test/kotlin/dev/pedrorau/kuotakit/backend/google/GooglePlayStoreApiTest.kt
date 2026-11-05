@@ -234,4 +234,12 @@ class GooglePlayStoreApiTest :
                 }
             u.message!!.contains("SECRET-TOKEN") shouldBe false
         }
+
+        "the token of the purchase this one replaced is read, and an empty one is none" {
+            val withLink = ACTIVE_TRIAL.replaceFirst("{", """{"linkedPurchaseToken":"OLD_TOKEN",""")
+            Google(body = withLink).api.subscription("t").linkedPurchaseToken shouldBe "OLD_TOKEN"
+            val empty = ACTIVE_TRIAL.replaceFirst("{", """{"linkedPurchaseToken":"",""")
+            Google(body = empty).api.subscription("t").linkedPurchaseToken shouldBe null
+            Google().api.subscription("t").linkedPurchaseToken shouldBe null
+        }
     })

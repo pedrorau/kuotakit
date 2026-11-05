@@ -93,7 +93,8 @@ class EntitlementsYamlTest :
         "the top level must be a mapping with only the known keys, and the error points at the line" {
             problem("- just\n- a list") shouldBe "test.yaml:1:1: the file must be a mapping"
             problem(VALID + "\nextra: 1") shouldBe
-                "test.yaml:15:1: unknown key 'extra' (expected entitlements, current_offering, offerings)"
+                "test.yaml:15:1: unknown key 'extra' " +
+                "(expected entitlements, current_offering, offerings, one_time_products)"
         }
 
         "each required key must be there" {

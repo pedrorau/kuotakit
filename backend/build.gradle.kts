@@ -53,6 +53,10 @@ pitest {
                 it.split(",").toSet()
             }.orElse(setOf("dev.pedrorau.kuotakit.backend.domain.*")),
     )
+    // Mutate only some classes if asked, but always run every test of the domain package against them. By default the
+    // plugin runs only the tests whose name matches the mutated classes, which ignores tests named after a feature
+    // (`OneTimeReceiptServiceTest` for `ReceiptService`) and makes a partial run score lower than the full one.
+    targetTests.set(setOf("dev.pedrorau.kuotakit.backend.domain.*"))
     junit5PluginVersion.set(libs.versions.pitest.junit5)
     outputFormats.set(listOf("HTML", "XML"))
     failWhenNoMutations.set(false)

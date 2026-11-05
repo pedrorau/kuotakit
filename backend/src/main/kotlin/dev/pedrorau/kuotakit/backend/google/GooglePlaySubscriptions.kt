@@ -37,6 +37,7 @@ internal object GooglePlaySubscriptions {
             items = subscription.lineItems.orEmpty().map(::item),
             acknowledged = subscription.acknowledgementState == ACKNOWLEDGED,
             obfuscatedAccountId = subscription.externalAccountIdentifiers?.obfuscatedExternalAccountId,
+            linkedPurchaseToken = subscription.linkedPurchaseToken?.takeIf { it.isNotBlank() },
         )
 
     private fun item(item: SubscriptionPurchaseLineItem) =

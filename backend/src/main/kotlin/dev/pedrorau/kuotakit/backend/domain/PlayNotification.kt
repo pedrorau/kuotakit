@@ -23,6 +23,11 @@ sealed interface PlayNotification {
         val token: String,
     ) : PlayNotification
 
+    /** Something changed in a one-time purchase (bought, cancelled, partly refunded): ask Google for its state. */
+    data class OneTimeChanged(
+        val token: String,
+    ) : PlayNotification
+
     /** Google took the subscription away before its end (`SUBSCRIPTION_REVOKED`). */
     data class SubscriptionRevoked(
         val token: String,
@@ -33,7 +38,7 @@ sealed interface PlayNotification {
         val token: String,
     ) : PlayNotification
 
-    /** Nothing to do: a test message, a one-time product (not handled yet), a price change... */
+    /** Nothing to do: a test message, a price change... */
     data class Ignored(
         val reason: String,
     ) : PlayNotification

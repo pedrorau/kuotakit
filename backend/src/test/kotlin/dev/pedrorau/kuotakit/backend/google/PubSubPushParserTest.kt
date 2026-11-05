@@ -67,18 +67,32 @@ class PubSubPushParserTest :
                 PlayPush("136969346945", "com.some.app", PlayNotification.PurchaseVoided("PURCHASE_TOKEN"))
         }
 
-        "a voided one-time purchase is ignored for now" {
-            val voided =
+        "a voided one-time purchase is a refund, unless only some units were refunded" {
+            fun voided(refundType: Int) =
                 """{"packageName":"com.some.app","voidedPurchaseNotification":""" +
-                    """{"purchaseToken":"T","orderId":"O","productType":2,"refundType":1}}"""
+                    """{"purchaseToken":"T","orderId":"O","productType":2,"refundType":$refundType}}"""
+            parse(voided(1)).notification shouldBe PlayNotification.PurchaseVoided("T")
+            parse(voided(2)).notification shouldBe PlayNotification.OneTimeChanged("T")
+        }
+
+        "a voided purchase of a type this backend does not know is ignored" {
+            val voided =
+                """{"packageName":"p","voidedPurchaseNotification":{"purchaseToken":"T","productType":9,"refundType":1}}"""
             (parse(voided).notification is PlayNotification.Ignored) shouldBe true
         }
 
-        "test, one-time, pending refund review and unknown notifications are ignored, not errors" {
+        "a one-time product notification, bought or cancelled, is read again" {
+            listOf(1, 2, 99).forEach { type ->
+                val oneTime =
+                    """{"packageName":"p","oneTimeProductNotification":""" +
+                        """{"version":"1.0","notificationType":$type,"purchaseToken":"T","sku":"lifetime"}}"""
+                parse(oneTime).notification shouldBe PlayNotification.OneTimeChanged("T")
+            }
+        }
+
+        "test, pending refund review and unknown notifications are ignored, not errors" {
             listOf(
                 """{"version":"1.0","packageName":"com.some.thing","testNotification":{"version":"1.0"}}""",
-                """{"packageName":"p","oneTimeProductNotification":""" +
-                    """{"notificationType":1,"purchaseToken":"T","sku":"s"}}""",
                 """{"packageName":"p","pendingRefundReviewNotification":{"pendingRefundToken":"x"}}""",
                 """{"packageName":"p","somethingNew":{}}""",
             ).forEach { notification ->

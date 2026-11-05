@@ -236,6 +236,13 @@ class PlayNotificationServiceTest :
                         productId: String,
                         purchaseToken: String,
                     ) = Unit
+
+                    override suspend fun oneTimePurchase(purchaseToken: String): PlayOneTimePurchase = error("not used")
+
+                    override suspend fun acknowledgeOneTime(
+                        productId: String,
+                        purchaseToken: String,
+                    ) = Unit
                 }
             val service = PlayNotificationService(slow, PACKAGE, s.repository, s.events, FixedClock(LATER))
             service.handle(PlayPush("renewal", PACKAGE, changed))

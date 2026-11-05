@@ -17,7 +17,7 @@
 
 ## Known limits (on purpose, for the next task)
 - **No notifications yet.** Until the RTDN webhook exists the backend learns about renewals only when the app submits the receipt again, and about refunds or revocations before the end date not at all: a refunded subscription keeps granting access until its stored expiry. This is the main reason the next task is not optional.
-- Only the line item whose product matches the receipt is read; plan changes with several items, `linkedPurchaseToken` (upgrades, resubscribe) and one-time products are not handled.
+- Only the line item whose product matches the receipt is read; plan changes with several items are not handled. (`linkedPurchaseToken` and one-time products came later: ADR 0015.)
 - The receipt body is limited to 16 KiB. There is no rate limit: anyone with the public app key can make the backend call Google for random tokens and spend its quota (part 2b).
 - A purchase made by a license tester (`testPurchase`) is treated like a real one. Whether `expiryTime` moves forward during `IN_GRACE_PERIOD` is not confirmed; if Google leaves the old date, a user in grace is stored as expired (fails closed, but wrong for them).
 - A buyer whose app changes the app user id after buying cannot claim a purchase that carries the old account id (`409`).

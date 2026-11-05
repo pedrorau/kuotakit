@@ -24,9 +24,11 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.google.api.services.androidpublisher.AndroidPublisherScopes
+import com.google.api.services.androidpublisher.model.ProductPurchasesAcknowledgeRequest
 import com.google.api.services.androidpublisher.model.SubscriptionPurchasesAcknowledgeRequest
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
+import dev.pedrorau.kuotakit.backend.domain.PlayOneTimePurchase
 import dev.pedrorau.kuotakit.backend.domain.PlayStoreApi
 import dev.pedrorau.kuotakit.backend.domain.PlaySubscription
 import dev.pedrorau.kuotakit.backend.domain.PurchaseInvalidException
@@ -39,7 +41,8 @@ import java.io.InputStream
 
 /**
  * The Google Play Developer API. Reads a subscription with `purchases.subscriptionsv2.get` and acknowledges it with
- * `purchases.subscriptions.acknowledge` (v2 has no acknowledge). The only class that talks to Google over the network.
+ * `purchases.subscriptions.acknowledge` (v2 has no acknowledge). One-time purchases use `purchases.productsv2` and
+ * `purchases.products.acknowledge`. The only class that talks to Google over the network.
  */
 class GooglePlayStoreApi internal constructor(
     private val publisher: AndroidPublisher,
@@ -66,6 +69,30 @@ class GooglePlayStoreApi internal constructor(
                 .purchases()
                 .subscriptions()
                 .acknowledge(packageName, productId, purchaseToken, SubscriptionPurchasesAcknowledgeRequest())
+                .execute()
+        }
+    }
+
+    override suspend fun oneTimePurchase(purchaseToken: String): PlayOneTimePurchase =
+        call(unknownTokenIsInvalid = true) {
+            GooglePlayOneTime.toDomain(
+                publisher
+                    .purchases()
+                    .productsv2()
+                    .getproductpurchasev2(packageName, purchaseToken)
+                    .execute(),
+            )
+        }
+
+    override suspend fun acknowledgeOneTime(
+        productId: String,
+        purchaseToken: String,
+    ) {
+        call(unknownTokenIsInvalid = false) {
+            publisher
+                .purchases()
+                .products()
+                .acknowledge(packageName, productId, purchaseToken, ProductPurchasesAcknowledgeRequest())
                 .execute()
         }
     }
