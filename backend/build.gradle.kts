@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.server.rate.limit)
     implementation(libs.logback.classic)
     implementation(libs.snakeyaml.engine)
     implementation(libs.exposed.core)

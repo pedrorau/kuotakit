@@ -36,13 +36,17 @@ Every non-2xx response of an endpoint has the same body, and the `code` is stabl
 | 401 | `unauthorized` | The API key is missing or wrong |
 | 402 | `purchase_invalid` | The store says the purchase is not valid |
 | 409 | `token_already_linked` | The purchase token is already linked to another user |
+| 429 | `rate_limited` | Too many requests from this client or for this user; wait the `Retry-After` seconds |
 | 500 | `internal_error` | Something unexpected went wrong; access is never granted on failure |
 | 502 | `store_unavailable` | The store API is unavailable; access is never granted on failure |
+
+## Request limits
+Every authenticated call is limited per client address (default 300 a minute); receipts, which make the backend ask the store, also per client address (30) and per app user id (10). Over the limit the answer is `429` with `Retry-After` (seconds) and the code `rate_limited`. `/health` and the webhooks are not limited. The counters live in one process; behind a reverse proxy set `KUOTAKIT_TRUST_FORWARDED_FOR=true`, and only then. Variables: `KUOTAKIT_RATE_LIMIT_PER_MINUTE`, `KUOTAKIT_RATE_LIMIT_RECEIPTS_PER_MINUTE`, `KUOTAKIT_RATE_LIMIT_RECEIPTS_PER_USER_PER_MINUTE` (ADR 0016).
 
 ## Endpoints
 
 ### `GET /v1/offerings`
-Returns offerings defined in `entitlements.yaml`. Responses: `200` · `401` · `500`.
+Returns offerings defined in `entitlements.yaml`. Responses: `200` · `401` · `429` · `500`.
 ```json
 {
   "current": "default",
@@ -64,12 +68,12 @@ Called by the SDK after a store purchase. The backend validates with the store, 
 // iOS
 { "store": "app_store", "bundle_id": "com.acme.app", "signed_transaction": "<JWS from StoreKit 2>" }
 ```
-Responses: `200` CustomerInfo · `400` invalid payload · `401` · `402` store says the purchase is not valid · `409` token already linked to another user · `500` · `502` store API unavailable (never grants access on failure). The `store` field tells the two receipt kinds apart.
+Responses: `200` CustomerInfo · `400` invalid payload · `401` · `402` store says the purchase is not valid · `409` token already linked to another user · `429` too many requests · `500` · `502` store API unavailable (never grants access on failure). The `store` field tells the two receipt kinds apart.
 
 Android receipts (subscriptions, ADR 0013, and non-consumable one-time products, ADR 0015; which one is decided by `one_time_products` in `entitlements.yaml`, not by the app): the `package_name` must be the app the backend serves (`400` otherwise), the purchase is read from Google and acknowledged before it is saved, and the answer is the customer info after saving. `ON_HOLD`/`PAUSED`/expired subscriptions are saved and grant nothing; a payment still pending is a `402`. A backend without Google Play configured answers `502`. iOS receipts answer `400` until Phase 2.
 
 ### `GET /v1/subscribers/{app_user_id}`
-Any valid key can read any user (see "The app user id is the secret"). A user without purchases gets an empty `CustomerInfo` (no entitlements, no subscriptions), not an error: that is what a new app user looks like. Responses: `200` CustomerInfo · `400` invalid app user id · `401` · `500`. `non_subscription_purchases` items have `product_id`, `store` and `purchased_at`.
+Any valid key can read any user (see "The app user id is the secret"). A user without purchases gets an empty `CustomerInfo` (no entitlements, no subscriptions), not an error: that is what a new app user looks like. Responses: `200` CustomerInfo · `400` invalid app user id · `401` · `429` · `500`. `non_subscription_purchases` items have `product_id`, `store` and `purchased_at`.
 ```json
 {
   "app_user_id": "$anon_6f1c...",
@@ -91,7 +95,7 @@ Any valid key can read any user (see "The app user id is the secret"). A user wi
 ```
 
 ### `POST /v1/webhooks/google`
-Google Play Real-time Developer Notifications via Cloud Pub/Sub push (ADR 0014). No API key: the proof is the OIDC token of the push subscription (`Authorization: Bearer`), checked for issuer, audience, service account email and signature. A refund or a revocation takes access away straight from the verified message; any other subscription change re-reads the subscription from the Play Developer API, because the notification never carries the state. The webhook never creates a purchase. A refunded or revoked purchase is final: nothing written later (a notification, a receipt sent again, a slow update) brings it back. Responses: `204` handled, or acknowledged because it can never succeed (another app, a test message, a one-time product, an unknown purchase, a body that cannot be read or is over 16 KiB; Pub/Sub would otherwise retry it for days) · `401` token not verified or webhook not configured · `502` Google or its signing keys unreachable (Pub/Sub retries) · `500`. There is no `400`.
+Google Play Real-time Developer Notifications via Cloud Pub/Sub push (ADR 0014). No API key: the proof is the OIDC token of the push subscription (`Authorization: Bearer`), checked for issuer, audience, service account email and signature. A refund or a revocation takes access away straight from the verified message; any other subscription change re-reads the subscription from the Play Developer API, because the notification never carries the state. The webhook never creates a purchase; a refund or a revocation for one that nobody has submitted yet waits up to 60 days and is applied when its receipt arrives (ADR 0016). A refunded or revoked purchase is final: nothing written later (a notification, a receipt sent again, a slow update) brings it back. Responses: `204` handled, or acknowledged because it can never succeed (another app, a test message, a one-time product, an unknown purchase, a body that cannot be read or is over 16 KiB; Pub/Sub would otherwise retry it for days) · `401` token not verified or webhook not configured · `502` Google or its signing keys unreachable (Pub/Sub retries) · `500`. There is no `400`.
 
 ### `POST /v1/webhooks/apple`
 App Store Server Notifications v2. Verify the `signedPayload` JWS against Apple's root certificate chain, then update state. Responses: `204` processed · `400` · `401` (signature verification failed) · `500` (the store retries). The webhook bodies are defined by the stores; the models for them arrive with the webhook endpoints.

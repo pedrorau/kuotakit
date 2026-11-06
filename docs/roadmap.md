@@ -16,7 +16,7 @@ Estimates assume ~10 hours per week. Each phase ends with an exit criterion that
 - Backend (Ktor), part 2a (done): `POST /v1/subscribers/{id}/receipts` for Google subscriptions (ADR 0013).
 - Backend (Ktor), part 2b (done): the Google RTDN webhook (ADR 0014).
 - Backend (Ktor), part 2c (done): one-time products and `linkedPurchaseToken` (ADR 0015).
-- Backend (Ktor), part 2d: rate limiting and refunds that arrive before the first receipt.
+- Backend (Ktor), part 2d (done): request limits and refunds that arrive before the first receipt (ADR 0016).
 - Before the SDK: require the `obfuscatedExternalAccountId` on Google receipts (today a token without one can be claimed by whoever sends it first, ADR 0013); the SDK will always set it.
 - Conformance suite: first scenarios (valid purchase, invalid purchase, refund, store failure, token reuse), running in CI.
 - SDK core (KMP) + Android adapter: configure, getOfferings, purchase, restore, getCustomerInfo, customer info listener.
@@ -48,3 +48,4 @@ Estimates assume ~10 hours per week. Each phase ends with an exit criterion that
 - Minimal admin dashboard.
 - A second backend (e.g. TypeScript), only if there is real demand, accepted once it passes the conformance suite.
 - Paywalls.
+- Abuse protection beyond fixed limits (ideas of the maintainer, 2026-11-06, see ADR 0016): combine behaviour patterns instead of counting only (many distinct app user ids or wrong keys from one address, repeated `token_already_linked`, bursts of invalid receipts) with progressive penalties; a way to cancel an app user id that leaked (the id is the user's secret and a leak is the owner's responsibility, but the backend can help to replace it); and **Redis** (or similar) as an optional shared store for counters, bans and other state that must live across several backend instances.

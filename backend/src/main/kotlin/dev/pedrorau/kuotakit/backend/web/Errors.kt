@@ -46,6 +46,13 @@ internal fun Application.installErrorHandling() {
                 errorResponse(ErrorCode.UNAUTHORIZED, "Missing or invalid API key."),
             )
         }
+        // The rate limiter answers 429 with `Retry-After`; this gives it the body of every other error.
+        status(HttpStatusCode.TooManyRequests) { call, _ ->
+            call.respond(
+                HttpStatusCode.TooManyRequests,
+                errorResponse(ErrorCode.RATE_LIMITED, "Too many requests; wait before trying again."),
+            )
+        }
         exception<BadRequestException> { call, _ ->
             call.respond(
                 HttpStatusCode.BadRequest,

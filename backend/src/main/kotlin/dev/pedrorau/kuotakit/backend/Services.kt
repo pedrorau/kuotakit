@@ -16,6 +16,7 @@
 
 package dev.pedrorau.kuotakit.backend
 
+import dev.pedrorau.kuotakit.backend.config.RateLimitConfig
 import dev.pedrorau.kuotakit.backend.domain.EntitlementsConfig
 import dev.pedrorau.kuotakit.backend.domain.PlayNotificationService
 import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
@@ -35,4 +36,5 @@ class Services(
     /** `null` when the webhook is not configured: it then refuses every push, because it cannot verify any. */
     val pushVerifier: PushTokenVerifier?,
     val clock: Clock = Clock.System,
+    val rateLimit: RateLimitConfig = RateLimitConfig(),
 )

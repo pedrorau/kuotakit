@@ -151,6 +151,7 @@ class ModelsJsonTest {
                 "store_unavailable",
                 "unauthorized",
                 "internal_error",
+                "rate_limited",
                 "unknown",
             ),
             names,
@@ -184,7 +185,10 @@ class ModelsJsonTest {
             )
         assertEquals(Store.UNKNOWN, entitlement.store)
         assertEquals(PeriodType.UNKNOWN, entitlement.periodType)
-        val error = json.decodeFromString<ErrorResponse>("""{"error":{"code":"rate_limited","message":"slow down"}}""")
+        val error =
+            json.decodeFromString<ErrorResponse>(
+                """{"error":{"code":"a_code_from_the_future","message":"slow down"}}""",
+            )
         assertEquals(ErrorCode.UNKNOWN, error.error.code)
     }
 

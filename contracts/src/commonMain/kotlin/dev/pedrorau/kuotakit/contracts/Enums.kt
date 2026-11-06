@@ -88,6 +88,9 @@ public enum class ErrorCode {
     /** 500: something unexpected went wrong in the backend; access is not granted. Wire name `internal_error`. */
     INTERNAL_ERROR,
 
+    /** 429: too many requests from this client or user; try again after `Retry-After`. Wire name `rate_limited`. */
+    RATE_LIMITED,
+
     /** A code this version does not know. */
     UNKNOWN,
 }
@@ -101,6 +104,7 @@ internal object ErrorCodeSerializer : FallbackEnumSerializer<ErrorCode>(
         ErrorCode.STORE_UNAVAILABLE to "store_unavailable",
         ErrorCode.UNAUTHORIZED to "unauthorized",
         ErrorCode.INTERNAL_ERROR to "internal_error",
+        ErrorCode.RATE_LIMITED to "rate_limited",
     ),
     ErrorCode.UNKNOWN,
 )

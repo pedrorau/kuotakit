@@ -135,6 +135,7 @@ public final class dev/pedrorau/kuotakit/contracts/ErrorCode : java/lang/Enum {
 	public static final field INTERNAL_ERROR Ldev/pedrorau/kuotakit/contracts/ErrorCode;
 	public static final field INVALID_PAYLOAD Ldev/pedrorau/kuotakit/contracts/ErrorCode;
 	public static final field PURCHASE_INVALID Ldev/pedrorau/kuotakit/contracts/ErrorCode;
+	public static final field RATE_LIMITED Ldev/pedrorau/kuotakit/contracts/ErrorCode;
 	public static final field STORE_UNAVAILABLE Ldev/pedrorau/kuotakit/contracts/ErrorCode;
 	public static final field TOKEN_ALREADY_LINKED Ldev/pedrorau/kuotakit/contracts/ErrorCode;
 	public static final field UNAUTHORIZED Ldev/pedrorau/kuotakit/contracts/ErrorCode;

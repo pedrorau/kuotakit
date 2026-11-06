@@ -30,7 +30,8 @@ class ReceiptAfterRefundTest :
             PurchaseStatus.entries.filter { it.isFinal() }.forEach { final ->
                 val google = FakePlayStoreApi()
                 val repository = InMemoryPurchaseRepository()
-                val service = ReceiptService(google, "com.acme.app", repository, FixedClock())
+                val service =
+                    ReceiptService(google, "com.acme.app", repository, FixedClock(), PendingEndingRepository.None)
                 val ended = purchase(token = "token-1", status = final)
                 repository.save("anon_1", ended)
                 // Google still describes it as a paid, unacknowledged subscription

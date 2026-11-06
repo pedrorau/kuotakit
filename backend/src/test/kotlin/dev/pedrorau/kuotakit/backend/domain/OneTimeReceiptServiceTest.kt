@@ -35,7 +35,13 @@ private class OneTimeSetup {
     val google = FakePlayStoreApi(log)
     val repository = InMemoryPurchaseRepository()
     val service =
-        ReceiptService(google, PACKAGE, RecordingPurchaseRepository(repository, log), FixedClock()) {
+        ReceiptService(
+            google,
+            PACKAGE,
+            RecordingPurchaseRepository(repository, log),
+            FixedClock(),
+            PendingEndingRepository.None,
+        ) {
             it == "lifetime_unlock"
         }
 

@@ -36,6 +36,7 @@ class ReceiptService(
     private val androidPackageName: String?,
     private val purchases: PurchaseRepository,
     private val clock: Clock,
+    private val pendingEndings: PendingEndingRepository,
     private val isOneTime: (productId: String) -> Boolean = { false },
 ) {
     private val linked = LinkedPurchases(purchases)
@@ -108,13 +109,41 @@ class ReceiptService(
         val now = clock.now()
         val existing = if (owner == null) null else purchases.purchasesOf(appUserId).firstOrNull { it.token == token }
         // Refunded or revoked for good: resubmitting the receipt changes nothing and must not acknowledge it again.
-        if (existing?.status?.isFinal() == true) return
-        val purchase = read.build(existing, now)
+        if (existing?.status?.isFinal() == true) {
+            // Also clean up a refund that was waiting for this receipt, in case an earlier attempt stopped before that.
+            pendingEndings.forget(Store.PLAY_STORE, token)
+            return
+        }
+        // A refund or a revocation that arrived before this receipt wins over whatever Google says now.
+        val ended = pendingEndings.find(Store.PLAY_STORE, token, now)
+        val built = read.build(existing, now)
+        val purchase = if (ended == null) built else built.copy(status = ended)
 
         // Google refunds a purchase that is not acknowledged within three days, so a purchase that grants access is.
         if (!read.acknowledged && purchase.grantsAccessAt(now)) read.acknowledge()
         purchases.save(appUserId, purchase)
-        linked.expire(read.linkedToken, token, now)
+        settle(appUserId, purchase, ended, read.linkedToken, now)
+    }
+
+    /**
+     * Last step once the purchase is stored. A refund may have been written down while this receipt was waiting for
+     * Google (the acknowledgement is a network round trip), after the first look and before the purchase existed, so
+     * look once more now that it does: whichever of the two comes last sees the other (docs/adr/0016).
+     */
+    private suspend fun settle(
+        appUserId: String,
+        purchase: Purchase,
+        endedBefore: PurchaseStatus?,
+        linkedToken: String?,
+        now: Instant,
+    ) {
+        val late = if (endedBefore == null) pendingEndings.find(Store.PLAY_STORE, purchase.token, clock.now()) else null
+        if (late != null) purchases.save(appUserId, purchase.copy(status = late, updatedAt = now))
+        if (endedBefore != null || late != null) {
+            pendingEndings.forget(Store.PLAY_STORE, purchase.token)
+        } else {
+            linked.expire(linkedToken, purchase.token, now)
+        }
     }
 
     /** Cheap checks first: nothing malformed or meant for another app costs a call to Google. */

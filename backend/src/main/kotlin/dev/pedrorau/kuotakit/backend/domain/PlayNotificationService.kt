@@ -30,6 +30,7 @@ class PlayNotificationService(
     private val purchases: PurchaseRepository,
     private val events: ProcessedEventRepository,
     private val clock: Clock,
+    private val pendingEndings: PendingEndingRepository,
 ) {
     /**
      * Throws [StoreUnavailableException] when Google could not be asked: nothing is remembered then, so Pub/Sub's
@@ -55,26 +56,38 @@ class PlayNotificationService(
         }
     }
 
-    /** Takes access away. A purchase that already ended for good keeps the reason it first had. */
+    /**
+     * Takes access away. A purchase that already ended for good keeps the reason it first had. One nobody has
+     * submitted yet cannot be changed, but the refund must not be lost: it waits for the receipt.
+     */
     private suspend fun end(
         token: String,
         status: PurchaseStatus,
     ): NotificationOutcome {
         val known = find(token)
-        return when {
-            known == null -> {
-                NotificationOutcome.UNKNOWN_PURCHASE
-            }
+        return if (known == null) waitForReceipt(token, status) else finish(known, status)
+    }
 
-            known.purchase.status.isFinal() -> {
-                NotificationOutcome.ALREADY_FINAL
-            }
-
-            else -> {
-                purchases.save(known.owner, known.purchase.copy(status = status, updatedAt = clock.now()))
-                NotificationOutcome.UPDATED
-            }
+    private suspend fun finish(
+        known: Known,
+        status: PurchaseStatus,
+    ): NotificationOutcome =
+        if (known.purchase.status.isFinal()) {
+            NotificationOutcome.ALREADY_FINAL
+        } else {
+            purchases.save(known.owner, known.purchase.copy(status = status, updatedAt = clock.now()))
+            NotificationOutcome.UPDATED
         }
+
+    private suspend fun waitForReceipt(
+        token: String,
+        status: PurchaseStatus,
+    ): NotificationOutcome {
+        pendingEndings.record(Store.PLAY_STORE, token, status, clock.now())
+        // The receipt may have been stored between the first look and the record: look again, so one of the two sees
+        // the other whatever the order.
+        val arrived = find(token) ?: return NotificationOutcome.RECORDED_FOR_LATER
+        return finish(arrived, status).also { pendingEndings.forget(Store.PLAY_STORE, token) }
     }
 
     private suspend fun refresh(token: String): NotificationOutcome {
