@@ -60,7 +60,13 @@ fun main() {
                 }
             }
         val receipts =
-            ReceiptService(playStore, config.google?.packageName, storage.purchases, Clock.System) {
+            ReceiptService(
+                playStore,
+                config.google?.packageName,
+                storage.purchases,
+                Clock.System,
+                storage.pendingEndings,
+            ) {
                 entitlements.isOneTime(Store.PLAY_STORE, it)
             }
         val notifications =
@@ -70,6 +76,7 @@ fun main() {
                 storage.purchases,
                 storage.events,
                 Clock.System,
+                storage.pendingEndings,
             )
         val pushVerifier = config.pubSub?.let { GooglePushTokenVerifier.create(it.audience, it.serviceAccountEmail) }
         val services =
@@ -80,6 +87,7 @@ fun main() {
                 receipts,
                 notifications,
                 pushVerifier,
+                rateLimit = config.rateLimit,
             )
         embeddedServer(Netty, port = config.port, host = "0.0.0.0") { module(services) }.start(wait = true)
     }

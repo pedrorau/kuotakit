@@ -33,6 +33,18 @@ data class GoogleConfig(
     val serviceAccountFile: Path,
 )
 
+/**
+ * How often a client may call the API per minute (docs/adr/0016): every authenticated call by client address, the calls
+ * that reach Google by client address and by app user id. [trustForwardedFor] reads the client address from the last
+ * `X-Forwarded-For` value, which is only right behind a reverse proxy that sets it.
+ */
+data class RateLimitConfig(
+    val perMinute: Int = 300,
+    val receiptsPerMinute: Int = 30,
+    val receiptsPerUserPerMinute: Int = 10,
+    val trustForwardedFor: Boolean = false,
+)
+
 /** How a Pub/Sub push proves it is ours: the audience set in the subscription and the account that signs the token. */
 data class PubSubConfig(
     val audience: String,
@@ -51,11 +63,12 @@ data class AppConfig(
     val entitlementsFile: Path,
     val google: GoogleConfig? = null,
     val pubSub: PubSubConfig? = null,
+    val rateLimit: RateLimitConfig = RateLimitConfig(),
 ) {
     // The generated toString would print the password and every API key the moment someone logs the configuration.
     override fun toString(): String =
         "AppConfig(port=$port, database=$database, appKeys=${appKeys.size} keys, secretKeys=${secretKeys.size} keys, " +
-            "entitlementsFile=$entitlementsFile, google=$google, pubSub=$pubSub)"
+            "entitlementsFile=$entitlementsFile, google=$google, pubSub=$pubSub, rateLimit=$rateLimit)"
 
     companion object {
         const val DEFAULT_PORT = 8080
@@ -88,6 +101,7 @@ data class AppConfig(
             }
             val google = google(env, problems)
             val pubSub = pubSub(env, google, problems)
+            val rateLimit = rateLimit(env, problems)
             if (problems.isNotEmpty()) {
                 throw ConfigException("Invalid configuration:\n" + problems.joinToString("\n") { " - $it" })
             }
@@ -100,6 +114,49 @@ data class AppConfig(
                     Path.of(env["KUOTAKIT_ENTITLEMENTS_FILE"]?.takeIf { it.isNotBlank() } ?: DEFAULT_ENTITLEMENTS_FILE),
                 google = google,
                 pubSub = pubSub,
+                rateLimit = rateLimit,
+            )
+        }
+
+        private fun rateLimit(
+            env: Map<String, String>,
+            problems: MutableList<String>,
+        ): RateLimitConfig {
+            val defaults = RateLimitConfig()
+
+            fun perMinute(
+                name: String,
+                default: Int,
+            ): Int {
+                val raw = env[name]?.trim()?.takeIf { it.isNotEmpty() } ?: return default
+                return raw.toIntOrNull()?.takeIf { it >= 1 }
+                    ?: default.also { problems += "$name must be a whole number of at least 1, not '$raw'" }
+            }
+
+            val trustRaw = env["KUOTAKIT_TRUST_FORWARDED_FOR"]?.trim()?.takeIf { it.isNotEmpty() }
+            val trust =
+                when (trustRaw) {
+                    null, "false" -> {
+                        false
+                    }
+
+                    "true" -> {
+                        true
+                    }
+
+                    else -> {
+                        false.also {
+                            problems +=
+                                "KUOTAKIT_TRUST_FORWARDED_FOR must be true or false, not '$trustRaw'"
+                        }
+                    }
+                }
+            return RateLimitConfig(
+                perMinute = perMinute("KUOTAKIT_RATE_LIMIT_PER_MINUTE", defaults.perMinute),
+                receiptsPerMinute = perMinute("KUOTAKIT_RATE_LIMIT_RECEIPTS_PER_MINUTE", defaults.receiptsPerMinute),
+                receiptsPerUserPerMinute =
+                    perMinute("KUOTAKIT_RATE_LIMIT_RECEIPTS_PER_USER_PER_MINUTE", defaults.receiptsPerUserPerMinute),
+                trustForwardedFor = trust,
             )
         }
 

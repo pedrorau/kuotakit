@@ -19,9 +19,13 @@ package dev.pedrorau.kuotakit.backend
 import dev.pedrorau.kuotakit.backend.domain.EntitlementCalculator
 import dev.pedrorau.kuotakit.backend.domain.toOfferingsResponse
 import dev.pedrorau.kuotakit.backend.google.PubSubPushParser
+import dev.pedrorau.kuotakit.backend.web.API_LIMIT
 import dev.pedrorau.kuotakit.backend.web.PushUnauthorizedException
+import dev.pedrorau.kuotakit.backend.web.RECEIPTS_IP_LIMIT
+import dev.pedrorau.kuotakit.backend.web.RECEIPTS_USER_LIMIT
 import dev.pedrorau.kuotakit.backend.web.errorResponse
 import dev.pedrorau.kuotakit.backend.web.installErrorHandling
+import dev.pedrorau.kuotakit.backend.web.installRateLimits
 import dev.pedrorau.kuotakit.contracts.APP_USER_ID_PATTERN
 import dev.pedrorau.kuotakit.contracts.ErrorCode
 import dev.pedrorau.kuotakit.contracts.HealthResponse
@@ -40,8 +44,10 @@ import io.ktor.server.auth.bearer
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
@@ -76,6 +82,7 @@ internal fun Application.module(services: Services) {
         }
     }
     installErrorHandling()
+    installRateLimits(services.rateLimit, services.apiKeys)
 
     val calculator = EntitlementCalculator(services.entitlements)
     routing {
@@ -85,24 +92,39 @@ internal fun Application.module(services: Services) {
 
         googleWebhook(services)
 
-        authenticate(API_AUTH) {
-            get("/v1/offerings") {
-                call.respond(services.entitlements.toOfferingsResponse())
+        // Counted before the key is checked, so a flood of wrong keys is limited too.
+        rateLimit(API_LIMIT) {
+            authenticate(API_AUTH) {
+                apiRoutes(services, calculator)
             }
+        }
+    }
+}
 
-            get("/v1/subscribers/{app_user_id}") {
-                val appUserId = call.parameters["app_user_id"].orEmpty()
-                if (!APP_USER_ID.matches(appUserId)) {
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        errorResponse(ErrorCode.INVALID_PAYLOAD, "Invalid app user id."),
-                    )
-                    return@get
-                }
-                val purchases = services.purchases.purchasesOf(appUserId)
-                call.respond(calculator.customerInfo(appUserId, purchases, services.clock.now()))
-            }
+private fun Route.apiRoutes(
+    services: Services,
+    calculator: EntitlementCalculator,
+) {
+    get("/v1/offerings") {
+        call.respond(services.entitlements.toOfferingsResponse())
+    }
 
+    get("/v1/subscribers/{app_user_id}") {
+        val appUserId = call.parameters["app_user_id"].orEmpty()
+        if (!APP_USER_ID.matches(appUserId)) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                errorResponse(ErrorCode.INVALID_PAYLOAD, "Invalid app user id."),
+            )
+            return@get
+        }
+        val purchases = services.purchases.purchasesOf(appUserId)
+        call.respond(calculator.customerInfo(appUserId, purchases, services.clock.now()))
+    }
+
+    // The only call that makes the backend ask Google, so it has its own, lower limits.
+    rateLimit(RECEIPTS_IP_LIMIT) {
+        rateLimit(RECEIPTS_USER_LIMIT) {
             post("/v1/subscribers/{app_user_id}/receipts") {
                 val appUserId = call.parameters["app_user_id"].orEmpty()
                 if (!APP_USER_ID.matches(appUserId)) {

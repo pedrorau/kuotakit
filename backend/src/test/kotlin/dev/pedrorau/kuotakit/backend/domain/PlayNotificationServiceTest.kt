@@ -45,6 +45,7 @@ private class NotificationSetup(
             purchases = repository,
             events = events,
             clock = FixedClock(LATER),
+            pendingEndings = PendingEndingRepository.None,
         )
 
     /** A purchase the app already submitted. */
@@ -99,7 +100,15 @@ class PlayNotificationServiceTest :
             s.google.subscription = { playSubscription(state = PlaySubscriptionState.IN_GRACE_PERIOD) }
             s.push(changed, "m1")
             s.current().billingIssueDetectedAt shouldBe LATER
-            val later = PlayNotificationService(s.google, PACKAGE, s.repository, s.events, FixedClock(LATER + 1.days))
+            val later =
+                PlayNotificationService(
+                    s.google,
+                    PACKAGE,
+                    s.repository,
+                    s.events,
+                    FixedClock(LATER + 1.days),
+                    PendingEndingRepository.None,
+                )
             later.handle(PlayPush("m2", PACKAGE, changed))
             s.current().billingIssueDetectedAt shouldBe LATER
         }
@@ -133,13 +142,10 @@ class PlayNotificationServiceTest :
 
         "a token nobody submitted creates nothing and costs no call to Google" {
             val s = NotificationSetup()
-            listOf(
-                changed,
-                PlayNotification.PurchaseVoided(TOKEN),
-                PlayNotification.SubscriptionRevoked(TOKEN),
-            ).forEachIndexed { i, notification ->
-                s.push(notification, "m$i") shouldBe NotificationOutcome.UNKNOWN_PURCHASE
-            }
+            // A change is read from Google when the receipt comes; a refund or a revocation waits for it (ADR 0016).
+            s.push(changed, "m0") shouldBe NotificationOutcome.UNKNOWN_PURCHASE
+            s.push(PlayNotification.PurchaseVoided(TOKEN), "m1") shouldBe NotificationOutcome.RECORDED_FOR_LATER
+            s.push(PlayNotification.SubscriptionRevoked(TOKEN), "m2") shouldBe NotificationOutcome.RECORDED_FOR_LATER
             s.google.calls shouldBe emptyList()
             s.repository.ownerOf(Store.PLAY_STORE, TOKEN) shouldBe null
         }
@@ -244,7 +250,15 @@ class PlayNotificationServiceTest :
                         purchaseToken: String,
                     ) = Unit
                 }
-            val service = PlayNotificationService(slow, PACKAGE, s.repository, s.events, FixedClock(LATER))
+            val service =
+                PlayNotificationService(
+                    slow,
+                    PACKAGE,
+                    s.repository,
+                    s.events,
+                    FixedClock(LATER),
+                    PendingEndingRepository.None,
+                )
             service.handle(PlayPush("renewal", PACKAGE, changed))
             s.current().status shouldBe PurchaseStatus.REFUNDED
             s.current().grantsAccessAt(LATER) shouldBe false

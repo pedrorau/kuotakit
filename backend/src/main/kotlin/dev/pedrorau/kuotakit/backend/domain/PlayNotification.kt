@@ -57,6 +57,7 @@ enum class NotificationOutcome {
     DUPLICATE,
     UNKNOWN_PURCHASE,
     ALREADY_FINAL,
+    RECORDED_FOR_LATER,
     STORE_REJECTED,
     IGNORED,
     OTHER_APP,

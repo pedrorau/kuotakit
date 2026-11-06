@@ -83,6 +83,14 @@ private val APP_USER_ID =
 private val internalError =
     error(500, ErrorCode.INTERNAL_ERROR, "Something unexpected went wrong; access is not granted.", "Internal error.")
 
+private val rateLimited =
+    error(
+        429,
+        ErrorCode.RATE_LIMITED,
+        "Too many requests from this client or for this user; wait the `Retry-After` seconds.",
+        "Too many requests; wait before trying again.",
+    )
+
 private val unauthorized =
     error(HTTP_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "The API key is missing or wrong.", "Missing or invalid API key.")
 
@@ -139,6 +147,7 @@ val ENDPOINTS: List<Endpoint> =
                 listOf(
                     Response(200, "The offerings.", model(OfferingsResponse.serializer(), Examples.offerings)),
                     unauthorized,
+                    rateLimited,
                     internalError,
                 ),
         ),
@@ -182,6 +191,7 @@ val ENDPOINTS: List<Endpoint> =
                         "The purchase token is linked to another user.",
                         "The purchase token belongs to another user.",
                     ),
+                    rateLimited,
                     error(
                         502,
                         ErrorCode.STORE_UNAVAILABLE,
@@ -208,6 +218,7 @@ val ENDPOINTS: List<Endpoint> =
                     Response(200, "The customer info.", model(CustomerInfo.serializer(), Examples.customerInfo)),
                     error(400, ErrorCode.INVALID_PAYLOAD, "The app user id is not valid.", "Invalid app user id."),
                     unauthorized,
+                    rateLimited,
                     internalError,
                 ),
         ),

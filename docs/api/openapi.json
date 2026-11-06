@@ -114,6 +114,22 @@
               }
             }
           },
+          "429": {
+            "description": "Too many requests from this client or for this user; wait the `Retry-After` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "rate_limited",
+                    "message": "Too many requests; wait before trying again."
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Something unexpected went wrong; access is not granted.",
             "content": {
@@ -268,6 +284,22 @@
               }
             }
           },
+          "429": {
+            "description": "Too many requests from this client or for this user; wait the `Retry-After` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "rate_limited",
+                    "message": "Too many requests; wait before trying again."
+                  }
+                }
+              }
+            }
+          },
           "502": {
             "description": "The store API is unavailable; access is not granted.",
             "content": {
@@ -385,6 +417,22 @@
                   "error": {
                     "code": "unauthorized",
                     "message": "Missing or invalid API key."
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests from this client or for this user; wait the `Retry-After` seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "rate_limited",
+                    "message": "Too many requests; wait before trying again."
                   }
                 }
               }
@@ -868,7 +916,8 @@
           "token_already_linked",
           "store_unavailable",
           "unauthorized",
-          "internal_error"
+          "internal_error",
+          "rate_limited"
         ]
       }
     }

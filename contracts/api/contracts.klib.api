@@ -10,6 +10,7 @@ final enum class dev.pedrorau.kuotakit.contracts/ErrorCode : kotlin/Enum<dev.ped
     enum entry INTERNAL_ERROR // dev.pedrorau.kuotakit.contracts/ErrorCode.INTERNAL_ERROR|null[0]
     enum entry INVALID_PAYLOAD // dev.pedrorau.kuotakit.contracts/ErrorCode.INVALID_PAYLOAD|null[0]
     enum entry PURCHASE_INVALID // dev.pedrorau.kuotakit.contracts/ErrorCode.PURCHASE_INVALID|null[0]
+    enum entry RATE_LIMITED // dev.pedrorau.kuotakit.contracts/ErrorCode.RATE_LIMITED|null[0]
     enum entry STORE_UNAVAILABLE // dev.pedrorau.kuotakit.contracts/ErrorCode.STORE_UNAVAILABLE|null[0]
     enum entry TOKEN_ALREADY_LINKED // dev.pedrorau.kuotakit.contracts/ErrorCode.TOKEN_ALREADY_LINKED|null[0]
     enum entry UNAUTHORIZED // dev.pedrorau.kuotakit.contracts/ErrorCode.UNAUTHORIZED|null[0]

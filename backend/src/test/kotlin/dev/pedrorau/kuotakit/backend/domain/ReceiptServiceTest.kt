@@ -44,6 +44,7 @@ private class Setup(
             androidPackageName = if (configured) PACKAGE else null,
             purchases = RecordingPurchaseRepository(repository, log),
             clock = FixedClock(),
+            pendingEndings = PendingEndingRepository.None,
         )
 
     suspend fun submit(
@@ -215,7 +216,7 @@ class ReceiptServiceTest :
             val firstSeen = s.stored().single().billingIssueDetectedAt
             firstSeen shouldBe NOW
             val later = FixedClock(NOW + 2.days)
-            val service = ReceiptService(s.google, PACKAGE, s.repository, later)
+            val service = ReceiptService(s.google, PACKAGE, s.repository, later, PendingEndingRepository.None)
             service.submit(USER, PlayStoreReceiptRequest(PACKAGE, "premium_monthly", "token-1"))
             s.stored().single().billingIssueDetectedAt shouldBe firstSeen
         }

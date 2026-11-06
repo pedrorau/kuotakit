@@ -20,8 +20,8 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.datetime.timestamp
 
 /**
- * The tables of `db/migration` (V1 subscribers and purchases, V3 store events). Flyway creates them; Exposed only
- * reads and writes.
+ * The tables of `db/migration` (V1 subscribers and purchases, V3 store events, V4 pending endings). Flyway creates
+ * them; Exposed only reads and writes.
  */
 internal object Subscribers : Table("subscribers") {
     val appUserId = text("app_user_id")
@@ -54,4 +54,13 @@ internal object StoreEvents : Table("store_events") {
     val receivedAt = timestamp("received_at")
 
     override val primaryKey = PrimaryKey(store, messageId)
+}
+
+internal object PendingEndings : Table("pending_endings") {
+    val store = text("store")
+    val purchaseToken = text("purchase_token")
+    val status = text("status")
+    val receivedAt = timestamp("received_at")
+
+    override val primaryKey = PrimaryKey(store, purchaseToken)
 }

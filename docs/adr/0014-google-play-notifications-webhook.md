@@ -20,7 +20,7 @@ After ADR 0013 the backend only learns about a subscription when the app sends i
 - Price-only notification types (8, 19, 22) do not change who has access: our reading of the reference.
 
 ## Known limits
-- **A refund or revocation that arrives before the first receipt is lost.** If the notification for a token nobody has submitted yet is acknowledged (204) and the receipt arrives later, the receipt reads Google's state, which may still look active. Likely rare (a purchase refunded before the app ever sent its receipt); a table of pending revocations would close it and is not part of this task.
+- **A refund or revocation that arrives before the first receipt was lost in this version (fixed by ADR 0016, which keeps it for 60 days).** If the notification for a token nobody has submitted yet is acknowledged (204) and the receipt arrives later, the receipt reads Google's state, which may still look active. Likely rare (a purchase refunded before the app ever sent its receipt); a table of pending revocations would close it and is not part of this task.
 - **Two non-final updates for one token** (for example a hold and a recovery read from Google at nearly the same time) are last-write-wins: both are states Google reported, and the later notification or receipt corrects it. Only the final statuses are protected.
 - The real verifier is tested on its own with signed tokens; the route tests use a fake verifier, and the wiring in `Main.kt` from the configuration is not covered by a test.
 - Logs are not tested for purchase tokens; the code never puts one in a log line, and the responses are fixed texts.

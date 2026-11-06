@@ -35,7 +35,15 @@ private val changed = PlayNotification.OneTimeChanged("token-1")
 private class OneTimeNotificationSetup {
     val google = FakePlayStoreApi()
     val repository = InMemoryPurchaseRepository()
-    val service = PlayNotificationService(google, PACKAGE, repository, InMemoryProcessedEvents(), FixedClock(LATER))
+    val service =
+        PlayNotificationService(
+            google,
+            PACKAGE,
+            repository,
+            InMemoryProcessedEvents(),
+            FixedClock(LATER),
+            PendingEndingRepository.None,
+        )
 
     suspend fun stored() =
         purchase(token = "token-1", productId = "lifetime_unlock", kind = PurchaseKind.NON_CONSUMABLE, expiresAt = null)

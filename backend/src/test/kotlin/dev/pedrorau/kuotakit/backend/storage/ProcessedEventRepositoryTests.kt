@@ -16,9 +16,11 @@
 
 package dev.pedrorau.kuotakit.backend.storage
 
+import dev.pedrorau.kuotakit.backend.testing.InMemoryPendingEndings
 import dev.pedrorau.kuotakit.backend.testing.InMemoryProcessedEvents
 import dev.pedrorau.kuotakit.backend.testing.InMemoryPurchaseRepository
 import dev.pedrorau.kuotakit.backend.testing.TestPostgres
+import dev.pedrorau.kuotakit.backend.testing.pendingEndingRepositoryContract
 import dev.pedrorau.kuotakit.backend.testing.processedEventRepositoryContract
 import dev.pedrorau.kuotakit.backend.testing.purchaseFinalStatusContract
 import io.kotest.core.spec.style.StringSpec
@@ -47,4 +49,17 @@ class PostgresPurchaseFinalStatusTest :
         val storage = PostgresStorage.open(TestPostgres.newDatabase())
         afterSpec { storage.close() }
         purchaseFinalStatusContract { storage.purchases }
+    })
+
+class InMemoryPendingEndingsTest :
+    StringSpec({
+        val repository = InMemoryPendingEndings()
+        pendingEndingRepositoryContract { repository }
+    })
+
+class PostgresPendingEndingRepositoryTest :
+    StringSpec({
+        val storage = PostgresStorage.open(TestPostgres.newDatabase())
+        afterSpec { storage.close() }
+        pendingEndingRepositoryContract { storage.pendingEndings }
     })

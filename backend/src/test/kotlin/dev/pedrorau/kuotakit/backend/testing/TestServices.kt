@@ -17,9 +17,11 @@
 package dev.pedrorau.kuotakit.backend.testing
 
 import dev.pedrorau.kuotakit.backend.Services
+import dev.pedrorau.kuotakit.backend.config.RateLimitConfig
 import dev.pedrorau.kuotakit.backend.domain.CONFIG
 import dev.pedrorau.kuotakit.backend.domain.EntitlementsConfig
 import dev.pedrorau.kuotakit.backend.domain.NOW
+import dev.pedrorau.kuotakit.backend.domain.PendingEndingRepository
 import dev.pedrorau.kuotakit.backend.domain.PlayNotificationService
 import dev.pedrorau.kuotakit.backend.domain.PlayStoreApi
 import dev.pedrorau.kuotakit.backend.domain.ProcessedEventRepository
@@ -43,21 +45,33 @@ class FixedClock(
 
 const val ANDROID_PACKAGE = "com.acme.app"
 
+@Suppress("LongParameterList") // a builder with defaults: the long list is what keeps the tests short
 fun testServices(
     purchases: PurchaseRepository = InMemoryPurchaseRepository(),
     playStore: PlayStoreApi? = FakePlayStoreApi(),
     events: ProcessedEventRepository = InMemoryProcessedEvents(),
     pushVerifier: PushTokenVerifier? = null,
     entitlements: EntitlementsConfig = CONFIG,
+    rateLimit: RateLimitConfig = RateLimitConfig(),
+    pendingEndings: PendingEndingRepository = InMemoryPendingEndings(),
 ) = Services(
     entitlements = entitlements,
     apiKeys = ApiKeys(listOf(APP_KEY), listOf(SECRET_KEY)),
     purchases = purchases,
     receipts =
-        ReceiptService(playStore, ANDROID_PACKAGE, purchases, FixedClock()) {
+        ReceiptService(playStore, ANDROID_PACKAGE, purchases, FixedClock(), pendingEndings) {
             entitlements.isOneTime(Store.PLAY_STORE, it)
         },
-    notifications = PlayNotificationService(playStore, ANDROID_PACKAGE, purchases, events, FixedClock()),
+    notifications =
+        PlayNotificationService(
+            playStore,
+            ANDROID_PACKAGE,
+            purchases,
+            events,
+            FixedClock(),
+            pendingEndings,
+        ),
     pushVerifier = pushVerifier,
     clock = FixedClock(),
+    rateLimit = rateLimit,
 )

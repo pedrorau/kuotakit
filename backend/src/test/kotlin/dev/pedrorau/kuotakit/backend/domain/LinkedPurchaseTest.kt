@@ -33,9 +33,16 @@ private const val USER = "anon_1"
 private class UpgradeSetup {
     val google = FakePlayStoreApi()
     val repository = InMemoryPurchaseRepository()
-    val receipts = ReceiptService(google, PACKAGE, repository, FixedClock())
+    val receipts = ReceiptService(google, PACKAGE, repository, FixedClock(), PendingEndingRepository.None)
     val notifications =
-        PlayNotificationService(google, PACKAGE, repository, InMemoryProcessedEvents(), FixedClock())
+        PlayNotificationService(
+            google,
+            PACKAGE,
+            repository,
+            InMemoryProcessedEvents(),
+            FixedClock(),
+            PendingEndingRepository.None,
+        )
 
     /** The plan the user had before. */
     suspend fun oldPurchase(
