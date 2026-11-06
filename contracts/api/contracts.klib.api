@@ -453,3 +453,5 @@ final const val dev.pedrorau.kuotakit.contracts/APP_USER_ID_PATTERN // dev.pedro
 
 final val dev.pedrorau.kuotakit.contracts/kuotaKitJson // dev.pedrorau.kuotakit.contracts/kuotaKitJson|{}kuotaKitJson[0]
     final fun <get-kuotaKitJson>(): kotlinx.serialization.json/Json // dev.pedrorau.kuotakit.contracts/kuotaKitJson.<get-kuotaKitJson>|<get-kuotaKitJson>(){}[0]
+
+final fun dev.pedrorau.kuotakit.contracts/playObfuscatedAccountId(kotlin/String): kotlin/String // dev.pedrorau.kuotakit.contracts/playObfuscatedAccountId|playObfuscatedAccountId(kotlin.String){}[0]

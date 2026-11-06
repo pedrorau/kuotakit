@@ -23,6 +23,7 @@ import dev.pedrorau.kuotakit.backend.testing.RecordingPurchaseRepository
 import dev.pedrorau.kuotakit.backend.testing.playOneTime
 import dev.pedrorau.kuotakit.backend.testing.playSubscription
 import dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest
+import dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -116,7 +117,7 @@ class OneTimeReceiptServiceTest :
 
         "the user attached to the purchase is the only one who can claim it" {
             val s = OneTimeSetup()
-            s.google.oneTime = { playOneTime(obfuscatedAccountId = "anon_buyer") }
+            s.google.oneTime = { playOneTime(obfuscatedAccountId = playObfuscatedAccountId("anon_buyer")) }
             shouldThrow<TokenAlreadyLinkedException> { s.submit(user = "anon_other") }
             s.stored("anon_other") shouldBe emptyList()
             s.submit(user = "anon_buyer")
@@ -125,9 +126,13 @@ class OneTimeReceiptServiceTest :
 
         "a token already stored for another user cannot be claimed" {
             val s = OneTimeSetup()
+            s.google.oneTime = { playOneTime(obfuscatedAccountId = playObfuscatedAccountId("owner")) }
             s.submit(user = "owner")
+            // even if Google named the thief's account for this token, the one who stored it first keeps it
+            s.google.oneTime = { playOneTime(obfuscatedAccountId = playObfuscatedAccountId("thief")) }
             shouldThrow<TokenAlreadyLinkedException> { s.submit(user = "thief") }
             s.stored("thief") shouldBe emptyList()
+            s.stored("owner").size shouldBe 1
         }
 
         "sending the receipt again after a refund brings nothing back" {

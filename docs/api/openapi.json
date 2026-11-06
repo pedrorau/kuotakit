@@ -253,7 +253,7 @@
             }
           },
           "402": {
-            "description": "The store says the purchase is not valid.",
+            "description": "The store says the purchase is not valid, or it carries no account id (the app must attach it).",
             "content": {
               "application/json": {
                 "schema": {

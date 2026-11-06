@@ -1,3 +1,7 @@
+public final class dev/pedrorau/kuotakit/contracts/AccountIdKt {
+	public static final fun playObfuscatedAccountId (Ljava/lang/String;)Ljava/lang/String;
+}
+
 public final class dev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest : dev/pedrorau/kuotakit/contracts/ReceiptRequest {
 	public static final field Companion Ldev/pedrorau/kuotakit/contracts/AppStoreReceiptRequest$Companion;
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V

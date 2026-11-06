@@ -199,4 +199,20 @@ class LinkedPurchaseTest :
             s.submitNew()
             s.purchaseOf("old-token") shouldBe lifetime
         }
+
+        "an upgrade whose new purchase carries no account id is refused, and the plan the user has is left alone" {
+            val s = UpgradeSetup()
+            val before = s.oldPurchase()
+            s.google.subscription = {
+                playSubscription(
+                    productId = "premium_annual",
+                    acknowledged = false,
+                    obfuscatedAccountId = null,
+                    linkedPurchaseToken = "old-token",
+                )
+            }
+            shouldThrow<PurchaseInvalidException> { s.submitNew() }
+            s.purchaseOf("old-token") shouldBe before
+            s.repository.purchasesOf(USER).size shouldBe 1
+        }
     })
