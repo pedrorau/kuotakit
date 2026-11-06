@@ -24,6 +24,7 @@ import dev.pedrorau.kuotakit.backend.testing.playSubscription
 import dev.pedrorau.kuotakit.contracts.AppStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.Store
+import dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -156,17 +157,28 @@ class ReceiptServiceTest :
 
         "a token that belongs to another user cannot be claimed, and is not acknowledged" {
             val s = Setup()
+            s.google.subscription = { playSubscription(obfuscatedAccountId = playObfuscatedAccountId("owner")) }
             s.submit(user = "owner")
             s.log.clear()
-            s.google.subscription = { playSubscription(acknowledged = false) }
+            // Google still says the purchase is the owner's: the thief cannot claim it
+            s.google.subscription = {
+                playSubscription(acknowledged = false, obfuscatedAccountId = playObfuscatedAccountId("owner"))
+            }
             shouldThrow<TokenAlreadyLinkedException> { s.submit(user = "thief") }
             s.stored("thief") shouldBe emptyList()
             s.log shouldBe listOf("get:token-1")
+            // and even if it named the thief's account, the one who stored the token first keeps it
+            s.google.subscription = {
+                playSubscription(acknowledged = false, obfuscatedAccountId = playObfuscatedAccountId("thief"))
+            }
+            shouldThrow<TokenAlreadyLinkedException> { s.submit(user = "thief") }
+            s.stored("thief") shouldBe emptyList()
+            s.log.none { it.startsWith("acknowledge") } shouldBe true
         }
 
         "when the app attached a user to the purchase only that user can claim it" {
             val s = Setup()
-            s.google.subscription = { playSubscription(obfuscatedAccountId = "anon_buyer") }
+            s.google.subscription = { playSubscription(obfuscatedAccountId = playObfuscatedAccountId("anon_buyer")) }
             shouldThrow<TokenAlreadyLinkedException> { s.submit(user = "anon_other") }
             s.stored("anon_other") shouldBe emptyList()
             s.log.none { it.startsWith("acknowledge") } shouldBe true
@@ -174,11 +186,38 @@ class ReceiptServiceTest :
             s.stored("anon_buyer").size shouldBe 1
         }
 
-        "a purchase with no account attached can be claimed by whoever sends it first" {
+        "a purchase with no account id attached is refused, whoever sends it, and is not acknowledged (ADR 0017)" {
             val s = Setup()
             s.google.subscription = { playSubscription(obfuscatedAccountId = null) }
-            s.submit(user = "anon_first")
-            s.stored("anon_first").size shouldBe 1
+            shouldThrow<PurchaseInvalidException> { s.submit(user = "anon_first") }
+            shouldThrow<PurchaseInvalidException> { s.submit(user = "anon_second") }
+            s.stored("anon_first") shouldBe emptyList()
+            s.stored("anon_second") shouldBe emptyList()
+            s.log.none { it.startsWith("acknowledge") || it.startsWith("save") } shouldBe true
+        }
+
+        "the app user id in plain text is not an account id: only its hash is" {
+            val s = Setup()
+            s.google.subscription = { playSubscription(obfuscatedAccountId = USER) }
+            shouldThrow<TokenAlreadyLinkedException> { s.submit() }
+            s.stored() shouldBe emptyList()
+            s.google.subscription =
+                { playSubscription(obfuscatedAccountId = playObfuscatedAccountId(USER).uppercase()) }
+            shouldThrow<TokenAlreadyLinkedException> { s.submit() }
+            s.stored() shouldBe emptyList()
+        }
+
+        "nothing is trimmed or normalised: the value must be exactly what the shared function gives" {
+            val s = Setup()
+            val exact = playObfuscatedAccountId(USER)
+            listOf(exact + " ", exact + "\n", exact + "x", " $exact", exact.dropLast(1)).forEach { wrong ->
+                s.google.subscription = { playSubscription(obfuscatedAccountId = wrong) }
+                shouldThrow<TokenAlreadyLinkedException> { s.submit() }
+            }
+            s.stored() shouldBe emptyList()
+            s.google.subscription = { playSubscription(acknowledged = true, obfuscatedAccountId = exact) }
+            s.submit()
+            s.stored().size shouldBe 1
         }
 
         "without Google Play configured the receipt cannot be validated, so nothing is granted" {

@@ -32,6 +32,9 @@ Without them the backend only learns about a purchase when the app sends the rec
 
 If the token cannot be verified the backend answers `401`; if Google's keys or the Play API cannot be reached it answers `502` and Pub/Sub retries. A notification that can never be handled (another app, a test message, a body that cannot be read) is answered `204` and shows in the log.
 
+## What the app must do when it starts a purchase
+The backend only accepts a purchase that says whose it is (ADR 0017). The SDK (not written yet) will do it for you; until then, and for any app with its own client, give Google, in `BillingFlowParams.Builder.setObfuscatedAccountId(...)`, the **SHA-256 of the app user id as 64 lowercase hexadecimal characters** (`playObfuscatedAccountId(appUserId)` in `contracts/`). Do not send the id itself: Google limits the field to 64 characters, may block purchases that look like personal data and recommends a one-way hash. Set it also when the purchase replaces another subscription. A purchase without it is refused with `402`, one with another user's with `409`, and in both cases it is not acknowledged; Google's documentation says that a purchase not acknowledged within three days is refunded. That includes purchases that do not start in your app (a promo code redeemed in the Play Store, a resubscription from Play's subscription centre): they carry no account id and cannot be accepted.
+
 ## Good to know
 - The container runs as an unprivileged user. If the backend says it cannot read the service account, make the file readable by others and keep the folder private, so only your user reaches it on the host: `chmod 700 secrets && chmod 644 secrets/play-service-account.json` (*not in the official page*).
 - The official page does not say how long the access takes to apply after the invitation. If Google answers 401 or 403 right after step 5, the backend answers `502 store_unavailable` and grants nothing; try again later.

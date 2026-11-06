@@ -26,9 +26,13 @@ import dev.pedrorau.kuotakit.backend.domain.PlaySubscriptionItem
 import dev.pedrorau.kuotakit.backend.domain.PlaySubscriptionState
 import dev.pedrorau.kuotakit.backend.domain.Purchase
 import dev.pedrorau.kuotakit.backend.domain.PurchaseRepository
+import dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId
 import kotlinx.coroutines.yield
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
+
+/** The app user most tests buy as; its account id is what a purchase carries unless a test says otherwise. */
+const val DEFAULT_BUYER = "anon_1"
 
 /** What a subscription looks like at [dev.pedrorau.kuotakit.backend.domain.NOW] unless a test says otherwise. */
 @Suppress("LongParameterList") // a builder with defaults: the long list is what keeps the tests short
@@ -39,7 +43,7 @@ fun playSubscription(
     autoRenewing: Boolean = true,
     offerPhase: PlayOfferPhase = PlayOfferPhase.BASE_PRICE,
     acknowledged: Boolean = false,
-    obfuscatedAccountId: String? = null,
+    obfuscatedAccountId: String? = playObfuscatedAccountId(DEFAULT_BUYER),
     startTime: Instant? = dev.pedrorau.kuotakit.backend.domain.NOW - 20.days,
     linkedPurchaseToken: String? = null,
 ) = PlaySubscription(
@@ -58,7 +62,7 @@ fun playOneTime(
     productId: String = "lifetime_unlock",
     refundableQuantity: Int? = 1,
     acknowledged: Boolean = false,
-    obfuscatedAccountId: String? = null,
+    obfuscatedAccountId: String? = playObfuscatedAccountId(DEFAULT_BUYER),
     completionTime: Instant? = dev.pedrorau.kuotakit.backend.domain.NOW - 2.days,
 ) = PlayOneTimePurchase(
     state = state,

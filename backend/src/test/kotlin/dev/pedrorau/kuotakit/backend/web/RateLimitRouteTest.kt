@@ -33,6 +33,7 @@ import dev.pedrorau.kuotakit.contracts.ErrorResponse
 import dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.ReceiptRequest
 import dev.pedrorau.kuotakit.contracts.kuotaKitJson
+import dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotContain
@@ -53,7 +54,13 @@ private const val TOKEN = "SECRET-purchase-token-123"
 
 private class Limited(
     val google: FakePlayStoreApi = FakePlayStoreApi(),
-)
+) {
+    /** From now on Google says the purchase is [user]'s, as it does when the app attaches the account id. */
+    fun buyingAs(user: String) {
+        google.subscription =
+            { playSubscription(acknowledged = true, obfuscatedAccountId = playObfuscatedAccountId(user)) }
+    }
+}
 
 private fun withLimits(
     config: RateLimitConfig,
@@ -110,7 +117,7 @@ class RateLimitRouteTest :
     StringSpec({
         "one user cannot make the backend ask Google over and over, and others are not affected" {
             withLimits(RateLimitConfig(receiptsPerUserPerMinute = 2)) { limited ->
-                limited.google.subscription = { playSubscription(acknowledged = true) }
+                limited.buyingAs("anon_1")
                 receipt("anon_1").status shouldBe HttpStatusCode.OK
                 receipt("anon_1").status shouldBe HttpStatusCode.OK
                 val limit = receipt("anon_1")
@@ -120,15 +127,18 @@ class RateLimitRouteTest :
                 (limit.headers[HttpHeaders.RetryAfter]!!.toInt() in 1..60) shouldBe true
                 OpenApiContract.assertResponseMatches(HttpMethod.Post, "/v1/subscribers/anon_1/receipts", limit)
                 limited.google.calls.size shouldBe 2
+                limited.buyingAs("anon_2")
                 receipt("anon_2").status shouldBe HttpStatusCode.OK
             }
         }
 
         "one client cannot spread the calls over many users to get past the limit" {
             withLimits(RateLimitConfig(receiptsPerMinute = 2)) { limited ->
-                limited.google.subscription = { playSubscription(acknowledged = true) }
+                limited.buyingAs("anon_1")
                 receipt("anon_1").status shouldBe HttpStatusCode.OK
+                limited.buyingAs("anon_2")
                 receipt("anon_2").status shouldBe HttpStatusCode.OK
+                limited.buyingAs("anon_3")
                 receipt("anon_3").status shouldBe HttpStatusCode.TooManyRequests
                 limited.google.calls.size shouldBe 2
             }

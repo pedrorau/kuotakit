@@ -17,7 +17,7 @@ Estimates assume ~10 hours per week. Each phase ends with an exit criterion that
 - Backend (Ktor), part 2b (done): the Google RTDN webhook (ADR 0014).
 - Backend (Ktor), part 2c (done): one-time products and `linkedPurchaseToken` (ADR 0015).
 - Backend (Ktor), part 2d (done): request limits and refunds that arrive before the first receipt (ADR 0016).
-- Before the SDK: require the `obfuscatedExternalAccountId` on Google receipts (today a token without one can be claimed by whoever sends it first, ADR 0013); the SDK will always set it.
+- Require the account id on Google receipts (done, ADR 0017). The SDK must attach `playObfuscatedAccountId(appUserId)` when it starts a purchase.
 - Conformance suite: first scenarios (valid purchase, invalid purchase, refund, store failure, token reuse), running in CI.
 - SDK core (KMP) + Android adapter: configure, getOfferings, purchase, restore, getCustomerInfo, customer info listener.
 - Example Android app against a Play Console internal-testing track.

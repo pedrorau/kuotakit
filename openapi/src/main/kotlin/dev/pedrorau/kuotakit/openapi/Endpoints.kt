@@ -182,7 +182,8 @@ val ENDPOINTS: List<Endpoint> =
                     error(
                         402,
                         ErrorCode.PURCHASE_INVALID,
-                        "The store says the purchase is not valid.",
+                        "The store says the purchase is not valid, or it carries no account id " +
+                            "(the app must attach it).",
                         "The store rejected the purchase.",
                     ),
                     error(

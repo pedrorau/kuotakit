@@ -20,6 +20,7 @@ import dev.pedrorau.kuotakit.contracts.AppStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.ReceiptRequest
 import dev.pedrorau.kuotakit.contracts.Store
+import dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -53,7 +54,7 @@ class ReceiptService(
 
     /** What Google said about a token, in the terms [accept] needs, whatever kind of product it is. */
     private class Read(
-        val attachedUser: String?,
+        val attachedAccount: String?,
         val acknowledged: Boolean,
         val linkedToken: String?,
         val build: (existing: Purchase?, now: Instant) -> Purchase,
@@ -72,7 +73,7 @@ class ReceiptService(
             if (isOneTime(productId)) {
                 val purchase = api.oneTimePurchase(token)
                 Read(
-                    attachedUser = purchase.obfuscatedAccountId,
+                    attachedAccount = purchase.obfuscatedAccountId,
                     acknowledged = purchase.acknowledged,
                     linkedToken = null,
                     build = {
@@ -86,7 +87,7 @@ class ReceiptService(
             } else {
                 val subscription = api.subscription(token)
                 Read(
-                    attachedUser = subscription.obfuscatedAccountId,
+                    attachedAccount = subscription.obfuscatedAccountId,
                     acknowledged = subscription.acknowledged,
                     linkedToken = subscription.linkedPurchaseToken,
                     build = { existing, now ->
@@ -104,7 +105,7 @@ class ReceiptService(
         read: Read,
     ) {
         val owner = purchases.ownerOf(Store.PLAY_STORE, token)
-        checkOwnership(appUserId, token, read.attachedUser, owner)
+        checkOwnership(appUserId, token, read.attachedAccount, owner)
 
         val now = clock.now()
         val existing = if (owner == null) null else purchases.purchasesOf(appUserId).firstOrNull { it.token == token }
@@ -170,16 +171,22 @@ class ReceiptService(
     }
 
     /**
-     * The app can attach the user to the purchase when it buys; if it did, only that user may claim it. Whoever
-     * stored the token first keeps it.
+     * The purchase must say whose it is: the app attaches [playObfuscatedAccountId] of the app user to it when it
+     * starts the purchase, and only that user may claim it (docs/adr/0017). A purchase with no account id, or with
+     * another one, is not accepted; and whoever stored the token first keeps it.
      */
     private fun checkOwnership(
         appUserId: String,
         token: String,
-        attachedUser: String?,
+        attachedAccount: String?,
         owner: String?,
     ) {
-        val foreign = (attachedUser != null && attachedUser != appUserId) || (owner != null && owner != appUserId)
+        if (attachedAccount == null) {
+            throw PurchaseInvalidException(
+                "The purchase has no account id: the app must attach it when it starts the purchase",
+            )
+        }
+        val foreign = attachedAccount != playObfuscatedAccountId(appUserId) || (owner != null && owner != appUserId)
         if (foreign) throw TokenAlreadyLinkedException(Store.PLAY_STORE, token)
     }
 

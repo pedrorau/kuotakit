@@ -33,6 +33,7 @@ import dev.pedrorau.kuotakit.contracts.ErrorResponse
 import dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.ReceiptRequest
 import dev.pedrorau.kuotakit.contracts.kuotaKitJson
+import dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -178,7 +179,10 @@ class ReceiptRouteTest :
 
         "a token that belongs to another user is a 409 and the owner keeps it" {
             withBackend { backend ->
+                val google = backend.google!!
+                google.subscription = { playSubscription(obfuscatedAccountId = playObfuscatedAccountId("owner")) }
                 post(user = "owner").status shouldBe HttpStatusCode.OK
+                // Google still says the purchase is the owner's
                 val response = post(user = "thief")
                 response.status shouldBe HttpStatusCode.Conflict
                 response.error() shouldBe ErrorCode.TOKEN_ALREADY_LINKED
