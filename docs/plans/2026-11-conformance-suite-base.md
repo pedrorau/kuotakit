@@ -41,7 +41,7 @@ Level 2 IDs are added to `conformance/manifest.txt` by part 2b, which owns them.
 - [x] The fake Google is complete for part 2b (the Pub/Sub push signer itself is 2b) — checked by: its own tests (`FakeGoogleTest`) over the token endpoint, the Play calls and their defaults, scripted answers, both signing key formats, the control API and the call log.
 - [x] Nothing secret is stored — checked by: `git ls-files conformance` lists no key, certificate or service account file.
 - [x] The suite never imports the backend — checked by: the Konsist rule and its canary.
-- [ ] The CI job is part of `ci` — checked by: `ci.yml` lists it in `needs` of `ci`; a green pull request run shows it.
+- [x] The CI job is part of `ci` — checked by: `ci.yml` lists it in `needs` of `ci`; a green pull request run shows it.
 - [x] The image is built, not published — checked by: `grep -rn "docker push\|ghcr.io\|docker/login-action" .github/workflows` finds nothing.
 - [x] ADR 0007 states the policy of levels and the document has the sections Manifest, What your backend needs and Plugging in a backend — checked by: `grep -n "^## " docs/adr/0007-*.md docs/conformance.md`.
 - [x] An independent read-only review of the diff against these criteria found nothing that blocks — checked by: the review report (a subagent, read-only). It found five things to fix before merge (a run id that could repeat within a minute, a CI path filter, an unused dependency on `contracts`, a brittle grep in the stub step, a manifest the suite did not read) and some documentation drift; all were fixed and the compose runs and the build repeated.
@@ -54,7 +54,7 @@ Level 2 IDs are added to `conformance/manifest.txt` by part 2b, which owns them.
 - [x] The mutant proxy and its test.
 - [x] The image, the compose file, the CI job.
 - [x] The Konsist rule, `docs/conformance.md`, ADR 0007, `AGENTS.md`.
-- [ ] Review, commit, push, pull request (the maintainer merges).
+- [x] Review, commit, push, pull request (the maintainer merges).
 
 ## Validation
 The compose runs above locally on Colima and in CI; `./gradlew build`; the Konsist canary. Negative checks: removing an OpenAPI validation must let its mutant pass unnoticed; a deliberately broken behaviour through the proxy must turn the suite red.
@@ -68,6 +68,7 @@ None. The fake Google keeps a scripted answer per scenario and forgets it when t
 - The suite runs the shipped image with the test-only lock of ADR 0018 open; fixtures generated at start; packaged as a Docker image; complete, not modest (original plan).
 
 ## Status
-In progress
+Done
 - 2026-11-11: split from the original plan, not started.
 - 2026-11-11: implemented on the branch; every criterion checked locally except the green pull request run of the CI job (it needs the pull request). Waiting for the maintainer's OK to commit.
+- 2026-11-12: PR #14 merged with the CI job green (checked in the pull request run).

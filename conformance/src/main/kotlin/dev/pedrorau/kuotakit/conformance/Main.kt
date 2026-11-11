@@ -44,7 +44,7 @@ private fun waitFor(
 private fun fakeGoogle(): Nothing {
     val publicUrl = setting("CONFORMANCE_FAKE_GOOGLE_URL", "http://fake-google:${Fixture.FAKE_GOOGLE_PORT}")
     Fixtures.write(Path.of(setting("CONFORMANCE_FIXTURES_DIR", "/fixtures")), "$publicUrl/token")
-    FakeGoogle(Fixture.FAKE_GOOGLE_PORT, SigningKey.generate()).use {
+    FakeGoogle(Fixture.FAKE_GOOGLE_PORT, Fixture.FAKE_GOOGLE_CONTROL_PORT, SigningKey.generate()).use {
         println("Fake Google listening on port ${it.port}; fixtures written.")
         CountDownLatch(1).await()
     }
@@ -58,7 +58,8 @@ private fun suite(selfCheck: Boolean): Nothing {
         exitProcess(2)
     }
     val backendUrl = setting("CONFORMANCE_BACKEND_URL", "http://backend:8080")
-    val googleUrl = setting("CONFORMANCE_FAKE_GOOGLE_URL", "http://fake-google:${Fixture.FAKE_GOOGLE_PORT}")
+    val googleUrl =
+        setting("CONFORMANCE_FAKE_GOOGLE_CONTROL_URL", "http://fake-google:${Fixture.FAKE_GOOGLE_CONTROL_PORT}")
     val level = setting("CONFORMANCE_LEVEL", "all")
     require(level in setOf("1", "all")) { "CONFORMANCE_LEVEL must be 1 or all, not '$level'" }
     val selection = Selection(level2 = level == "all", reference = setting("CONFORMANCE_REFERENCE", "false") == "true")

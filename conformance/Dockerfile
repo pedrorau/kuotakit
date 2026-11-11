@@ -9,5 +9,5 @@ RUN mkdir /fixtures && chown conformance /fixtures
 COPY build/install/conformance /app
 
 USER conformance
-EXPOSE 9000
+EXPOSE 9000 9001
 ENTRYPOINT ["/app/bin/conformance"]

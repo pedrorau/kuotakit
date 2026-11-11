@@ -13,3 +13,40 @@ L1-10 a flood of wrong keys does not use up the budget of good keys
 L1-11 every response that docs/api/openapi.json describes matches it
 L1-12 the codes of the error bodies are the ones of the table Errors in docs/api-spec.md
 R-01 an App Store receipt is a 400 until Phase 2 (reference backend only)
+L2-01 a valid subscription grants its entitlement and the fake Google's log shows one acknowledge
+L2-02 a free trial and an introductory price show in the period type
+L2-03 an expired subscription, and one past its end date though Google still says active, deny
+L2-04 a subscription in its grace period grants and dates the billing problem
+L2-05 on hold and paused subscriptions deny, and when Google later reports one active again and the receipt is sent again, access returns
+L2-06 a subscription cancelled until its end grants and does not renew
+L2-07 pending and unknown subscription states are a 402, the customer info stays empty and the log shows no acknowledge
+L2-08 a receipt for a product that the purchase does not match is a 402
+L2-09 a subscription that Google reports as already acknowledged is not acknowledged again
+L2-10 a failing acknowledgement is a 502 and the customer info stays empty; once it stops failing the same receipt is a 200 with one acknowledge in the log
+L2-11 a valid one-time purchase grants with no end date and is listed as a non-subscription purchase
+L2-12 a refunded one-time purchase (nothing left to refund) denies
+L2-13 a one-time purchase with no refundable quantity is a 402
+L2-14 pending and cancelled one-time purchases are a 402
+L2-15 a subscription without the account id is a 402, the customer info stays empty and the log shows no acknowledge
+L2-16 a subscription with another user's account id is a 409
+L2-17 an account id that is the plain app user id, another case of the hash or the hash with added spaces is a 409
+L2-18 one token claimed by two users: the second is a 409 and the first still has the access
+L2-19 an upgrade ends the old plan, and a refused new purchase leaves the old plan alone
+L2-20 a 400, 404 or 410 from Google when reading is a 402
+L2-21 a 401, 403, 429, 500 or 503 from Google when reading is a 502 and grants nothing
+L2-22 a refused connection to Google is a 502
+L2-23 a receipt for another package is a 400 and the log shows that Google was not asked
+L2-24 a push without proof, or with a wrong audience, account, unverified email, issuer, expired, badly signed or alg none token, is a 401 and the customer info does not change
+L2-25 a test message is a 204
+L2-26 a refund removes access for good and a receipt sent again does not restore it
+L2-27 a revocation removes access for good as a refund does
+L2-28 a refund before the receipt: the receipt that comes later is answered with no access, and the log shows no acknowledge
+L2-29 a duplicate message is handled once (the log shows one read)
+L2-30 a notification of another app is a 204 and the log shows that Google was not asked
+L2-31 a renewal is read again and extends the access
+L2-32 one-time purchase cancellation and refund notifications remove access
+L2-33 an unreadable body is a 204, and unreachable signing keys are a 502
+L2-34 a notification for a purchase nobody submitted is a 204, the customer info stays empty, and a receipt that comes later behaves as a new one
+L2-35 a one-time purchase without the account id is a 402
+L2-36 a one-time purchase with another user's account id is a 409
+L2-37 a deferred replacement (the new line item has no end date) is a 402 and leaves the old plan alone

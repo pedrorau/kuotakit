@@ -14,7 +14,7 @@ services:
     volumes:
       - fixtures:/fixtures
     healthcheck:
-      test: ["CMD", "/app/bin/conformance", "ping", "http://localhost:9000/health"]
+      test: ["CMD", "/app/bin/conformance", "ping", "http://localhost:9001/health"]
       interval: 2s
       timeout: 10s
       retries: 30
@@ -74,7 +74,7 @@ services:
         condition: service_started
     environment:
       CONFORMANCE_BACKEND_URL: http://backend:8080
-      CONFORMANCE_FAKE_GOOGLE_URL: http://fake-google:9000
+      CONFORMANCE_FAKE_GOOGLE_CONTROL_URL: http://fake-google:9001
       # `all` (the default) or `1` for a backend that cannot redirect its Google calls.
       CONFORMANCE_LEVEL: ${CONFORMANCE_LEVEL:-all}
       CONFORMANCE_REFERENCE: ${CONFORMANCE_REFERENCE:-false}

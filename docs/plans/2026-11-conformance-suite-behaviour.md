@@ -2,15 +2,15 @@
 
 - **Origin:** context (the conformance suite plan of 2026-11-11, split in two by the maintainer's approval of the same day: "si procede con 2 PR")
 - **Approved by the maintainer on:** 2026-11-11
-- **Branch / PR:** `feat/conformance-suite-behaviour` / not started
+- **Branch / PR:** `feat/conformance-suite-behaviour` / not opened yet
 
 ## Goal
 Level 2 on top of the base of part 2a (`2026-11-conformance-suite-base.md`, merged first): the scenarios that check how a backend behaves against the stores, so that "fully conformant" means something and a third party can earn it.
 
 ## Scope
 - The scenarios L2-01..L2-37 below, added to `conformance/manifest.txt` and to `docs/conformance.md`.
-- The Pub/Sub push signer in the fake Google (valid and invalid tokens: wrong audience, account, unverified email, issuer, expired, badly signed, `alg: none`).
-- The Level 2 mutations of the proxy (access granted after a refund, a missing acknowledge, a 502 turned into 200) and their test.
+- The Pub/Sub push signer in the fake Google (valid and invalid tokens: wrong audience, account, unverified email, issuer, expired, badly signed, `alg: none`), and a switch that makes the fake refuse connections for real (L2-22). Both need the control API to live on a port of its own (9001), so the control API moved: an intentional change of the fake's tests (`FakeGoogleTest` only changed the helper that starts it).
+- The Level 2 mutations of the proxy (a 402, a 409 or a 502 turned into 200, every entitlement reported as active, a push with no valid proof accepted), caught by `self-check`. A missing acknowledge is not visible on the wire: it is covered by a negative check on the real backend instead.
 - The report says "fully conformant" when Levels 1 and 2 pass.
 - Full third-party documentation: what each scenario proves, how to script the fake Google from another language, how to read a failure.
 - The CI job from 2a runs both levels.
@@ -30,20 +30,20 @@ Level 2, the behaviour of the stores (the fake Google):
 
 
 ## Acceptance criteria
-- [ ] The suite passes against the reference backend and prints "fully conformant" — checked by: the compose run of 2a, now exiting 0 with that line (locally on Colima and in CI).
-- [ ] Every L2 ID has a scenario and appears in the manifest and in `docs/conformance.md` — checked by: the registry and document tests of 2a.
-- [ ] Each Level 2 mutation is detected — checked by: the suite's own mutant test.
-- [ ] The push signer produces every invalid token class and the reference backend refuses each — checked by: L2-24 and the signer's own tests.
-- [ ] Scenarios assert observable effects only (response, customer info, fake call log) — checked by: review of each scenario and the Konsist rule of 2a.
-- [ ] A negative check per group: breaking the reference backend on purpose (e.g. dropping the account id check, applying a refund as non-final) turns the matching scenarios red — checked by: running the suite against the broken backend once, then reverting.
-- [ ] Documentation lets a third party run and read the suite — checked by: `grep -n "^## " docs/conformance.md` and a review.
-- [ ] An independent read-only review found nothing that blocks — checked by: the review report.
+- [x] The suite passes against the reference backend and prints "fully conformant" — checked by: the compose run of 2a, now exiting 0 with that line (locally on Colima and in CI).
+- [x] Every L2 ID has a scenario and appears in the manifest and in `docs/conformance.md` — checked by: the registry and document tests of 2a.
+- [x] Each Level 2 mutation is detected — checked by: the suite's own mutant test.
+- [x] The push signer produces every invalid token class and the reference backend refuses each — checked by: L2-24 and the signer's own tests.
+- [x] Scenarios assert observable effects only (response, customer info, fake call log) — checked by: review of each scenario and the Konsist rule of 2a.
+- [x] A negative check per group: breaking the reference backend on purpose (e.g. dropping the account id check, applying a refund as non-final) turns the matching scenarios red — checked by: running the suite against the broken backend once, then reverting.
+- [x] Documentation lets a third party run and read the suite — checked by: `grep -n "^## " docs/conformance.md` and a review.
+- [x] An independent read-only review found nothing that blocks — checked by: the review report.
 
 ## Steps
-- [ ] Push signer and its tests.
-- [ ] L2 scenarios by group: subscriptions, one-time, account id, replacement, Google failures, webhook.
-- [ ] Level 2 mutations and the test.
-- [ ] Documentation and `AGENTS.md` current state.
+- [x] Push signer and its tests.
+- [x] L2 scenarios by group: subscriptions, one-time, account id, replacement, Google failures, webhook.
+- [x] Level 2 mutations and the test.
+- [x] Documentation and `AGENTS.md` current state.
 - [ ] Review, commit, push, pull request (the maintainer merges).
 
 ## Validation
@@ -56,5 +56,6 @@ None.
 - Scenarios assert only what a client can observe; which internal rule refuses a request is not part of the contract (original plan).
 
 ## Status
-Approved (starts when 2a is merged)
+In progress
 - 2026-11-11: split from the original plan.
+- 2026-11-12: implemented on the branch; every criterion checked locally. Negative checks on the real backend (each broken, run, reverted): no account id check (L2-15, L2-35 failed), a refund not final (L2-26, L2-27, L2-28), never acknowledging (L2-01, L2-10, L2-11, L2-34), notifications of other apps handled (L2-30), push email not checked (L2-24), a refund before the receipt forgotten (L2-28); after the review, also the replaced plan keeps giving access (L2-19) and Google 400/404/410 treated as an outage (L2-20). The independent review (a read-only subagent) found no blocking defect; it asked for fewer claims than the scenarios made (L2-34 no longer requires that Google is not asked, L2-03 is described as it is tested, L2-18 also checks the second user), the caches a backend may have to be written down (done in `docs/conformance.md`), and some tidying. Waiting for the maintainer's OK to commit.
