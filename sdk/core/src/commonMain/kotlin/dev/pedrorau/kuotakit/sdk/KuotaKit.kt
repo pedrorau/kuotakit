@@ -22,9 +22,14 @@ import dev.pedrorau.kuotakit.contracts.OfferingsResponse
 import dev.pedrorau.kuotakit.contracts.Store
 import dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId
 import io.ktor.client.engine.HttpClientEngine
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -46,36 +51,27 @@ public class KuotaKit internal constructor(
     /** The anonymous id of this user, made on first use and kept on the device. It is a secret: do not log it. */
     public val appUserId: String,
 ) {
-    private val latest = MutableStateFlow<CustomerInfo?>(null)
+    private val latest = LatestCustomerInfo()
     private val oneAtATime = Mutex()
-
-    // Answers can come back in another order than the requests went out: only the newest request may set
-    // `customerInfo`.
-    private val stampLock = Mutex()
-    private var issued = 0L
-    private var applied = 0L
-
-    private suspend fun stamp(): Long = stampLock.withLock { ++issued }
-
-    private suspend fun remember(
-        stamp: Long,
-        info: CustomerInfo,
-    ) = stampLock.withLock {
-        if (stamp > applied) {
-            applied = stamp
-            latest.value = info
-        }
-    }
+    private val sync = PurchaseSync(api, billing, appUserId, playObfuscatedAccountId(appUserId), latest)
 
     /** The last customer info the backend gave, or `null` before the first one. Never computed by the SDK. */
-    public val customerInfo: StateFlow<CustomerInfo?> = latest.asStateFlow()
+    public val customerInfo: StateFlow<CustomerInfo?> = latest.flow
 
     public suspend fun getOfferings(): OfferingsResponse = api.offerings()
 
     public suspend fun getCustomerInfo(): CustomerInfo {
-        val stamp = stamp()
-        return api.customerInfo(appUserId).also { remember(stamp, it) }
+        val stamp = latest.stamp()
+        return api.customerInfo(appUserId).also { latest.remember(stamp, it) }
     }
+
+    /**
+     * Finds the purchases of this user in the store (the ones that were never sent, a pending payment that was
+     * approved, a purchase made on this device before a reinstall of the SDK data) and has the backend check them,
+     * then returns what the backend says. Call it when the app comes to the foreground, as Google recommends. A
+     * purchase made outside the app, or under another app user id, carries another account id and cannot be recovered.
+     */
+    public suspend fun restore(): RestoreOutcome = sync.run().outcome
 
     /**
      * Buys [pkg] with the store of the platform and has the backend check it. The user may cancel or the payment may
@@ -96,14 +92,66 @@ public class KuotaKit internal constructor(
                     PurchaseOutcome.Pending
                 }
 
+                BillingResult.AlreadyOwned -> {
+                    alreadyOwned(productId)
+                }
+
                 is BillingResult.Purchased -> {
-                    val stamp = stamp()
+                    val stamp = latest.stamp()
                     val info = api.submitReceipt(appUserId, result.receipt)
-                    remember(stamp, info)
+                    latest.remember(stamp, info)
                     PurchaseOutcome.Success(info)
                 }
             }
         }
+
+    private suspend fun alreadyOwned(productId: String): PurchaseOutcome {
+        val result = sync.run()
+        val outcome = result.outcome
+        return when {
+            productId in result.acceptedProducts -> PurchaseOutcome.AlreadyOwned(outcome.customerInfo)
+
+            outcome.refused > 0 -> throw KuotaKitException.PurchaseInvalid(
+                "The store says the user already owns this product, but the backend does not accept that purchase",
+            )
+
+            else -> throw KuotaKitException.InvalidRequest(
+                "The store says the user already owns this product, but no purchase of it was found for this app " +
+                    "user: it was made under another app user id, or outside the app",
+            )
+        }
+    }
+
+    private val jobs = mutableListOf<Job>()
+
+    /**
+     * Sends the purchases that arrive while no purchase is waiting, and the ones already owned, to the backend. A
+     * failure changes nothing visible: the next trigger (an update, `restore()`) finds the purchase again.
+     */
+    internal fun startBackgroundSync(scope: CoroutineScope) {
+        // Listening starts at once, so an update that arrives while the first sync runs is not missed.
+        jobs += scope.launch { billing.purchaseUpdates.catch { }.collect { quietly { restore() } } }
+        jobs += scope.launch { quietly { restore() } }
+    }
+
+    /** Stops the background sync (when the SDK is configured again). */
+    internal fun stopBackgroundSync() {
+        jobs.forEach { it.cancel() }
+        jobs.clear()
+    }
+
+    // Whatever goes wrong in the background (the store, the network, a bug) must not end the app: the next trigger
+    // tries again, and nothing is shown as success.
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    private suspend fun quietly(block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (ignored: Exception) {
+            // Kept for the next trigger.
+        }
+    }
 
     private fun productOf(
         pkg: OfferingPackage,
@@ -127,8 +175,17 @@ public class KuotaKit internal constructor(
         public val shared: KuotaKit
             get() = configured ?: throw KuotaKitException.NotConfigured()
 
-        /** Sets the SDK up; call it once, at start-up. Calling it again replaces the previous configuration. */
-        public fun configure(config: KuotaKitConfig): KuotaKit = create(config).also { configured = it }
+        /**
+         * Sets the SDK up; call it once, at start-up. Calling it again replaces the previous configuration. It is the
+         * one place that makes the scope of the background sync; tests pass their own to `startBackgroundSync`.
+         */
+        @Suppress("InjectDispatcher")
+        public fun configure(config: KuotaKitConfig): KuotaKit =
+            create(config).also {
+                configured?.stopBackgroundSync()
+                configured = it
+                it.startBackgroundSync(CoroutineScope(SupervisorJob() + Dispatchers.Default))
+            }
 
         internal fun create(
             config: KuotaKitConfig,

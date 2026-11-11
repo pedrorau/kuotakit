@@ -58,6 +58,11 @@ private class FakeBilling(
         requests += request
         return answer()
     }
+
+    // The BillingAdapter gained these two members (restore); this fake has nothing owned and no updates.
+    override suspend fun ownedPurchases(): List<OwnedPurchase> = emptyList()
+
+    override val purchaseUpdates: kotlinx.coroutines.flow.Flow<OwnedPurchase> = kotlinx.coroutines.flow.emptyFlow()
 }
 
 /** A backend that records every request, in order, and answers by path. */
@@ -268,9 +273,13 @@ class KuotaKitTest {
     fun anOlderAnswerNeverOverwritesANewerOne() =
         runTest {
             var calls = 0
+            // Which request is the slow one must not depend on which thread of the engine gets there first: the
+            // test starts the second request only after the first one has reached the engine.
+            val firstArrived = kotlinx.coroutines.CompletableDeferred<Unit>()
             val engine =
                 MockEngine {
                     val first = ++calls == 1
+                    if (first) firstArrived.complete(Unit)
                     delay(if (first) 100 else 10)
                     respond(
                         if (first) Samples.CUSTOMER_EMPTY else Samples.CUSTOMER_PREMIUM,
@@ -285,6 +294,7 @@ class KuotaKitTest {
                 )
             val slow = async { kit.getCustomerInfo() }
             runCurrent()
+            firstArrived.await()
             val fast = async { kit.getCustomerInfo() }
             slow.await()
             fast.await()

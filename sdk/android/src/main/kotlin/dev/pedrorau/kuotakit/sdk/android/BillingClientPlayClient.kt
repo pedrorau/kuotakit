@@ -26,117 +26,82 @@ import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryProductDetailsParams
+import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.queryProductDetails
+import com.android.billingclient.api.queryPurchasesAsync
 import dev.pedrorau.kuotakit.sdk.KuotaKitException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 /**
- * The Play Billing connection: one [BillingClient] (Google recommends a single one), reconnecting by itself. A product
- * is looked up as a subscription first and as a one-time product after, because the app only knows its id; the
- * backend, not the app, decides which kind it is (ADR 0015).
+ * The only class that touches Google's Play Billing classes: it translates to and from [PlayClient] and decides
+ * nothing. One [BillingClient] (Google recommends a single one), reconnecting by itself. It cannot be unit tested
+ * (Google's classes need a device), so it is kept thin and checked on a device with the example app.
  */
 internal class BillingClientPlayClient(
     context: Context,
     private val activity: () -> Activity?,
-) : PlayPurchaseClient {
-    private var waiting: CompletableDeferred<PlayPurchaseResult>? = null
-    private var waitingFor: String? = null
+) : PlayClient {
+    private val reported =
+        MutableSharedFlow<PlayUpdate>(
+            extraBufferCapacity = UPDATES_BUFFER,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
 
     private val client: BillingClient =
         BillingClient
             .newBuilder(context)
-            .setListener {
-                result,
-                purchases,
-                ->
-                onPurchasesUpdated(result.responseCode, result.debugMessage, purchases)
+            .setListener { result, purchases ->
+                reported.tryEmit(
+                    PlayUpdate(
+                        PlayResponse(result.responseCode, result.debugMessage),
+                        purchases.orEmpty().map(::playOwned),
+                    ),
+                )
             }.enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
             .enableAutoServiceReconnection()
             .build()
 
-    override suspend fun buy(
-        productId: String,
-        accountId: String,
-    ): PlayPurchaseResult {
-        val screen =
-            activity()
-                ?: throw KuotaKitException.InvalidRequest("There is no activity to show the purchase screen from")
-        connect()
-        val params = flowParams(productId, accountId)
-        val answer = CompletableDeferred<PlayPurchaseResult>()
-        waiting = answer
-        waitingFor = productId
-        // Google needs the main thread to show the purchase screen, whatever dispatcher the caller is on.
-        val launched = withContext(Dispatchers.Main.immediate) { client.launchBillingFlow(screen, params) }
-        if (launched.responseCode != BillingResponseCode.OK) {
-            waiting = null
-            return resultOrThrow(launched.responseCode, launched.debugMessage)
-        }
-        return try {
-            answer.await()
-        } finally {
-            waiting = null
-            waitingFor = null
-        }
-    }
+    override val updates: Flow<PlayUpdate> = reported.asSharedFlow()
 
-    private suspend fun connect() {
-        if (client.isReady) return
-        val code =
-            suspendCancellableCoroutine { continuation ->
-                client.startConnection(
-                    object : BillingClientStateListener {
-                        override fun onBillingSetupFinished(result: com.android.billingclient.api.BillingResult) {
-                            if (continuation.isActive) continuation.resume(result.responseCode)
+    private val connecting = Mutex()
+
+    // One connection attempt at a time: a sync, a purchase and a restore may all need it at once.
+    override suspend fun connect(): PlayResponse =
+        connecting.withLock {
+            if (client.isReady) PlayResponse(BillingResponseCode.OK) else startConnection()
+        }
+
+    private suspend fun startConnection(): PlayResponse =
+        suspendCancellableCoroutine { continuation ->
+            client.startConnection(
+                object : BillingClientStateListener {
+                    override fun onBillingSetupFinished(result: com.android.billingclient.api.BillingResult) {
+                        if (continuation.isActive) {
+                            continuation.resume(
+                                PlayResponse(result.responseCode, result.debugMessage),
+                            )
                         }
+                    }
 
-                        override fun onBillingServiceDisconnected() = Unit
-                    },
-                )
-            }
-        if (code != BillingResponseCode.OK) throw failureOf(code, "the connection to Google Play failed")
-    }
+                    override fun onBillingServiceDisconnected() = Unit
+                },
+            )
+        }
 
-    private suspend fun flowParams(
+    override suspend fun queryProduct(
         productId: String,
-        accountId: String,
-    ): BillingFlowParams {
-        val details =
-            detailsOf(productId, BillingClient.ProductType.SUBS)
-                ?: detailsOf(productId, BillingClient.ProductType.INAPP)
-        val product =
-            details ?: throw KuotaKitException.InvalidRequest("Google Play does not offer the product '$productId'")
-        // The offer is the base plan when there is one, else the first the user is eligible for.
-        val offerToken =
-            product.subscriptionOfferDetails?.let { offers ->
-                (
-                    offers.firstOrNull { it.offerId == null }
-                        ?: offers.firstOrNull()
-                )?.offerToken
-            }
-                ?: product.oneTimePurchaseOfferDetailsList?.firstOrNull()?.offerToken
-        val productParams =
-            BillingFlowParams.ProductDetailsParams
-                .newBuilder()
-                .setProductDetails(product)
-                .apply { offerToken?.let { setOfferToken(it) } }
-                .build()
-        return BillingFlowParams
-            .newBuilder()
-            .setProductDetailsParamsList(listOf(productParams))
-            .setObfuscatedAccountId(accountId)
-            .build()
-    }
-
-    /** The product as Google knows it, `null` if Google does not know it; a failed query is an error, not "unknown". */
-    private suspend fun detailsOf(
-        productId: String,
-        type: String,
-    ): ProductDetails? {
+        kind: ProductKind,
+    ): ProductQuery {
+        val type = if (kind == ProductKind.SUBS) BillingClient.ProductType.SUBS else BillingClient.ProductType.INAPP
         val product =
             QueryProductDetailsParams.Product
                 .newBuilder()
@@ -148,52 +113,79 @@ internal class BillingClientPlayClient(
             client.queryProductDetails(
                 QueryProductDetailsParams.newBuilder().setProductList(listOf(product)).build(),
             )
-        if (result.billingResult.responseCode != BillingResponseCode.OK) {
-            throw failureOf(result.billingResult.responseCode, result.billingResult.debugMessage)
+        val response = PlayResponse(result.billingResult.responseCode, result.billingResult.debugMessage)
+        val details = result.productDetailsList?.firstOrNull()
+        return when {
+            response.code != BillingResponseCode.OK -> ProductQuery.Failed(response)
+            details == null -> ProductQuery.NotFound
+            else -> ProductQuery.Found(PlayProduct(productId, kind, details))
         }
-        return result.productDetailsList?.firstOrNull()
     }
 
-    private fun onPurchasesUpdated(
-        code: Int,
-        message: String,
-        purchases: List<Purchase>?,
-    ) {
-        val answer = waiting ?: return
-        val outcome =
-            runCatching {
-                when {
-                    code == BillingResponseCode.OK -> purchased(purchases.orEmpty())
-                    else -> resultOrThrow(code, message)
-                }
+    override suspend fun launch(
+        product: PlayProduct,
+        accountId: String,
+    ): PlayResponse {
+        val screen =
+            activity()
+                ?: throw KuotaKitException.InvalidRequest("There is no activity to show the purchase screen from")
+        val details = product.handle as ProductDetails
+        // The offer is the base plan when there is one, else the first the user is eligible for.
+        val offerToken =
+            details.subscriptionOfferDetails?.let { offers ->
+                (
+                    offers.firstOrNull { it.offerId == null }
+                        ?: offers.firstOrNull()
+                )?.offerToken
             }
-        outcome.fold(answer::complete, answer::completeExceptionally)
-    }
-
-    // Only a purchase that Google says is PURCHASED, of the product that was asked for, is handed on: anything else
-    // is pending or an error, never a token (fail closed).
-    private fun purchased(purchases: List<Purchase>): PlayPurchaseResult {
-        val purchase =
-            purchases.firstOrNull { waitingFor in it.products }
-                ?: throw KuotaKitException.Unexpected(
-                    "Google Play reported no purchase of the product that was asked for",
-                )
-        return when (purchase.purchaseState) {
-            Purchase.PurchaseState.PURCHASED -> PlayPurchaseResult.Purchased(purchase.purchaseToken)
-            Purchase.PurchaseState.PENDING -> PlayPurchaseResult.Pending
-            else -> throw KuotaKitException.Unexpected("Google Play reported a purchase in an unknown state")
+                ?: details.oneTimePurchaseOfferDetailsList?.firstOrNull()?.offerToken
+        if (product.kind == ProductKind.SUBS && offerToken == null) {
+            throw KuotaKitException.InvalidRequest("Google Play has no offer of '${product.id}' that this user can buy")
         }
+        val productParams =
+            BillingFlowParams.ProductDetailsParams
+                .newBuilder()
+                .setProductDetails(details)
+                .apply { offerToken?.let { setOfferToken(it) } }
+                .build()
+        val params =
+            BillingFlowParams
+                .newBuilder()
+                .setProductDetailsParamsList(listOf(productParams))
+                .setObfuscatedAccountId(accountId)
+                .build()
+        // Google needs the main thread to show the purchase screen, whatever dispatcher the caller is on.
+        val launched = withContext(Dispatchers.Main.immediate) { client.launchBillingFlow(screen, params) }
+        return PlayResponse(launched.responseCode, launched.debugMessage)
     }
 
-    private fun resultOrThrow(
-        code: Int,
-        message: String,
-    ): PlayPurchaseResult =
-        if (code ==
-            BillingResponseCode.USER_CANCELED
+    override suspend fun queryOwned(kind: ProductKind): OwnedQuery {
+        val type = if (kind == ProductKind.SUBS) BillingClient.ProductType.SUBS else BillingClient.ProductType.INAPP
+        val result = client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(type).build())
+        val response = PlayResponse(result.billingResult.responseCode, result.billingResult.debugMessage)
+        return if (response.code ==
+            BillingResponseCode.OK
         ) {
-            PlayPurchaseResult.Cancelled
+            OwnedQuery.Listed(result.purchasesList.map(::playOwned))
         } else {
-            throw failureOf(code, message)
+            OwnedQuery.Failed(response)
         }
+    }
+
+    private fun playOwned(purchase: Purchase) =
+        PlayOwned(
+            token = purchase.purchaseToken,
+            products = purchase.products,
+            state =
+                when (purchase.purchaseState) {
+                    Purchase.PurchaseState.PURCHASED -> PlayState.PURCHASED
+                    Purchase.PurchaseState.PENDING -> PlayState.PENDING
+                    else -> PlayState.OTHER
+                },
+            accountId = purchase.accountIdentifiers?.obfuscatedAccountId,
+        )
+
+    private companion object {
+        const val UPDATES_BUFFER = 16
+    }
 }

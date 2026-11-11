@@ -18,11 +18,23 @@ package dev.pedrorau.kuotakit.sdk.android
 
 import android.app.Activity
 import android.content.Context
+import com.android.billingclient.api.BillingClient.BillingResponseCode
 import dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.Store
 import dev.pedrorau.kuotakit.sdk.BillingAdapter
 import dev.pedrorau.kuotakit.sdk.BillingResult
+import dev.pedrorau.kuotakit.sdk.KuotaKitException
+import dev.pedrorau.kuotakit.sdk.OwnedPurchase
+import dev.pedrorau.kuotakit.sdk.OwnedState
 import dev.pedrorau.kuotakit.sdk.PurchaseRequest
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.transform
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Buys with Google Play Billing (ADR 0002). It attaches the account id to every purchase, as the backend requires
@@ -34,25 +46,148 @@ import dev.pedrorau.kuotakit.sdk.PurchaseRequest
  */
 public class PlayBilling internal constructor(
     private val packageName: String,
-    private val client: PlayPurchaseClient,
+    private val client: PlayClient,
 ) : BillingAdapter {
     public constructor(context: Context, activity: () -> Activity?) :
         this(context.applicationContext.packageName, BillingClientPlayClient(context.applicationContext, activity))
 
     override val store: Store = Store.PLAY_STORE
 
-    override suspend fun purchase(request: PurchaseRequest): BillingResult =
-        when (val result = client.buy(request.productId, request.accountId)) {
-            is PlayPurchaseResult.Purchased -> {
-                BillingResult.Purchased(PlayStoreReceiptRequest(packageName, request.productId, result.purchaseToken))
+    // While a purchase call is waiting it takes the update that answers it; the others go to `purchaseUpdates`.
+    private val waitingFor = AtomicReference<String?>(null)
+
+    // A map used as a set: `newKeySet` needs API 24 and the SDK supports 23.
+    private val answered = ConcurrentHashMap<String, Unit>()
+
+    override suspend fun purchase(request: PurchaseRequest): BillingResult {
+        connect()
+        val product = lookup(request.productId)
+        waitingFor.set(request.productId)
+        try {
+            val update =
+                coroutineScope {
+                    // Listening starts before the screen is shown, so the answer cannot be missed.
+                    val answer =
+                        async(
+                            start = CoroutineStart.UNDISPATCHED,
+                        ) { client.updates.first { answers(it, request.productId) } }
+                    val launched = client.launch(product, request.accountId)
+                    if (launched.code == BillingResponseCode.OK) {
+                        answer.await()
+                    } else {
+                        answer.cancel()
+                        PlayUpdate(launched, emptyList())
+                    }
+                }
+            return resultOf(update, request.productId)
+        } finally {
+            waitingFor.set(null)
+        }
+    }
+
+    override suspend fun ownedPurchases(): List<OwnedPurchase> {
+        connect()
+        return listOf(ProductKind.SUBS, ProductKind.INAPP).flatMap { kind ->
+            when (val query = client.queryOwned(kind)) {
+                is OwnedQuery.Listed -> query.purchases.flatMap(::owned)
+                is OwnedQuery.Failed -> throw failureOf(query.response.code, query.response.message)
+            }
+        }
+    }
+
+    // An update answers a waiting purchase call if it is an error, carries no purchase, or carries one of the
+    // product asked for; any other (a pending purchase of another product that completes meanwhile) is not.
+    private fun answers(
+        update: PlayUpdate,
+        productId: String,
+    ) = update.response.code != BillingResponseCode.OK || update.purchases.isEmpty() ||
+        update.purchases.any { productId in it.products }
+
+    override val purchaseUpdates: Flow<OwnedPurchase> =
+        client.updates.transform { update ->
+            if (update.response.code == BillingResponseCode.OK) {
+                val waiting = waitingFor.get()
+                update.purchases
+                    .filter { !answered.containsKey(it.token) && (waiting == null || waiting !in it.products) }
+                    .forEach { purchase -> owned(purchase).forEach { emit(it) } }
+            }
+        }
+
+    private suspend fun connect() {
+        val response = client.connect()
+        if (response.code != BillingResponseCode.OK) throw failureOf(response.code, response.message)
+    }
+
+    /** The product as a subscription, else as a product bought once: the app only knows its id (ADR 0015). */
+    private suspend fun lookup(productId: String): PlayProduct {
+        for (kind in ProductKind.entries) {
+            when (val query = client.queryProduct(productId, kind)) {
+                is ProductQuery.Found -> return query.product
+                is ProductQuery.Failed -> throw failureOf(query.response.code, query.response.message)
+                ProductQuery.NotFound -> Unit
+            }
+        }
+        throw KuotaKitException.InvalidRequest("Google Play does not offer the product '$productId'")
+    }
+
+    // Only a purchase of the product that was asked for, in the state PURCHASED, becomes a receipt: anything else is
+    // pending or an error, never a token (fail closed).
+    private fun resultOf(
+        update: PlayUpdate,
+        productId: String,
+    ): BillingResult =
+        when (update.response.code) {
+            BillingResponseCode.OK -> {
+                val purchase =
+                    update.purchases.firstOrNull { productId in it.products }
+                        ?: throw KuotaKitException.Unexpected(
+                            "Google Play reported no purchase of the product that was asked for",
+                        )
+                when (purchase.state) {
+                    PlayState.PURCHASED -> {
+                        // Kept so the forwarder skips it; a few hundred tokens at most, so it is simply emptied.
+                        if (answered.size > MAX_ANSWERED) answered.clear()
+                        answered[purchase.token] = Unit
+                        BillingResult.Purchased(PlayStoreReceiptRequest(packageName, productId, purchase.token))
+                    }
+
+                    PlayState.PENDING -> {
+                        BillingResult.Pending
+                    }
+
+                    PlayState.OTHER -> {
+                        throw KuotaKitException.Unexpected("Google Play reported a purchase in an unknown state")
+                    }
+                }
             }
 
-            PlayPurchaseResult.Cancelled -> {
+            BillingResponseCode.USER_CANCELED -> {
                 BillingResult.Cancelled
             }
 
-            PlayPurchaseResult.Pending -> {
-                BillingResult.Pending
+            BillingResponseCode.ITEM_ALREADY_OWNED -> {
+                BillingResult.AlreadyOwned
+            }
+
+            else -> {
+                throw failureOf(update.response.code, update.response.message)
             }
         }
+
+    private fun owned(purchase: PlayOwned): List<OwnedPurchase> =
+        purchase.products.map { product ->
+            OwnedPurchase(
+                PlayStoreReceiptRequest(packageName, product, purchase.token),
+                when (purchase.state) {
+                    PlayState.PURCHASED -> OwnedState.PURCHASED
+                    PlayState.PENDING -> OwnedState.PENDING
+                    PlayState.OTHER -> OwnedState.OTHER
+                },
+                purchase.accountId,
+            )
+        }
+
+    private companion object {
+        const val MAX_ANSWERED = 256
+    }
 }
