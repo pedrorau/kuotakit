@@ -1,0 +1,168 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <kuotakit.sdk:core>
+abstract interface dev.pedrorau.kuotakit.sdk/BillingAdapter { // dev.pedrorau.kuotakit.sdk/BillingAdapter|null[0]
+    abstract val store // dev.pedrorau.kuotakit.sdk/BillingAdapter.store|{}store[0]
+        abstract fun <get-store>(): dev.pedrorau.kuotakit.contracts/Store // dev.pedrorau.kuotakit.sdk/BillingAdapter.store.<get-store>|<get-store>(){}[0]
+
+    abstract suspend fun purchase(dev.pedrorau.kuotakit.sdk/PurchaseRequest): dev.pedrorau.kuotakit.sdk/BillingResult // dev.pedrorau.kuotakit.sdk/BillingAdapter.purchase|purchase(dev.pedrorau.kuotakit.sdk.PurchaseRequest){}[0]
+}
+
+abstract interface dev.pedrorau.kuotakit.sdk/KeyValueStore { // dev.pedrorau.kuotakit.sdk/KeyValueStore|null[0]
+    abstract fun get(kotlin/String): kotlin/String? // dev.pedrorau.kuotakit.sdk/KeyValueStore.get|get(kotlin.String){}[0]
+    abstract fun put(kotlin/String, kotlin/String) // dev.pedrorau.kuotakit.sdk/KeyValueStore.put|put(kotlin.String;kotlin.String){}[0]
+}
+
+sealed interface dev.pedrorau.kuotakit.sdk/BillingResult { // dev.pedrorau.kuotakit.sdk/BillingResult|null[0]
+    final class Purchased : dev.pedrorau.kuotakit.sdk/BillingResult { // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased|null[0]
+        constructor <init>(dev.pedrorau.kuotakit.contracts/ReceiptRequest) // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.<init>|<init>(dev.pedrorau.kuotakit.contracts.ReceiptRequest){}[0]
+
+        final val receipt // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.receipt|{}receipt[0]
+            final fun <get-receipt>(): dev.pedrorau.kuotakit.contracts/ReceiptRequest // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.receipt.<get-receipt>|<get-receipt>(){}[0]
+
+        final fun component1(): dev.pedrorau.kuotakit.contracts/ReceiptRequest // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.component1|component1(){}[0]
+        final fun copy(dev.pedrorau.kuotakit.contracts/ReceiptRequest = ...): dev.pedrorau.kuotakit.sdk/BillingResult.Purchased // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.copy|copy(dev.pedrorau.kuotakit.contracts.ReceiptRequest){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.toString|toString(){}[0]
+    }
+
+    final object Cancelled : dev.pedrorau.kuotakit.sdk/BillingResult { // dev.pedrorau.kuotakit.sdk/BillingResult.Cancelled|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/BillingResult.Cancelled.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/BillingResult.Cancelled.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/BillingResult.Cancelled.toString|toString(){}[0]
+    }
+
+    final object Pending : dev.pedrorau.kuotakit.sdk/BillingResult { // dev.pedrorau.kuotakit.sdk/BillingResult.Pending|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/BillingResult.Pending.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/BillingResult.Pending.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/BillingResult.Pending.toString|toString(){}[0]
+    }
+}
+
+sealed interface dev.pedrorau.kuotakit.sdk/PurchaseOutcome { // dev.pedrorau.kuotakit.sdk/PurchaseOutcome|null[0]
+    final class Success : dev.pedrorau.kuotakit.sdk/PurchaseOutcome { // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success|null[0]
+        constructor <init>(dev.pedrorau.kuotakit.contracts/CustomerInfo) // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.<init>|<init>(dev.pedrorau.kuotakit.contracts.CustomerInfo){}[0]
+
+        final val customerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.customerInfo|{}customerInfo[0]
+            final fun <get-customerInfo>(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.customerInfo.<get-customerInfo>|<get-customerInfo>(){}[0]
+
+        final fun component1(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.component1|component1(){}[0]
+        final fun copy(dev.pedrorau.kuotakit.contracts/CustomerInfo = ...): dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.copy|copy(dev.pedrorau.kuotakit.contracts.CustomerInfo){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.toString|toString(){}[0]
+    }
+
+    final object Cancelled : dev.pedrorau.kuotakit.sdk/PurchaseOutcome { // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Cancelled|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Cancelled.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Cancelled.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Cancelled.toString|toString(){}[0]
+    }
+
+    final object Pending : dev.pedrorau.kuotakit.sdk/PurchaseOutcome { // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Pending|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Pending.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Pending.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Pending.toString|toString(){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.sdk/KuotaKit { // dev.pedrorau.kuotakit.sdk/KuotaKit|null[0]
+    final val appUserId // dev.pedrorau.kuotakit.sdk/KuotaKit.appUserId|{}appUserId[0]
+        final fun <get-appUserId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/KuotaKit.appUserId.<get-appUserId>|<get-appUserId>(){}[0]
+    final val customerInfo // dev.pedrorau.kuotakit.sdk/KuotaKit.customerInfo|{}customerInfo[0]
+        final fun <get-customerInfo>(): kotlinx.coroutines.flow/StateFlow<dev.pedrorau.kuotakit.contracts/CustomerInfo?> // dev.pedrorau.kuotakit.sdk/KuotaKit.customerInfo.<get-customerInfo>|<get-customerInfo>(){}[0]
+
+    final suspend fun getCustomerInfo(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/KuotaKit.getCustomerInfo|getCustomerInfo(){}[0]
+    final suspend fun getOfferings(): dev.pedrorau.kuotakit.contracts/OfferingsResponse // dev.pedrorau.kuotakit.sdk/KuotaKit.getOfferings|getOfferings(){}[0]
+    final suspend fun purchase(dev.pedrorau.kuotakit.contracts/OfferingPackage): dev.pedrorau.kuotakit.sdk/PurchaseOutcome // dev.pedrorau.kuotakit.sdk/KuotaKit.purchase|purchase(dev.pedrorau.kuotakit.contracts.OfferingPackage){}[0]
+
+    final object Companion { // dev.pedrorau.kuotakit.sdk/KuotaKit.Companion|null[0]
+        final val shared // dev.pedrorau.kuotakit.sdk/KuotaKit.Companion.shared|{}shared[0]
+            final fun <get-shared>(): dev.pedrorau.kuotakit.sdk/KuotaKit // dev.pedrorau.kuotakit.sdk/KuotaKit.Companion.shared.<get-shared>|<get-shared>(){}[0]
+
+        final fun configure(dev.pedrorau.kuotakit.sdk/KuotaKitConfig): dev.pedrorau.kuotakit.sdk/KuotaKit // dev.pedrorau.kuotakit.sdk/KuotaKit.Companion.configure|configure(dev.pedrorau.kuotakit.sdk.KuotaKitConfig){}[0]
+    }
+}
+
+final class dev.pedrorau.kuotakit.sdk/KuotaKitConfig { // dev.pedrorau.kuotakit.sdk/KuotaKitConfig|null[0]
+    constructor <init>(kotlin/String, kotlin/String, dev.pedrorau.kuotakit.sdk/BillingAdapter, dev.pedrorau.kuotakit.sdk/KeyValueStore) // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.<init>|<init>(kotlin.String;kotlin.String;dev.pedrorau.kuotakit.sdk.BillingAdapter;dev.pedrorau.kuotakit.sdk.KeyValueStore){}[0]
+
+    final val apiKey // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.apiKey|{}apiKey[0]
+        final fun <get-apiKey>(): kotlin/String // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.apiKey.<get-apiKey>|<get-apiKey>(){}[0]
+    final val baseUrl // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.baseUrl|{}baseUrl[0]
+        final fun <get-baseUrl>(): kotlin/String // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+    final val billing // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.billing|{}billing[0]
+        final fun <get-billing>(): dev.pedrorau.kuotakit.sdk/BillingAdapter // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.billing.<get-billing>|<get-billing>(){}[0]
+    final val storage // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.storage|{}storage[0]
+        final fun <get-storage>(): dev.pedrorau.kuotakit.sdk/KeyValueStore // dev.pedrorau.kuotakit.sdk/KuotaKitConfig.storage.<get-storage>|<get-storage>(){}[0]
+}
+
+final class dev.pedrorau.kuotakit.sdk/PurchaseRequest { // dev.pedrorau.kuotakit.sdk/PurchaseRequest|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String) // dev.pedrorau.kuotakit.sdk/PurchaseRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val accountId // dev.pedrorau.kuotakit.sdk/PurchaseRequest.accountId|{}accountId[0]
+        final fun <get-accountId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.accountId.<get-accountId>|<get-accountId>(){}[0]
+    final val appUserId // dev.pedrorau.kuotakit.sdk/PurchaseRequest.appUserId|{}appUserId[0]
+        final fun <get-appUserId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.appUserId.<get-appUserId>|<get-appUserId>(){}[0]
+    final val productId // dev.pedrorau.kuotakit.sdk/PurchaseRequest.productId|{}productId[0]
+        final fun <get-productId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.productId.<get-productId>|<get-productId>(){}[0]
+
+    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.component1|component1(){}[0]
+    final fun component2(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.component2|component2(){}[0]
+    final fun component3(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ...): dev.pedrorau.kuotakit.sdk/PurchaseRequest // dev.pedrorau.kuotakit.sdk/PurchaseRequest.copy|copy(kotlin.String;kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/PurchaseRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/PurchaseRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.toString|toString(){}[0]
+}
+
+sealed class dev.pedrorau.kuotakit.sdk/KuotaKitException : kotlin/Exception { // dev.pedrorau.kuotakit.sdk/KuotaKitException|null[0]
+    final class InvalidConfiguration : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.InvalidConfiguration|null[0]
+        constructor <init>(kotlin/String) // dev.pedrorau.kuotakit.sdk/KuotaKitException.InvalidConfiguration.<init>|<init>(kotlin.String){}[0]
+    }
+
+    final class InvalidRequest : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.InvalidRequest|null[0]
+        constructor <init>(kotlin/String) // dev.pedrorau.kuotakit.sdk/KuotaKitException.InvalidRequest.<init>|<init>(kotlin.String){}[0]
+    }
+
+    final class Network : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.Network|null[0]
+        constructor <init>(kotlin/String, kotlin/Throwable? = ...) // dev.pedrorau.kuotakit.sdk/KuotaKitException.Network.<init>|<init>(kotlin.String;kotlin.Throwable?){}[0]
+    }
+
+    final class NotConfigured : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.NotConfigured|null[0]
+        constructor <init>() // dev.pedrorau.kuotakit.sdk/KuotaKitException.NotConfigured.<init>|<init>(){}[0]
+    }
+
+    final class PurchaseInvalid : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.PurchaseInvalid|null[0]
+        constructor <init>(kotlin/String) // dev.pedrorau.kuotakit.sdk/KuotaKitException.PurchaseInvalid.<init>|<init>(kotlin.String){}[0]
+    }
+
+    final class RateLimited : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.RateLimited|null[0]
+        constructor <init>(kotlin/Int?, kotlin/String) // dev.pedrorau.kuotakit.sdk/KuotaKitException.RateLimited.<init>|<init>(kotlin.Int?;kotlin.String){}[0]
+
+        final val retryAfterSeconds // dev.pedrorau.kuotakit.sdk/KuotaKitException.RateLimited.retryAfterSeconds|{}retryAfterSeconds[0]
+            final fun <get-retryAfterSeconds>(): kotlin/Int? // dev.pedrorau.kuotakit.sdk/KuotaKitException.RateLimited.retryAfterSeconds.<get-retryAfterSeconds>|<get-retryAfterSeconds>(){}[0]
+    }
+
+    final class StoreUnavailable : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.StoreUnavailable|null[0]
+        constructor <init>(kotlin/String) // dev.pedrorau.kuotakit.sdk/KuotaKitException.StoreUnavailable.<init>|<init>(kotlin.String){}[0]
+    }
+
+    final class TokenAlreadyLinked : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.TokenAlreadyLinked|null[0]
+        constructor <init>(kotlin/String) // dev.pedrorau.kuotakit.sdk/KuotaKitException.TokenAlreadyLinked.<init>|<init>(kotlin.String){}[0]
+    }
+
+    final class Unauthorized : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.Unauthorized|null[0]
+        constructor <init>(kotlin/String) // dev.pedrorau.kuotakit.sdk/KuotaKitException.Unauthorized.<init>|<init>(kotlin.String){}[0]
+    }
+
+    final class Unexpected : dev.pedrorau.kuotakit.sdk/KuotaKitException { // dev.pedrorau.kuotakit.sdk/KuotaKitException.Unexpected|null[0]
+        constructor <init>(kotlin/String, kotlin/Throwable? = ...) // dev.pedrorau.kuotakit.sdk/KuotaKitException.Unexpected.<init>|<init>(kotlin.String;kotlin.Throwable?){}[0]
+    }
+}

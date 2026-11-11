@@ -42,6 +42,7 @@ jobs:
             jvm:
               - *build
               - 'contracts/**'
+              - 'sdk/**'
               - 'backend/**'
               - 'architecture-tests/**'
               - 'openapi/**'
@@ -52,6 +53,7 @@ jobs:
             ios:
               - *build
               - 'contracts/**'
+              - 'sdk/core/**'
             compose:
               - *build
               - 'contracts/**'
@@ -99,7 +101,7 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
       # checkKotlinAbi also proves the public API dump is the same on macOS as on the Linux `jvm` job.
-      - run: ./gradlew :contracts:iosSimulatorArm64Test :contracts:compileKotlinIosArm64 :contracts:checkKotlinAbi
+      - run: ./gradlew :contracts:iosSimulatorArm64Test :contracts:compileKotlinIosArm64 :contracts:checkKotlinAbi :sdk:core:iosSimulatorArm64Test :sdk:core:compileKotlinIosArm64 :sdk:core:checkKotlinAbi
 
   compose:
     needs: changes
