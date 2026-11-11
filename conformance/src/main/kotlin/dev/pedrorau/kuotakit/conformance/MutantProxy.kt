@@ -20,6 +20,7 @@ import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
@@ -97,6 +98,57 @@ internal enum class Mutation(
         setOf("L1-09", "L1-10"),
         { _, _, reply -> if (reply.status == Status.TOO_MANY_REQUESTS) reply.copy(status = Status.OK) else reply },
     ),
+    PURCHASE_REFUSAL_ACCEPTED(
+        "a 402 turned into a 200: a purchase Google does not confirm is accepted",
+        Level.TWO,
+        setOf("L2-07", "L2-15"),
+        { _, _, reply -> if (reply.status == Status.PURCHASE_INVALID) reply.copy(status = Status.OK) else reply },
+    ),
+    CONFLICT_ACCEPTED(
+        "a 409 turned into a 200: a token of another user is accepted",
+        Level.TWO,
+        setOf("L2-16", "L2-18"),
+        { _, _, reply -> if (reply.status == Status.CONFLICT) reply.copy(status = Status.OK) else reply },
+    ),
+    STORE_FAILURE_ACCEPTED(
+        "a 502 turned into a 200: a failure of the store is treated as success",
+        Level.TWO,
+        setOf("L2-10", "L2-21", "L2-22"),
+        { _, _, reply -> if (reply.status == Status.BAD_GATEWAY) reply.copy(status = Status.OK) else reply },
+    ),
+    ACCESS_AFTER_ENDING(
+        "every entitlement reported as active, as if no refund or expiry ever took access away",
+        Level.TWO,
+        setOf("L2-03", "L2-26"),
+        { method, path, reply ->
+            if (method == "GET" && path.startsWith("/v1/subscribers/") && reply.status == Status.OK) {
+                reply.copy(body = activateAll(reply.body))
+            } else {
+                reply
+            }
+        },
+    ),
+    UNTRUSTED_PUSH_ACCEPTED(
+        "a 401 of the webhook turned into a 204: a push with no valid proof is accepted",
+        Level.TWO,
+        setOf("L2-24"),
+        { _, path, reply ->
+            if (path == "/v1/webhooks/google" && reply.status == Status.UNAUTHORIZED) {
+                reply.copy(status = Status.NO_CONTENT, body = "")
+            } else {
+                reply
+            }
+        },
+    ),
+}
+
+private fun activateAll(body: String): String {
+    val info = body.asObject()
+    val entitlements =
+        info.getValue("entitlements").jsonObject.mapValues { (_, value) ->
+            JsonObject(value.jsonObject + ("is_active" to JsonPrimitive(true)))
+        }
+    return Json.encodeToString(JsonObject.serializer(), JsonObject(info + ("entitlements" to JsonObject(entitlements))))
 }
 
 private fun String.asObject() = Json.parseToJsonElement(this).jsonObject

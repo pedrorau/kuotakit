@@ -24,6 +24,7 @@ internal object Fixture {
     const val PUBSUB_AUDIENCE = "http://backend:8080/v1/webhooks/google"
     const val PUBSUB_EMAIL = "push@conformance.iam.gserviceaccount.com"
     const val FAKE_GOOGLE_PORT = 9000
+    const val FAKE_GOOGLE_CONTROL_PORT = 9001
 
     /** The `entitlements.yaml` the backend under test is started with (the fake Google writes it at start). */
     val ENTITLEMENTS_YAML =

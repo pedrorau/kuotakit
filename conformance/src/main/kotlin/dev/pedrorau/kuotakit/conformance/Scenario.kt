@@ -58,4 +58,13 @@ internal fun <T> expectEqual(
 
 /** The scenarios of the suite, by ID. The manifest (`conformance/manifest.txt`) and this list must match. */
 internal fun allScenarios(): List<Scenario> =
-    (level1AccessScenarios() + level1ShapeScenarios()).sortedBy { it.id.replace("R-", "Z-") }
+    (level1AccessScenarios() + level1ShapeScenarios() + level2Scenarios()).sortedBy { it.id.replace("R-", "Z-") }
+
+internal fun level2Scenarios(): List<Scenario> =
+    level2Subscriptions1() +
+        level2Subscriptions2() +
+        level2OneTime() +
+        level2Ownership() +
+        level2Failures() +
+        level2WebhookAuth() +
+        level2WebhookEvents()

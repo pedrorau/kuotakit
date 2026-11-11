@@ -131,3 +131,12 @@ One entry per working session. Template in [ai-workflow.md](ai-workflow.md).
 - Public API: none.
 - Time spent: pending · Diff accepted as-is: pending
 
+## 2026-11-12 — Conformance suite, part 2b: the behaviour of the stores (Level 2)
+- Goal: Level 2 of the suite (L2-01 to L2-37) so that "fully conformant" means something, with the push signer, a really refused connection, the Level 2 mutations and the documentation for third parties. Plan: `docs/plans/2026-11-conformance-suite-behaviour.md`.
+- What the agent proposed / what I chose: the control API of the fake moved to its own port (9001) so that the Google port can be switched off and a connection is truly refused (L2-22); the push token is made by the fake, which holds the key; the scenarios assert only the answer, the customer info and the log of the fake; the first receipt of an unknown notification is not asserted to cost no call to Google, because the manifest does not promise it.
+- What I had to correct: the 50 scenarios passed at the first run, which I did not trust. So: five mutations of the proxy for Level 2 (a 402, a 409 or a 502 turned into 200, every entitlement active, a push with no proof accepted), all caught by the scenarios meant to; and eight deliberate breakages of the real backend, each run and reverted, that failed exactly the expected scenarios (no account id check, a refund that is not final, never acknowledging, handling another app's notifications, not checking the push email, forgetting a refund that comes before the receipt, a replaced plan that keeps access, Google 400/404/410 treated as an outage). A review found scenarios stricter or weaker than their manifest line (L2-34, L2-03, L2-18), a garbled line of AGENTS.md and leftovers; fixed. It also pointed out that a backend that caches Google's signing keys would fail L2-33: written in the docs.
+- One existing test file changed: `FakeGoogleTest` (only the helper that starts the fake, because the control API moved to its own port); no assertion was changed.
+- Validation done: `./gradlew build` green; the compose run says "fully conformant" with 50 scenarios, the self-check catches every mutation, Level 1 only and an incomplete backend behave as before. Not validated: the CI job with Level 2 (first run is this pull request), the real Google.
+- Public API: none.
+- Time spent: pending · Diff accepted as-is: pending
+

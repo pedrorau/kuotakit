@@ -37,9 +37,8 @@ private const val ACKNOWLEDGE =
 private val key = SigningKey.generate()
 
 private fun <T> withFake(block: (String, FakeGoogleControl, Http) -> T): T =
-    FakeGoogle(0, key).use { fake ->
-        val url = "http://127.0.0.1:${fake.port}"
-        block(url, FakeGoogleControl(url), Http())
+    FakeGoogle(0, 0, key).use { fake ->
+        block("http://127.0.0.1:${fake.port}", FakeGoogleControl("http://127.0.0.1:${fake.controlPort}"), Http())
     }
 
 private fun Http.token(url: String) =

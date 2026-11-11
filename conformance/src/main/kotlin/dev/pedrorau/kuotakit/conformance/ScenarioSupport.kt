@@ -30,8 +30,11 @@ internal const val UNKNOWN_SECRET = "sk_this_key_does_not_exist_anywhere"
 
 internal fun freshUser() = "anon_conformance_" + Random.nextLong().toString(Character.MAX_RADIX).removePrefix("-")
 
-internal fun receipt(token: String = "token-1") =
-    """{"store":"play_store","package_name":"${Fixture.PACKAGE_NAME}","product_id":"premium_monthly","purchase_token":"$token"}"""
+internal fun receipt(
+    token: String = "token-1",
+    productId: String = "premium_monthly",
+    packageName: String = Fixture.PACKAGE_NAME,
+) = """{"store":"play_store","package_name":"$packageName","product_id":"$productId","purchase_token":"$token"}"""
 
 internal fun json(reply: Reply): JsonObject = Json.parseToJsonElement(reply.body).jsonObject
 
