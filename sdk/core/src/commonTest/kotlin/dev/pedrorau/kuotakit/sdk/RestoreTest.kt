@@ -128,7 +128,7 @@ class RestoreTest {
                 listOf(
                     owned("good-1", mine),
                     owned("pending", mine, OwnedState.PENDING),
-                    owned("other-state", mine, OwnedState.OTHER),
+                    owned("other-state", mine, OwnedState.UNKNOWN),
                     owned("no-account", null),
                     owned("another-user", playObfuscatedAccountId("\$anon_someone_else")),
                     owned("good-2", mine),
@@ -363,12 +363,12 @@ class RestoreTest {
         val mine = "mine"
         assertEquals(OwnedAction.Send(receipt("t")), classify(owned("t", mine), mine))
         assertEquals(OwnedAction.Waiting, classify(owned("t", mine, OwnedState.PENDING), mine))
-        assertEquals(OwnedAction.Ignore, classify(owned("t", mine, OwnedState.OTHER), mine))
+        assertEquals(OwnedAction.Ignore, classify(owned("t", mine, OwnedState.UNKNOWN), mine))
         assertEquals(OwnedAction.NotOurs, classify(owned("t", null), mine))
         assertEquals(OwnedAction.NotOurs, classify(owned("t", "theirs"), mine))
         assertEquals(OwnedAction.NotOurs, classify(owned("t", mine.uppercase()), mine))
         assertEquals(OwnedAction.NotOurs, classify(owned("t", "theirs", OwnedState.PENDING), mine))
-        assertEquals(OwnedAction.Ignore, classify(owned("t", "theirs", OwnedState.OTHER), mine))
+        assertEquals(OwnedAction.Ignore, classify(owned("t", "theirs", OwnedState.UNKNOWN), mine))
     }
 
     @Test

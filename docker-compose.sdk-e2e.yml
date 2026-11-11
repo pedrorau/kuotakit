@@ -1,0 +1,17 @@
+# Publishes the ports the end-to-end test of the SDK needs, on top of the conformance stack (docs/sdk-android.md):
+#   docker compose -f docker-compose.conformance.yml -f docker-compose.conformance.reference.yml \
+#     -f docker-compose.sdk-e2e.yml up -d --build backend fake-google postgres
+#   ./gradlew :sdk:e2e:e2eTest
+# The limits per address are raised because every call of the test comes from the same address; the limit of the
+# receipts of one app user stays low, since one scenario is about it.
+services:
+  backend:
+    ports:
+      - "8080:8080"
+    environment:
+      KUOTAKIT_RATE_LIMIT_PER_MINUTE: "100000"
+      KUOTAKIT_RATE_LIMIT_RECEIPTS_PER_MINUTE: "100000"
+      KUOTAKIT_RATE_LIMIT_RECEIPTS_PER_USER_PER_MINUTE: "30"
+  fake-google:
+    ports:
+      - "9001:9001"

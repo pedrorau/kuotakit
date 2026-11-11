@@ -125,6 +125,7 @@ internal class BillingClientPlayClient(
     override suspend fun launch(
         product: PlayProduct,
         accountId: String,
+        replacement: PlayReplacement?,
     ): PlayResponse {
         val screen =
             activity()
@@ -153,7 +154,17 @@ internal class BillingClientPlayClient(
                 .newBuilder()
                 .setProductDetailsParamsList(listOf(productParams))
                 .setObfuscatedAccountId(accountId)
-                .build()
+                .apply {
+                    replacement?.let {
+                        setSubscriptionUpdateParams(
+                            BillingFlowParams.SubscriptionUpdateParams
+                                .newBuilder()
+                                .setOldPurchaseToken(it.oldPurchaseToken)
+                                .setSubscriptionReplacementMode(replacementModeOf(it.mode))
+                                .build(),
+                        )
+                    }
+                }.build()
         // Google needs the main thread to show the purchase screen, whatever dispatcher the caller is on.
         val launched = withContext(Dispatchers.Main.immediate) { client.launchBillingFlow(screen, params) }
         return PlayResponse(launched.responseCode, launched.debugMessage)

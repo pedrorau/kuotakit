@@ -16,6 +16,7 @@
 
 package dev.pedrorau.kuotakit.sdk.android
 
+import dev.pedrorau.kuotakit.sdk.ReplacementMode
 import kotlinx.coroutines.flow.Flow
 
 /** A kind of product in Google Play: a subscription or a product bought once. */
@@ -26,6 +27,12 @@ internal class PlayProduct(
     val id: String,
     val kind: ProductKind,
     val handle: Any,
+)
+
+/** The subscription that a purchase replaces, found among the purchases the user owns, and how (docs/adr/0019). */
+internal class PlayReplacement(
+    val oldPurchaseToken: String,
+    val mode: ReplacementMode,
 )
 
 /** What Google answered to a call: a response code of `BillingResponseCode` and its message. */
@@ -86,10 +93,14 @@ internal interface PlayClient {
         kind: ProductKind,
     ): ProductQuery
 
-    /** Shows the purchase screen for [product], attaching [accountId] to the purchase (ADR 0017). */
+    /**
+     * Shows the purchase screen for [product], attaching [accountId] to the purchase (ADR 0017), and replacing the
+     * subscription of [replacement] when there is one: the account id is attached to a plan change too.
+     */
     suspend fun launch(
         product: PlayProduct,
         accountId: String,
+        replacement: PlayReplacement? = null,
     ): PlayResponse
 
     suspend fun queryOwned(kind: ProductKind): OwnedQuery

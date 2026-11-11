@@ -68,12 +68,17 @@ internal class FakePlayClient : PlayClient {
         return known[productId to kind] ?: ProductQuery.NotFound
     }
 
+    /** The replacement each launch carried (`null` for a first purchase), in the same order as [launched]. */
+    val replacements = mutableListOf<PlayReplacement?>()
+
     override suspend fun launch(
         product: PlayProduct,
         accountId: String,
+        replacement: PlayReplacement?,
     ): PlayResponse {
         calls += "launch"
         launched += product.id to accountId
+        replacements += replacement
         beforeAnswer.forEach { reported.emit(it) }
         afterLaunch?.let { reported.emit(it) }
         return launchAnswer

@@ -7,15 +7,29 @@
 
 // Library unique name: <kuotakit.sdk:core>
 final enum class dev.pedrorau.kuotakit.sdk/OwnedState : kotlin/Enum<dev.pedrorau.kuotakit.sdk/OwnedState> { // dev.pedrorau.kuotakit.sdk/OwnedState|null[0]
-    enum entry OTHER // dev.pedrorau.kuotakit.sdk/OwnedState.OTHER|null[0]
     enum entry PENDING // dev.pedrorau.kuotakit.sdk/OwnedState.PENDING|null[0]
     enum entry PURCHASED // dev.pedrorau.kuotakit.sdk/OwnedState.PURCHASED|null[0]
+    enum entry UNKNOWN // dev.pedrorau.kuotakit.sdk/OwnedState.UNKNOWN|null[0]
 
     final val entries // dev.pedrorau.kuotakit.sdk/OwnedState.entries|#static{}entries[0]
         final fun <get-entries>(): kotlin.enums/EnumEntries<dev.pedrorau.kuotakit.sdk/OwnedState> // dev.pedrorau.kuotakit.sdk/OwnedState.entries.<get-entries>|<get-entries>#static(){}[0]
 
     final fun valueOf(kotlin/String): dev.pedrorau.kuotakit.sdk/OwnedState // dev.pedrorau.kuotakit.sdk/OwnedState.valueOf|valueOf#static(kotlin.String){}[0]
     final fun values(): kotlin/Array<dev.pedrorau.kuotakit.sdk/OwnedState> // dev.pedrorau.kuotakit.sdk/OwnedState.values|values#static(){}[0]
+}
+
+final enum class dev.pedrorau.kuotakit.sdk/ReplacementMode : kotlin/Enum<dev.pedrorau.kuotakit.sdk/ReplacementMode> { // dev.pedrorau.kuotakit.sdk/ReplacementMode|null[0]
+    enum entry CHARGE_FULL_PRICE // dev.pedrorau.kuotakit.sdk/ReplacementMode.CHARGE_FULL_PRICE|null[0]
+    enum entry CHARGE_PRORATED_PRICE // dev.pedrorau.kuotakit.sdk/ReplacementMode.CHARGE_PRORATED_PRICE|null[0]
+    enum entry DEFERRED // dev.pedrorau.kuotakit.sdk/ReplacementMode.DEFERRED|null[0]
+    enum entry WITHOUT_PRORATION // dev.pedrorau.kuotakit.sdk/ReplacementMode.WITHOUT_PRORATION|null[0]
+    enum entry WITH_TIME_PRORATION // dev.pedrorau.kuotakit.sdk/ReplacementMode.WITH_TIME_PRORATION|null[0]
+
+    final val entries // dev.pedrorau.kuotakit.sdk/ReplacementMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<dev.pedrorau.kuotakit.sdk/ReplacementMode> // dev.pedrorau.kuotakit.sdk/ReplacementMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): dev.pedrorau.kuotakit.sdk/ReplacementMode // dev.pedrorau.kuotakit.sdk/ReplacementMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<dev.pedrorau.kuotakit.sdk/ReplacementMode> // dev.pedrorau.kuotakit.sdk/ReplacementMode.values|values#static(){}[0]
 }
 
 abstract interface dev.pedrorau.kuotakit.sdk/BillingAdapter { // dev.pedrorau.kuotakit.sdk/BillingAdapter|null[0]
@@ -40,8 +54,6 @@ sealed interface dev.pedrorau.kuotakit.sdk/BillingResult { // dev.pedrorau.kuota
         final val receipt // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.receipt|{}receipt[0]
             final fun <get-receipt>(): dev.pedrorau.kuotakit.contracts/ReceiptRequest // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.receipt.<get-receipt>|<get-receipt>(){}[0]
 
-        final fun component1(): dev.pedrorau.kuotakit.contracts/ReceiptRequest // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.component1|component1(){}[0]
-        final fun copy(dev.pedrorau.kuotakit.contracts/ReceiptRequest = ...): dev.pedrorau.kuotakit.sdk/BillingResult.Purchased // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.copy|copy(dev.pedrorau.kuotakit.contracts.ReceiptRequest){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/BillingResult.Purchased.toString|toString(){}[0]
@@ -73,8 +85,6 @@ sealed interface dev.pedrorau.kuotakit.sdk/PurchaseOutcome { // dev.pedrorau.kuo
         final val customerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.AlreadyOwned.customerInfo|{}customerInfo[0]
             final fun <get-customerInfo>(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.AlreadyOwned.customerInfo.<get-customerInfo>|<get-customerInfo>(){}[0]
 
-        final fun component1(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.AlreadyOwned.component1|component1(){}[0]
-        final fun copy(dev.pedrorau.kuotakit.contracts/CustomerInfo = ...): dev.pedrorau.kuotakit.sdk/PurchaseOutcome.AlreadyOwned // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.AlreadyOwned.copy|copy(dev.pedrorau.kuotakit.contracts.CustomerInfo){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.AlreadyOwned.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.AlreadyOwned.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.AlreadyOwned.toString|toString(){}[0]
@@ -86,8 +96,6 @@ sealed interface dev.pedrorau.kuotakit.sdk/PurchaseOutcome { // dev.pedrorau.kuo
         final val customerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.customerInfo|{}customerInfo[0]
             final fun <get-customerInfo>(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.customerInfo.<get-customerInfo>|<get-customerInfo>(){}[0]
 
-        final fun component1(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.component1|component1(){}[0]
-        final fun copy(dev.pedrorau.kuotakit.contracts/CustomerInfo = ...): dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.copy|copy(dev.pedrorau.kuotakit.contracts.CustomerInfo){}[0]
         final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.equals|equals(kotlin.Any?){}[0]
         final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.hashCode|hashCode(){}[0]
         final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseOutcome.Success.toString|toString(){}[0]
@@ -106,15 +114,30 @@ sealed interface dev.pedrorau.kuotakit.sdk/PurchaseOutcome { // dev.pedrorau.kuo
     }
 }
 
+final class dev.pedrorau.kuotakit.sdk/CachedCustomerInfo { // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo|null[0]
+    constructor <init>(dev.pedrorau.kuotakit.contracts/CustomerInfo, kotlin.time/Instant) // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo.<init>|<init>(dev.pedrorau.kuotakit.contracts.CustomerInfo;kotlin.time.Instant){}[0]
+
+    final val customerInfo // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo.customerInfo|{}customerInfo[0]
+        final fun <get-customerInfo>(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo.customerInfo.<get-customerInfo>|<get-customerInfo>(){}[0]
+    final val receivedAt // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo.receivedAt|{}receivedAt[0]
+        final fun <get-receivedAt>(): kotlin.time/Instant // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo.receivedAt.<get-receivedAt>|<get-receivedAt>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/CachedCustomerInfo.toString|toString(){}[0]
+}
+
 final class dev.pedrorau.kuotakit.sdk/KuotaKit { // dev.pedrorau.kuotakit.sdk/KuotaKit|null[0]
     final val appUserId // dev.pedrorau.kuotakit.sdk/KuotaKit.appUserId|{}appUserId[0]
         final fun <get-appUserId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/KuotaKit.appUserId.<get-appUserId>|<get-appUserId>(){}[0]
     final val customerInfo // dev.pedrorau.kuotakit.sdk/KuotaKit.customerInfo|{}customerInfo[0]
         final fun <get-customerInfo>(): kotlinx.coroutines.flow/StateFlow<dev.pedrorau.kuotakit.contracts/CustomerInfo?> // dev.pedrorau.kuotakit.sdk/KuotaKit.customerInfo.<get-customerInfo>|<get-customerInfo>(){}[0]
+    final val lastKnownCustomerInfo // dev.pedrorau.kuotakit.sdk/KuotaKit.lastKnownCustomerInfo|{}lastKnownCustomerInfo[0]
+        final fun <get-lastKnownCustomerInfo>(): kotlinx.coroutines.flow/StateFlow<dev.pedrorau.kuotakit.sdk/CachedCustomerInfo?> // dev.pedrorau.kuotakit.sdk/KuotaKit.lastKnownCustomerInfo.<get-lastKnownCustomerInfo>|<get-lastKnownCustomerInfo>(){}[0]
 
     final suspend fun getCustomerInfo(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/KuotaKit.getCustomerInfo|getCustomerInfo(){}[0]
     final suspend fun getOfferings(): dev.pedrorau.kuotakit.contracts/OfferingsResponse // dev.pedrorau.kuotakit.sdk/KuotaKit.getOfferings|getOfferings(){}[0]
-    final suspend fun purchase(dev.pedrorau.kuotakit.contracts/OfferingPackage): dev.pedrorau.kuotakit.sdk/PurchaseOutcome // dev.pedrorau.kuotakit.sdk/KuotaKit.purchase|purchase(dev.pedrorau.kuotakit.contracts.OfferingPackage){}[0]
+    final suspend fun purchase(dev.pedrorau.kuotakit.contracts/OfferingPackage, dev.pedrorau.kuotakit.sdk/PlanChange? = ...): dev.pedrorau.kuotakit.sdk/PurchaseOutcome // dev.pedrorau.kuotakit.sdk/KuotaKit.purchase|purchase(dev.pedrorau.kuotakit.contracts.OfferingPackage;dev.pedrorau.kuotakit.sdk.PlanChange?){}[0]
     final suspend fun restore(): dev.pedrorau.kuotakit.sdk/RestoreOutcome // dev.pedrorau.kuotakit.sdk/KuotaKit.restore|restore(){}[0]
 
     final object Companion { // dev.pedrorau.kuotakit.sdk/KuotaKit.Companion|null[0]
@@ -148,17 +171,39 @@ final class dev.pedrorau.kuotakit.sdk/OwnedPurchase { // dev.pedrorau.kuotakit.s
     final val state // dev.pedrorau.kuotakit.sdk/OwnedPurchase.state|{}state[0]
         final fun <get-state>(): dev.pedrorau.kuotakit.sdk/OwnedState // dev.pedrorau.kuotakit.sdk/OwnedPurchase.state.<get-state>|<get-state>(){}[0]
 
-    final fun component1(): dev.pedrorau.kuotakit.contracts/ReceiptRequest // dev.pedrorau.kuotakit.sdk/OwnedPurchase.component1|component1(){}[0]
-    final fun component2(): dev.pedrorau.kuotakit.sdk/OwnedState // dev.pedrorau.kuotakit.sdk/OwnedPurchase.component2|component2(){}[0]
-    final fun component3(): kotlin/String? // dev.pedrorau.kuotakit.sdk/OwnedPurchase.component3|component3(){}[0]
-    final fun copy(dev.pedrorau.kuotakit.contracts/ReceiptRequest = ..., dev.pedrorau.kuotakit.sdk/OwnedState = ..., kotlin/String? = ...): dev.pedrorau.kuotakit.sdk/OwnedPurchase // dev.pedrorau.kuotakit.sdk/OwnedPurchase.copy|copy(dev.pedrorau.kuotakit.contracts.ReceiptRequest;dev.pedrorau.kuotakit.sdk.OwnedState;kotlin.String?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/OwnedPurchase.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/OwnedPurchase.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/OwnedPurchase.toString|toString(){}[0]
 }
 
+final class dev.pedrorau.kuotakit.sdk/PlanChange { // dev.pedrorau.kuotakit.sdk/PlanChange|null[0]
+    constructor <init>(dev.pedrorau.kuotakit.contracts/OfferingPackage, dev.pedrorau.kuotakit.sdk/ReplacementMode) // dev.pedrorau.kuotakit.sdk/PlanChange.<init>|<init>(dev.pedrorau.kuotakit.contracts.OfferingPackage;dev.pedrorau.kuotakit.sdk.ReplacementMode){}[0]
+
+    final val mode // dev.pedrorau.kuotakit.sdk/PlanChange.mode|{}mode[0]
+        final fun <get-mode>(): dev.pedrorau.kuotakit.sdk/ReplacementMode // dev.pedrorau.kuotakit.sdk/PlanChange.mode.<get-mode>|<get-mode>(){}[0]
+    final val replacing // dev.pedrorau.kuotakit.sdk/PlanChange.replacing|{}replacing[0]
+        final fun <get-replacing>(): dev.pedrorau.kuotakit.contracts/OfferingPackage // dev.pedrorau.kuotakit.sdk/PlanChange.replacing.<get-replacing>|<get-replacing>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/PlanChange.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/PlanChange.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/PlanChange.toString|toString(){}[0]
+}
+
+final class dev.pedrorau.kuotakit.sdk/ProductReplacement { // dev.pedrorau.kuotakit.sdk/ProductReplacement|null[0]
+    constructor <init>(kotlin/String, dev.pedrorau.kuotakit.sdk/ReplacementMode) // dev.pedrorau.kuotakit.sdk/ProductReplacement.<init>|<init>(kotlin.String;dev.pedrorau.kuotakit.sdk.ReplacementMode){}[0]
+
+    final val mode // dev.pedrorau.kuotakit.sdk/ProductReplacement.mode|{}mode[0]
+        final fun <get-mode>(): dev.pedrorau.kuotakit.sdk/ReplacementMode // dev.pedrorau.kuotakit.sdk/ProductReplacement.mode.<get-mode>|<get-mode>(){}[0]
+    final val productId // dev.pedrorau.kuotakit.sdk/ProductReplacement.productId|{}productId[0]
+        final fun <get-productId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/ProductReplacement.productId.<get-productId>|<get-productId>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/ProductReplacement.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/ProductReplacement.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/ProductReplacement.toString|toString(){}[0]
+}
+
 final class dev.pedrorau.kuotakit.sdk/PurchaseRequest { // dev.pedrorau.kuotakit.sdk/PurchaseRequest|null[0]
-    constructor <init>(kotlin/String, kotlin/String, kotlin/String) // dev.pedrorau.kuotakit.sdk/PurchaseRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String){}[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, dev.pedrorau.kuotakit.sdk/ProductReplacement? = ...) // dev.pedrorau.kuotakit.sdk/PurchaseRequest.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;dev.pedrorau.kuotakit.sdk.ProductReplacement?){}[0]
 
     final val accountId // dev.pedrorau.kuotakit.sdk/PurchaseRequest.accountId|{}accountId[0]
         final fun <get-accountId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.accountId.<get-accountId>|<get-accountId>(){}[0]
@@ -166,11 +211,9 @@ final class dev.pedrorau.kuotakit.sdk/PurchaseRequest { // dev.pedrorau.kuotakit
         final fun <get-appUserId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.appUserId.<get-appUserId>|<get-appUserId>(){}[0]
     final val productId // dev.pedrorau.kuotakit.sdk/PurchaseRequest.productId|{}productId[0]
         final fun <get-productId>(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.productId.<get-productId>|<get-productId>(){}[0]
+    final val replacing // dev.pedrorau.kuotakit.sdk/PurchaseRequest.replacing|{}replacing[0]
+        final fun <get-replacing>(): dev.pedrorau.kuotakit.sdk/ProductReplacement? // dev.pedrorau.kuotakit.sdk/PurchaseRequest.replacing.<get-replacing>|<get-replacing>(){}[0]
 
-    final fun component1(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.component1|component1(){}[0]
-    final fun component2(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.component2|component2(){}[0]
-    final fun component3(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.component3|component3(){}[0]
-    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ...): dev.pedrorau.kuotakit.sdk/PurchaseRequest // dev.pedrorau.kuotakit.sdk/PurchaseRequest.copy|copy(kotlin.String;kotlin.String;kotlin.String){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/PurchaseRequest.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/PurchaseRequest.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/PurchaseRequest.toString|toString(){}[0]
@@ -188,11 +231,6 @@ final class dev.pedrorau.kuotakit.sdk/RestoreOutcome { // dev.pedrorau.kuotakit.
     final val unattributed // dev.pedrorau.kuotakit.sdk/RestoreOutcome.unattributed|{}unattributed[0]
         final fun <get-unattributed>(): kotlin/Int // dev.pedrorau.kuotakit.sdk/RestoreOutcome.unattributed.<get-unattributed>|<get-unattributed>(){}[0]
 
-    final fun component1(): dev.pedrorau.kuotakit.contracts/CustomerInfo // dev.pedrorau.kuotakit.sdk/RestoreOutcome.component1|component1(){}[0]
-    final fun component2(): kotlin/Int // dev.pedrorau.kuotakit.sdk/RestoreOutcome.component2|component2(){}[0]
-    final fun component3(): kotlin/Int // dev.pedrorau.kuotakit.sdk/RestoreOutcome.component3|component3(){}[0]
-    final fun component4(): kotlin/Int // dev.pedrorau.kuotakit.sdk/RestoreOutcome.component4|component4(){}[0]
-    final fun copy(dev.pedrorau.kuotakit.contracts/CustomerInfo = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): dev.pedrorau.kuotakit.sdk/RestoreOutcome // dev.pedrorau.kuotakit.sdk/RestoreOutcome.copy|copy(dev.pedrorau.kuotakit.contracts.CustomerInfo;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // dev.pedrorau.kuotakit.sdk/RestoreOutcome.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // dev.pedrorau.kuotakit.sdk/RestoreOutcome.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // dev.pedrorau.kuotakit.sdk/RestoreOutcome.toString|toString(){}[0]

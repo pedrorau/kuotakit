@@ -32,7 +32,6 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.KSerializer
@@ -53,19 +52,27 @@ internal class ApiClient(
     engine: HttpClientEngine = platformEngine(),
     requestTimeoutMillis: Long = REQUEST_TIMEOUT_MS,
 ) {
+    // Named apart: inside the block below `requestTimeoutMillis` would be the setting itself, not this parameter.
+    private val requestTimeout = requestTimeoutMillis
+
     private val http =
         HttpClient(engine) {
             expectSuccess = false
             install(HttpTimeout) {
                 connectTimeoutMillis = CONNECT_TIMEOUT_MS
-                this.requestTimeoutMillis = requestTimeoutMillis
+                this.requestTimeoutMillis = requestTimeout
             }
         }
+
+    // Joined by hand: `url(baseUrl) { appendPathSegments(...) }` made "http://localhost:8080://localhost/..." out of a
+    // base address with a port, which OkHttp refuses (found by the end-to-end test; a mock engine accepts it). The
+    // segments are an app user id and fixed words, all characters that need no encoding (APP_USER_ID_PATTERN).
+    private fun address(vararg segments: String): String = baseUrl.trimEnd('/') + segments.joinToString("") { "/$it" }
 
     suspend fun offerings(): OfferingsResponse =
         read(OfferingsResponse.serializer()) {
             http.get {
-                url(baseUrl) { appendPathSegments("v1", "offerings") }
+                url(address("v1", "offerings"))
                 bearerAuth(apiKey)
             }
         }
@@ -73,7 +80,7 @@ internal class ApiClient(
     suspend fun customerInfo(appUserId: String): CustomerInfo =
         read(CustomerInfo.serializer()) {
             http.get {
-                url(baseUrl) { appendPathSegments("v1", "subscribers", appUserId) }
+                url(address("v1", "subscribers", appUserId))
                 bearerAuth(apiKey)
             }
         }
@@ -84,7 +91,7 @@ internal class ApiClient(
     ): CustomerInfo =
         read(CustomerInfo.serializer()) {
             http.post {
-                url(baseUrl) { appendPathSegments("v1", "subscribers", appUserId, "receipts") }
+                url(address("v1", "subscribers", appUserId, "receipts"))
                 bearerAuth(apiKey)
                 contentType(ContentType.Application.Json)
                 setBody(kuotaKitJson.encodeToString(ReceiptRequest.serializer(), receipt))

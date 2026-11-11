@@ -25,18 +25,27 @@ public enum class OwnedState {
     PENDING,
 
     /** Any other state the store reports: never sent. */
-    OTHER,
+    UNKNOWN,
 }
 
 /**
  * A purchase the store says the user owns. [accountId] is the one the app attached when it started the purchase, or
  * `null` (a purchase made outside the app has none).
  */
-public data class OwnedPurchase(
-    val receipt: ReceiptRequest,
-    val state: OwnedState,
-    val accountId: String?,
-)
+public class OwnedPurchase(
+    public val receipt: ReceiptRequest,
+    public val state: OwnedState,
+    public val accountId: String?,
+) {
+    override fun equals(other: Any?): Boolean =
+        other is OwnedPurchase && receipt == other.receipt && state == other.state && accountId == other.accountId
+
+    override fun hashCode(): Int = listOf(receipt, state, accountId).hashCode()
+
+    // The receipt holds the purchase token and the account id is a hash of a secret of the user: both are left out of
+    // what a log can show.
+    override fun toString(): String = "OwnedPurchase(state=$state)"
+}
 
 /**
  * What [KuotaKit.restore] did: [customerInfo] is what the backend says after it; [submitted] purchases were sent and
@@ -45,9 +54,21 @@ public data class OwnedPurchase(
  * outside the app, or under another app user id): they cannot be recovered. A purchase already accepted earlier in this
  * run of the app is not sent again and is not counted again.
  */
-public data class RestoreOutcome(
-    val customerInfo: CustomerInfo,
-    val submitted: Int,
-    val refused: Int,
-    val unattributed: Int,
-)
+public class RestoreOutcome(
+    public val customerInfo: CustomerInfo,
+    public val submitted: Int,
+    public val refused: Int,
+    public val unattributed: Int,
+) {
+    override fun equals(other: Any?): Boolean =
+        other is RestoreOutcome &&
+            customerInfo == other.customerInfo &&
+            submitted == other.submitted &&
+            refused == other.refused &&
+            unattributed == other.unattributed
+
+    override fun hashCode(): Int = listOf(customerInfo, submitted, refused, unattributed).hashCode()
+
+    override fun toString(): String =
+        "RestoreOutcome(submitted=$submitted, refused=$refused, unattributed=$unattributed)"
+}
