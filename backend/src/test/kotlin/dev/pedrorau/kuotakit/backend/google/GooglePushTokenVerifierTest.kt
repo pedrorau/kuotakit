@@ -26,17 +26,13 @@ import com.google.api.client.testing.http.MockHttpTransport
 import com.google.api.client.testing.http.MockLowLevelHttpRequest
 import com.google.api.client.testing.http.MockLowLevelHttpResponse
 import dev.pedrorau.kuotakit.backend.domain.StoreUnavailableException
+import dev.pedrorau.kuotakit.backend.testing.TestKey
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import java.io.File
 import java.io.IOException
-import java.nio.file.Files
-import java.security.KeyStore
-import java.security.PrivateKey
-import java.security.cert.X509Certificate
 import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -45,58 +41,6 @@ private const val AUDIENCE = "https://kuotakit.example.com/v1/webhooks/google"
 private const val ACCOUNT = "push@my-project.iam.gserviceaccount.com"
 private const val GOOGLE_ISSUER = "https://accounts.google.com"
 private val JSON = GsonFactory.getDefaultInstance()
-
-/** An RSA key pair and its self-signed certificate, made with the JDK's own `keytool` (nothing is stored in git). */
-private class TestKey(
-    val privateKey: PrivateKey,
-    val certificate: X509Certificate,
-) {
-    val pem: String
-        get() =
-            "-----BEGIN CERTIFICATE-----\n" +
-                Base64.getMimeEncoder(64, "\n".toByteArray()).encodeToString(certificate.encoded) +
-                "\n-----END CERTIFICATE-----\n"
-
-    companion object {
-        fun generate(): TestKey {
-            val dir = Files.createTempDirectory("push-key").toFile()
-            val keystore = File(dir, "k.p12")
-            val keytool = File(System.getProperty("java.home"), "bin/keytool").path
-            val process =
-                ProcessBuilder(
-                    keytool,
-                    "-genkeypair",
-                    "-alias",
-                    "k",
-                    "-keyalg",
-                    "RSA",
-                    "-keysize",
-                    "2048",
-                    "-validity",
-                    "30",
-                    "-dname",
-                    "CN=test",
-                    "-keystore",
-                    keystore.path,
-                    "-storetype",
-                    "PKCS12",
-                    "-storepass",
-                    "changeit",
-                ).redirectErrorStream(true).start()
-            val output = process.inputStream.bufferedReader().readText()
-            check(process.waitFor() == 0) { "keytool failed: $output" }
-            val store =
-                KeyStore
-                    .getInstance(
-                        "PKCS12",
-                    ).apply { keystore.inputStream().use { load(it, "changeit".toCharArray()) } }
-            return TestKey(
-                store.getKey("k", "changeit".toCharArray()) as PrivateKey,
-                store.getCertificate("k") as X509Certificate,
-            ).also { dir.deleteRecursively() }
-        }
-    }
-}
 
 private val trusted = TestKey.generate()
 private val stranger = TestKey.generate()

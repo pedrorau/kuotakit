@@ -18,6 +18,7 @@ package dev.pedrorau.kuotakit.backend.google
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
+import com.google.api.client.googleapis.auth.oauth2.GooglePublicKeysManager
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import dev.pedrorau.kuotakit.backend.domain.PushTokenVerifier
@@ -55,6 +56,9 @@ class GooglePushTokenVerifier internal constructor(
         }
     }
 
+    /** The address the signing keys of the push tokens are fetched from. */
+    internal val certsUrl: String get() = verifier.publicKeysManager.publicCertsEncodedUrl
+
     private fun parse(bearerToken: String): GoogleIdToken? =
         try {
             GoogleIdToken.parse(verifier.publicKeysManager.jsonFactory, bearerToken)
@@ -68,13 +72,19 @@ class GooglePushTokenVerifier internal constructor(
         fun create(
             audience: String,
             serviceAccountEmail: String,
-        ): GooglePushTokenVerifier =
-            GooglePushTokenVerifier(
-                GoogleIdTokenVerifier
+            certsUrl: String? = null,
+        ): GooglePushTokenVerifier {
+            val keys =
+                GooglePublicKeysManager
                     .Builder(NetHttpTransport(), GsonFactory.getDefaultInstance())
-                    .setAudience(listOf(audience))
-                    .build(),
+                    .apply {
+                        // Only the conformance suite uses another address (docs/adr/0018).
+                        certsUrl?.let { setPublicCertsEncodedUrl(it) }
+                    }.build()
+            return GooglePushTokenVerifier(
+                GoogleIdTokenVerifier.Builder(keys).setAudience(listOf(audience)).build(),
                 serviceAccountEmail,
             )
+        }
     }
 }
