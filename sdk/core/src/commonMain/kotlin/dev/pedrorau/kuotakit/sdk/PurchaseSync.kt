@@ -25,18 +25,26 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.time.Clock
 
 /**
  * The last customer info the backend gave. Answers can come back in another order than the requests went out, so
  * only the newest request may set it.
  */
-internal class LatestCustomerInfo {
+internal class LatestCustomerInfo(
+    private val store: KeyValueStore,
+    private val appUserId: String,
+    private val clock: Clock,
+) {
     private val value = MutableStateFlow<CustomerInfo?>(null)
+    private val cache = MutableStateFlow(loadCached(store, appUserId))
+
     private val lock = Mutex()
     private var issued = 0L
     private var applied = 0L
 
     val flow: StateFlow<CustomerInfo?> = value.asStateFlow()
+    val cached: StateFlow<CachedCustomerInfo?> = cache.asStateFlow()
 
     suspend fun stamp(): Long = lock.withLock { ++issued }
 
@@ -47,6 +55,13 @@ internal class LatestCustomerInfo {
         if (stamp > applied) {
             applied = stamp
             value.value = info
+            // Only what would be read back is kept: an answer about another app user is never the cache of this one.
+            if (info.appUserId == appUserId) {
+                CachedCustomerInfo(info, clock.now()).also {
+                    cache.value = it
+                    saveCachedQuietly(store, it)
+                }
+            }
         }
     }
 }
@@ -73,7 +88,7 @@ internal fun classify(
     accountId: String,
 ): OwnedAction =
     when {
-        purchase.state == OwnedState.OTHER -> OwnedAction.Ignore
+        purchase.state == OwnedState.UNKNOWN -> OwnedAction.Ignore
         purchase.accountId != accountId -> OwnedAction.NotOurs
         purchase.state == OwnedState.PENDING -> OwnedAction.Waiting
         else -> OwnedAction.Send(purchase.receipt)

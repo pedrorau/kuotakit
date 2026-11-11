@@ -1,6 +1,6 @@
 # KuotaKit SDK for Android
 
-Subphase 1b-i: configure, offerings, purchase, customer info and `restore`. Plan changes, the offline cache and the closing of the public API come in subphase 1b-ii (`docs/plans/2026-11-sdk-android-1a.md`, `docs/plans/2026-11-sdk-android-1b-i.md`). The decisions are in [ADR 0019](adr/0019-sdk-public-api.md).
+The Android SDK of v0: configure, offerings, purchase, plan changes, customer info, `restore` and the last known customer info (plans: `docs/plans/2026-11-sdk-android-1a.md`, `1b-i`, `1b-ii`; the decisions are in [ADR 0019](adr/0019-sdk-public-api.md)).
 
 ## Add it
 ```kotlin
@@ -36,10 +36,33 @@ kit.customerInfo.collect { latest -> /* the last answer of the backend, or null 
 ```
 `currentActivity` is the activity in the foreground (or `null`): Google needs it to show the purchase screen. The lambda lives as long as the SDK, so keep only a weak reference to the activity in it (for example the one your `ActivityLifecycleCallbacks` last saw resume), never the activity itself. Call `configure` once, at start-up (a second call stops the background sync of the first, but its Play Billing connection stays open), and use `https` for `baseUrl`: the API key travels in every request.
 
+## Change plan
+```kotlin
+// Upgrade now: the old plan is replaced at once.
+kit.purchase(annual, PlanChange(replacing = monthly, mode = ReplacementMode.CHARGE_PRORATED_PRICE))
+// Downgrade: the user keeps what they paid for and the new plan starts when the old one ends.
+kit.purchase(monthly, PlanChange(replacing = annual, mode = ReplacementMode.DEFERRED))
+```
+You name the package to replace; the SDK finds that subscription among what the user owns (never a purchase token of yours). If the user owns no such subscription the call fails with `InvalidRequest` and nothing is shown. Google's recommendation: `CHARGE_PRORATED_PRICE` to upgrade, `DEFERRED` to downgrade. Subscriptions with add-ons (`KEEP_EXISTING`) are not supported.
+
+## Offline: the last known customer info
+`kit.lastKnownCustomerInfo` is the last answer of the backend, kept on the device, with the moment it was received (`CachedCustomerInfo`). It needs no network and survives restarts, and it is replaced by every answer. It is **not proof of access**: the SDK never turns it into entitlements (`customerInfo` and every result of a purchase are only what the backend answered), and the file can be edited on a rooted device. Use it to show what the user had while there is no network, and decide how long your app trusts it.
+
 ## What it never does
 - It never decides access: `is_active` comes from the backend, and a failure leaves what you had.
 - It never acknowledges a purchase: the backend does, after it checked it with Google.
 - It refuses a secret key (`sk_...`): `configure` throws `KuotaKitException.InvalidConfiguration`.
+
+## Test it with no device
+The repository has an end-to-end test that runs the SDK against the real reference backend and a fake Google, with a fake Play that reports to the fake Google what Play would (using the account id your SDK attached). With Docker running:
+```bash
+./gradlew :backend:installDist :conformance:installDist
+docker compose -f docker-compose.conformance.yml -f docker-compose.conformance.reference.yml -f docker-compose.sdk-e2e.yml \
+  up -d --build backend fake-google postgres
+./gradlew :sdk:e2e:e2eTest
+docker compose -f docker-compose.conformance.yml -f docker-compose.conformance.reference.yml -f docker-compose.sdk-e2e.yml down -v
+```
+It is not part of `./gradlew build` (it needs Docker); CI runs it in the job `sdk-e2e`.
 
 ## Errors
 Every call can throw a `KuotaKitException`: `Unauthorized` (wrong key), `InvalidRequest`, `PurchaseInvalid` (the store does not confirm the purchase), `TokenAlreadyLinked` (it belongs to another user), `RateLimited(retryAfterSeconds)`, `StoreUnavailable` (the store or billing is not available), `Network`, `Unexpected` and `NotConfigured`.

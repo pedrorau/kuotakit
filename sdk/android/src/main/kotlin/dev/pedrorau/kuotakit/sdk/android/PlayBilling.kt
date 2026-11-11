@@ -26,6 +26,7 @@ import dev.pedrorau.kuotakit.sdk.BillingResult
 import dev.pedrorau.kuotakit.sdk.KuotaKitException
 import dev.pedrorau.kuotakit.sdk.OwnedPurchase
 import dev.pedrorau.kuotakit.sdk.OwnedState
+import dev.pedrorau.kuotakit.sdk.ProductReplacement
 import dev.pedrorau.kuotakit.sdk.PurchaseRequest
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
@@ -62,6 +63,7 @@ public class PlayBilling internal constructor(
     override suspend fun purchase(request: PurchaseRequest): BillingResult {
         connect()
         val product = lookup(request.productId)
+        val replacement = request.replacing?.let { replacementFor(it, product, request.accountId) }
         waitingFor.set(request.productId)
         try {
             val update =
@@ -71,7 +73,7 @@ public class PlayBilling internal constructor(
                         async(
                             start = CoroutineStart.UNDISPATCHED,
                         ) { client.updates.first { answers(it, request.productId) } }
-                    val launched = client.launch(product, request.accountId)
+                    val launched = client.launch(product, request.accountId, replacement)
                     if (launched.code == BillingResponseCode.OK) {
                         answer.await()
                     } else {
@@ -84,6 +86,47 @@ public class PlayBilling internal constructor(
             waitingFor.set(null)
         }
     }
+
+    /**
+     * The subscription a plan change replaces is found among what the user owns, never named by the app (a purchase
+     * token is a secret of the user): a completed purchase of that product, made through this app user. Without it
+     * nothing is launched.
+     */
+    private suspend fun replacementFor(
+        replacing: ProductReplacement,
+        product: PlayProduct,
+        accountId: String,
+    ): PlayReplacement {
+        if (product.kind != ProductKind.SUBS) {
+            throw KuotaKitException.InvalidRequest("Only a subscription can replace another one")
+        }
+        val matching =
+            ownedSubscriptions().filter {
+                replacing.productId in it.products && it.state == PlayState.PURCHASED && it.accountId == accountId
+            }
+        // Two completed purchases of the same product by the same user: which one to replace is not guessed.
+        val old = matching.singleOrNull() ?: throw cannotReplace(replacing.productId, matching.size)
+        return PlayReplacement(old.token, replacing.mode)
+    }
+
+    private fun cannotReplace(
+        productId: String,
+        found: Int,
+    ) = KuotaKitException.InvalidRequest(
+        if (found ==
+            0
+        ) {
+            "The user has no subscription of '$productId' to replace"
+        } else {
+            "The user has more than one subscription of '$productId'"
+        },
+    )
+
+    private suspend fun ownedSubscriptions(): List<PlayOwned> =
+        when (val query = client.queryOwned(ProductKind.SUBS)) {
+            is OwnedQuery.Listed -> query.purchases
+            is OwnedQuery.Failed -> throw failureOf(query.response.code, query.response.message)
+        }
 
     override suspend fun ownedPurchases(): List<OwnedPurchase> {
         connect()
@@ -181,7 +224,7 @@ public class PlayBilling internal constructor(
                 when (purchase.state) {
                     PlayState.PURCHASED -> OwnedState.PURCHASED
                     PlayState.PENDING -> OwnedState.PENDING
-                    PlayState.OTHER -> OwnedState.OTHER
+                    PlayState.OTHER -> OwnedState.UNKNOWN
                 },
                 purchase.accountId,
             )
