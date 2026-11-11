@@ -18,5 +18,12 @@ Some teams will prefer a backend in their own stack (TypeScript, Python, Go). Ma
 
 ## Consequences
 - The reference backend must pass the suite in CI from Phase 1.
-- A second backend (by the maintainer or the community) is accepted only if it passes the full suite.
+- A second backend (by the maintainer or the community) is accepted only if it is fully conformant: it passes both levels of the suite (see the amendment below).
 - The suite doubles as executable documentation of how a backend must behave.
+
+## Amendment (2026-11-11): levels of conformance
+The suite has two levels, and what a backend may call itself depends on which it passes:
+- **Level 1, the contract.** What every backend does with no store involved: API keys, the error body of every status, request limits, offerings, an empty customer info, validation, and every answer matching `docs/api/openapi.json`. A backend that passes it is **contract conformant**.
+- **Level 2, the behaviour of the stores.** Receipts, refunds, the webhook and the failures of Google, against a fake Google that the suite scripts (the profile a backend must offer for this is [ADR 0018](0018-conformance-profile.md)). A backend that passes both levels is **fully conformant**.
+
+Why: a backend that cannot send its Google calls to another address can still prove that it keeps the API contract, and that is worth saying, but it has not proved that it fails closed. Only a fully conformant backend is accepted as an official second backend. The reference backend must be fully conformant in CI. The suite also checks itself: a proxy that corrupts the answers of the backend under test must turn the scenario meant to notice each corruption red. How to run it and what a backend needs: [`docs/conformance.md`](../conformance.md).

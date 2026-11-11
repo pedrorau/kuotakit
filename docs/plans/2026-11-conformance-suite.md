@@ -2,7 +2,7 @@
 
 - **Origin:** context (proposed by the agent and approved in the conversation of 2026-11-11, copied here)
 - **Approved by the maintainer on:** 2026-11-11
-- **Branch / PR:** `feat/conformance-suite` / not started
+- **Branch / PR:** none: split into the two plans below
 
 ## Goal
 A black-box suite that runs against the address of **any** backend and checks its behaviour, not its code (ADR 0007). It must prove that the reference backend, as it is shipped in its Docker image, keeps the contract, and it must be usable by anyone who writes a backend in another language. It has to be complete from the start, not a modest first version: the maintainer expects third parties to try it soon.
@@ -79,5 +79,6 @@ None. (The fake Google keeps a scripted answer per scenario and forgets it when 
 - Complete from the first version, not modest (maintainer, 2026-11-11).
 
 ## Status
-Approved
+Superseded by `2026-11-conformance-suite-base.md` (2a) and `2026-11-conformance-suite-behaviour.md` (2b)
 - 2026-11-11: approved, not started. It comes after `2026-11-conformance-profile.md`.
+- 2026-11-11: split in two (maintainer: "si procede con 2 PR"); the scenarios and criteria moved to the two plans. Kept as the record of the whole.

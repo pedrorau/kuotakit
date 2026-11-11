@@ -24,6 +24,7 @@ jobs:
       jvm: ${{ steps.filter.outputs.jvm }}
       ios: ${{ steps.filter.outputs.ios }}
       compose: ${{ steps.filter.outputs.compose }}
+      conformance: ${{ steps.filter.outputs.conformance }}
       agent: ${{ steps.filter.outputs.agent }}
     steps:
       - uses: actions/checkout@v7
@@ -44,7 +45,10 @@ jobs:
               - 'backend/**'
               - 'architecture-tests/**'
               - 'openapi/**'
+              - 'conformance/**'
               - 'docs/api/**'
+              - 'docs/api-spec.md' # ManifestTest reads these two
+              - 'docs/conformance.md'
             ios:
               - *build
               - 'contracts/**'
@@ -55,6 +59,13 @@ jobs:
               - 'docker-compose.yml'
               - '.env.example'
               - 'entitlements.example.yaml'
+            conformance:
+              - *build
+              - 'contracts/**'
+              - 'backend/**'
+              - 'conformance/**'
+              - 'docs/api/**'
+              - 'docker-compose.conformance*.yml'
             agent:
               - 'scripts/**'
               - '.claude/**'
@@ -124,6 +135,43 @@ jobs:
       - if: always() && hashFiles('.env') != ''
         run: docker compose down -v
 
+  conformance:
+    needs: changes
+    if: needs.changes.outputs.conformance == 'true'
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE: docker compose -f docker-compose.conformance.yml -f docker-compose.conformance.reference.yml
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      - run: ./gradlew :backend:installDist :conformance:installDist
+      - name: The suite against the reference backend (the shipped image, with the fake Google)
+        run: $COMPOSE up --build --abort-on-container-exit --exit-code-from conformance
+      - name: The suite checks itself (a corrupted backend must turn it red)
+        run: CONFORMANCE_COMMAND=self-check $COMPOSE up --abort-on-container-exit --exit-code-from conformance
+      - name: Level 1 only, for a backend that cannot redirect its Google calls
+        run: >
+          CONFORMANCE_LEVEL=1 CONFORMANCE_CUSTOM_GOOGLE= CONFORMANCE_GOOGLE_API_URL= CONFORMANCE_GOOGLE_CERTS_URL=
+          $COMPOSE up --abort-on-container-exit --exit-code-from conformance
+      - name: Another backend can be plugged in, and an incomplete one fails naming the scenarios
+        run: |
+          mkdir -p "$RUNNER_TEMP/stub/www" && printf '{"status":"ok"}' > "$RUNNER_TEMP/stub/www/health"
+          printf 'FROM busybox\nCOPY www /www\nCMD ["httpd","-f","-p","8080","-h","/www"]\n' > "$RUNNER_TEMP/stub/Dockerfile"
+          docker build -t stub-backend:ci "$RUNNER_TEMP/stub"
+          if CONFORMANCE_BACKEND_IMAGE=stub-backend:ci CONFORMANCE_LEVEL=1 \
+            docker compose -f docker-compose.conformance.yml up --abort-on-container-exit --exit-code-from conformance \
+            > "$RUNNER_TEMP/stub.log" 2>&1; then
+            echo "an incomplete backend passed the suite"; exit 1
+          fi
+          grep -q 'Result: NOT conformant: failed' "$RUNNER_TEMP/stub.log"
+          grep -q 'FAIL  L1-02' "$RUNNER_TEMP/stub.log"
+      - if: always()
+        run: $COMPOSE down -v
+
   agent-scripts:
     needs: changes
     if: needs.changes.outputs.agent == 'true'
@@ -143,7 +191,7 @@ jobs:
       - run: python3 scripts/ci/check_license_headers.py
 
   ci:
-    needs: [changes, jvm, ios, compose, agent-scripts, license-headers]
+    needs: [changes, jvm, ios, compose, conformance, agent-scripts, license-headers]
     if: always()
     runs-on: ubuntu-latest
     steps:

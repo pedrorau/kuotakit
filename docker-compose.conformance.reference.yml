@@ -1,0 +1,9 @@
+# Builds the reference backend for the conformance run (docker-compose.conformance.yml). Needs
+# ./gradlew :backend:installDist and :conformance:installDist first.
+services:
+  backend:
+    build: ./backend
+    image: kuotakit-backend:conformance
+  conformance:
+    environment:
+      CONFORMANCE_REFERENCE: "true"

@@ -1,0 +1,15 @@
+# The scenarios of the conformance suite: an ID, then a one-line description. The suite and docs/conformance.md must
+# list exactly these IDs (two tests check it). Removing an ID needs a change of the plan or of ADR 0007.
+L1-01 health needs no key
+L1-02 a missing, wrong or malformed key is a 401 with the error body, on every authenticated endpoint
+L1-03 an app key and a secret key both read
+L1-04 the offerings equal the fixture entitlements
+L1-05 an unknown user gets an empty customer info
+L1-06 invalid app user ids are a 400
+L1-07 a body over 16 KiB and malformed bodies are a 400
+L1-08 an unknown path or method is a plain 404 or 405
+L1-09 over the request limit the answer is a 429 with Retry-After and the code rate_limited
+L1-10 a flood of wrong keys does not use up the budget of good keys
+L1-11 every response that docs/api/openapi.json describes matches it
+L1-12 the codes of the error bodies are the ones of the table Errors in docs/api-spec.md
+R-01 an App Store receipt is a 400 until Phase 2 (reference backend only)
