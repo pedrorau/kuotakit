@@ -19,19 +19,10 @@ package dev.pedrorau.kuotakit.backend
 import dev.pedrorau.kuotakit.backend.config.AppConfig
 import dev.pedrorau.kuotakit.backend.config.ConfigException
 import dev.pedrorau.kuotakit.backend.config.EntitlementsYaml
-import dev.pedrorau.kuotakit.backend.domain.PlayNotificationService
-import dev.pedrorau.kuotakit.backend.domain.ReceiptService
-import dev.pedrorau.kuotakit.backend.google.GooglePlayStoreApi
-import dev.pedrorau.kuotakit.backend.google.GooglePushTokenVerifier
 import dev.pedrorau.kuotakit.backend.storage.PostgresStorage
-import dev.pedrorau.kuotakit.backend.web.ApiKeys
-import dev.pedrorau.kuotakit.contracts.Store
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import java.io.IOException
-import java.nio.file.Files
 import kotlin.system.exitProcess
-import kotlin.time.Clock
 
 fun main() {
     val (config, entitlements) =
@@ -45,50 +36,13 @@ fun main() {
         }
 
     PostgresStorage.open(config.database).use { storage ->
-        val playStore =
-            config.google?.let { google ->
-                try {
-                    GooglePlayStoreApi.fromServiceAccount(
-                        Files.newInputStream(google.serviceAccountFile),
-                        google.packageName,
-                    )
-                } catch (e: IOException) {
-                    System.err.println(
-                        "Cannot read the Google service account ${google.serviceAccountFile}: ${e.message}",
-                    )
-                    exitProcess(1)
-                }
-            }
-        val receipts =
-            ReceiptService(
-                playStore,
-                config.google?.packageName,
-                storage.purchases,
-                Clock.System,
-                storage.pendingEndings,
-            ) {
-                entitlements.isOneTime(Store.PLAY_STORE, it)
-            }
-        val notifications =
-            PlayNotificationService(
-                playStore,
-                config.google?.packageName,
-                storage.purchases,
-                storage.events,
-                Clock.System,
-                storage.pendingEndings,
-            )
-        val pushVerifier = config.pubSub?.let { GooglePushTokenVerifier.create(it.audience, it.serviceAccountEmail) }
         val services =
-            Services(
-                entitlements,
-                ApiKeys(config.appKeys, config.secretKeys),
-                storage.purchases,
-                receipts,
-                notifications,
-                pushVerifier,
-                rateLimit = config.rateLimit,
-            )
+            try {
+                buildServices(config, entitlements, storage.purchases, storage.events, storage.pendingEndings)
+            } catch (e: ConfigException) {
+                System.err.println(e.message)
+                exitProcess(1)
+            }
         embeddedServer(Netty, port = config.port, host = "0.0.0.0") { module(services) }.start(wait = true)
     }
 }

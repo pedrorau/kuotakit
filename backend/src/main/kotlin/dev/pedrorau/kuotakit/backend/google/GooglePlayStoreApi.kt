@@ -49,6 +49,9 @@ class GooglePlayStoreApi internal constructor(
     private val packageName: String,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : PlayStoreApi {
+    /** The address of the Play Developer API this client talks to. */
+    internal val rootUrl: String get() = publisher.rootUrl
+
     override suspend fun subscription(purchaseToken: String): PlaySubscription =
         call(unknownTokenIsInvalid = true) {
             GooglePlaySubscriptions.toDomain(
@@ -138,18 +141,20 @@ class GooglePlayStoreApi internal constructor(
         fun fromServiceAccount(
             serviceAccountJson: InputStream,
             packageName: String,
+            apiBaseUrl: String? = null,
         ): GooglePlayStoreApi {
             val credentials =
                 serviceAccountJson.use {
                     GoogleCredentials.fromStream(it).createScoped(AndroidPublisherScopes.ANDROIDPUBLISHER)
                 }
-            return create(NetHttpTransport(), HttpCredentialsAdapter(credentials), packageName)
+            return create(NetHttpTransport(), HttpCredentialsAdapter(credentials), packageName, apiBaseUrl)
         }
 
         internal fun create(
             transport: HttpTransport,
             auth: HttpRequestInitializer,
             packageName: String,
+            apiBaseUrl: String? = null,
         ): GooglePlayStoreApi {
             val withTimeouts =
                 HttpRequestInitializer { request: HttpRequest ->
@@ -157,12 +162,13 @@ class GooglePlayStoreApi internal constructor(
                     request.connectTimeout = CONNECT_TIMEOUT_MS
                     request.readTimeout = READ_TIMEOUT_MS
                 }
-            val publisher =
+            val builder =
                 AndroidPublisher
                     .Builder(transport, GsonFactory.getDefaultInstance(), withTimeouts)
                     .setApplicationName("KuotaKit")
-                    .build()
-            return GooglePlayStoreApi(publisher, packageName)
+            // Only the conformance suite uses another address (docs/adr/0018); the path of every call stays the same.
+            apiBaseUrl?.let { builder.setRootUrl(it) }
+            return GooglePlayStoreApi(builder.build(), packageName)
         }
     }
 }

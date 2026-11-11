@@ -16,6 +16,7 @@
 
 package dev.pedrorau.kuotakit.backend.config
 
+import java.net.URI
 import java.nio.file.Path
 
 data class DatabaseConfig(
@@ -31,6 +32,8 @@ data class DatabaseConfig(
 data class GoogleConfig(
     val packageName: String,
     val serviceAccountFile: Path,
+    /** Another address for the Play Developer API, for the conformance suite only (docs/adr/0018). */
+    val apiBaseUrl: String? = null,
 )
 
 /**
@@ -49,6 +52,8 @@ data class RateLimitConfig(
 data class PubSubConfig(
     val audience: String,
     val serviceAccountEmail: String,
+    /** Another address to fetch the signing keys of the push tokens from, for the conformance suite only. */
+    val certsUrl: String? = null,
 )
 
 /**
@@ -74,6 +79,7 @@ data class AppConfig(
         const val DEFAULT_PORT = 8080
         const val DEFAULT_ENTITLEMENTS_FILE = "/config/entitlements.yaml"
         const val MIN_KEY_LENGTH = 16
+        private const val ALLOW_CUSTOM_URLS = "KUOTAKIT_ALLOW_CUSTOM_GOOGLE_URLS"
         private const val PLACEHOLDER = "change_me"
 
         /** What an `Authorization: Bearer` header can carry (RFC 6750): anything else could never authenticate. */
@@ -99,6 +105,7 @@ data class AppConfig(
                 problems +=
                     "set KUOTAKIT_APP_KEYS (the key the SDK uses) and, for your own servers, KUOTAKIT_SECRET_KEYS"
             }
+            checkCustomUrlLock(env, problems)
             val google = google(env, problems)
             val pubSub = pubSub(env, google, problems)
             val rateLimit = rateLimit(env, problems)
@@ -116,6 +123,41 @@ data class AppConfig(
                 pubSub = pubSub,
                 rateLimit = rateLimit,
             )
+        }
+
+        /**
+         * An address that replaces one of Google's, which only the conformance suite needs (docs/adr/0018). Using one
+         * takes `KUOTAKIT_ALLOW_CUSTOM_GOOGLE_URLS=true`, so that a mistake in production cannot point the backend at
+         * a fake server; it must be an http or https address with a host.
+         */
+        private fun customUrl(
+            env: Map<String, String>,
+            name: String,
+            problems: MutableList<String>,
+        ): String? {
+            val raw = env[name]?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+            if (env[ALLOW_CUSTOM_URLS]?.trim() != "true") {
+                problems += "$name is for testing only: it needs $ALLOW_CUSTOM_URLS=true, so that a mistake cannot " +
+                    "point the backend at a fake Google"
+            }
+            val uri = runCatching { URI(raw) }.getOrNull()
+            // `authority` and not `host`: the host of an address such as `http://fake_google:9000/` (a compose service
+            // name with an underscore) is null for `URI`, although Java and Google's clients connect to it.
+            if (uri == null || uri.scheme !in setOf("http", "https") || uri.authority.isNullOrEmpty()) {
+                problems += "$name must be an http or https address with a host, not '$raw'"
+            }
+            return raw
+        }
+
+        /** The lock is exactly `true` or `false` (surrounding spaces are ignored), whether or not an address is set. */
+        private fun checkCustomUrlLock(
+            env: Map<String, String>,
+            problems: MutableList<String>,
+        ) {
+            val lock = env[ALLOW_CUSTOM_URLS]?.trim()?.takeIf { it.isNotEmpty() }
+            if (lock != null && lock != "true" && lock != "false") {
+                problems += "$ALLOW_CUSTOM_URLS must be true or false, not '$lock'"
+            }
         }
 
         private fun rateLimit(
@@ -168,7 +210,11 @@ data class AppConfig(
         ): PubSubConfig? {
             val audience = env["KUOTAKIT_GOOGLE_PUBSUB_AUDIENCE"]?.trim().orEmpty()
             val email = env["KUOTAKIT_GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL"]?.trim().orEmpty()
-            if (audience.isEmpty() && email.isEmpty()) return null
+            val certsUrl = customUrl(env, "KUOTAKIT_GOOGLE_CERTS_URL", problems)
+            if (audience.isEmpty() && email.isEmpty()) {
+                if (certsUrl != null) problems += "KUOTAKIT_GOOGLE_CERTS_URL needs the Pub/Sub settings of the webhook"
+                return null
+            }
             if (audience.isEmpty()) {
                 problems +=
                     "KUOTAKIT_GOOGLE_PUBSUB_AUDIENCE is required with the service account email"
@@ -183,7 +229,7 @@ data class AppConfig(
             if (google == null) {
                 problems += "KUOTAKIT_GOOGLE_PUBSUB_* need KUOTAKIT_GOOGLE_PACKAGE_NAME and the service account file"
             }
-            return if (audience.isEmpty() || email.isEmpty()) null else PubSubConfig(audience, email)
+            return if (audience.isEmpty() || email.isEmpty()) null else PubSubConfig(audience, email, certsUrl)
         }
 
         /** Both or none: half a Google configuration is a mistake, not "Google is off". */
@@ -193,13 +239,23 @@ data class AppConfig(
         ): GoogleConfig? {
             val packageName = env["KUOTAKIT_GOOGLE_PACKAGE_NAME"]?.trim().orEmpty()
             val file = env["KUOTAKIT_GOOGLE_SERVICE_ACCOUNT_FILE"]?.trim().orEmpty()
-            if (packageName.isEmpty() && file.isEmpty()) return null
+            val baseUrl = customUrl(env, "KUOTAKIT_GOOGLE_API_BASE_URL", problems)
+            if (packageName.isEmpty() && file.isEmpty()) {
+                if (baseUrl != null) problems += "KUOTAKIT_GOOGLE_API_BASE_URL needs the Google Play settings"
+                return null
+            }
             if (packageName.isEmpty()) {
                 problems +=
                     "KUOTAKIT_GOOGLE_PACKAGE_NAME is required with the service account file"
             }
             if (file.isEmpty()) problems += "KUOTAKIT_GOOGLE_SERVICE_ACCOUNT_FILE is required with the package name"
-            return if (packageName.isEmpty() || file.isEmpty()) null else GoogleConfig(packageName, Path.of(file))
+            return if (packageName.isEmpty() ||
+                file.isEmpty()
+            ) {
+                null
+            } else {
+                GoogleConfig(packageName, Path.of(file), baseUrl)
+            }
         }
 
         private fun keys(
