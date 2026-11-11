@@ -2,7 +2,7 @@
 
 - **Origin:** context (agreed with the maintainer on 2026-11-12: the SDK is built in subphases, 1a the basics and 1b the rest, and Phase 1 does not close until the Android SDK is complete)
 - **Approved by the maintainer on:** 2026-11-12
-- **Branch / PR:** `feat/sdk-android-1a` / not started
+- **Branch / PR:** `feat/sdk-android-1a` / #16 (merged)
 
 ## Goal
 An Android app can use KuotaKit: configure it with the address of its backend and its API key, show the offerings, buy one with Google Play, and read what the user is entitled to. The SDK never decides access (ADR 0003): everything it shows comes from the backend. It attaches the account id to every purchase (ADR 0017). The business logic lives once in a Kotlin Multiplatform core that iOS reuses in Phase 2 (ADR 0002).
@@ -79,9 +79,9 @@ If the user buys and the backend cannot be reached when the receipt is sent, `pu
 - **Identity of the example app** (maintainer, 2026-11-12): `dev.pedrorau.kuotakit.sandbox`, published as open source in test mode; each user configures their own backend and credentials; no data of the maintainer is published. (Its own task.)
 
 ## Status
-In progress
+Done
 - 2026-11-12: written, approved by the maintainer ("si procede"); implementation started.
 - 2026-11-12: implemented on the branch; every criterion checked locally (`./gradlew build` green, 26 tests in the core and 8 in the Android module, the iOS simulator tests and the ABI check). Five negative checks failed the tests as they should and were reverted: the plain app user id as account id, a refused purchase read as a conflict, the backend asked when the user cancels, the customer info cleared on a failure, and the Android adapter sending an empty account id.
 - Differences from the plan: `compileSdk` of the two modules is 37, not 36, because OkHttp 5 (the Ktor engine) requires it; there is one more exception, `InvalidConfiguration` (a secret key or a bad address in `configure`); the real `BillingClient` code has no unit test (said in ADR 0019). Waiting for the independent review and the maintainer's OK to commit.
 - 2026-11-12: independent review (a read-only subagent): no path where the SDK reports access without the backend, and findings fixed: the purchase screen is launched on the main thread; a failed product query is an error, not "unknown product"; only a purchase in the state PURCHASED of the product asked for is handed on; the app user id no longer reaches the message or the cause of a network error; only the newest request sets `customerInfo`; the id is saved with `commit`; `Volatile` on the configuration. Stronger tests (each error row maps to its exact exception, a refused purchase keeps the previous customer info, the order of answers, the leak, a timeout), two more negative checks (stale answer overwriting, the engine message kept as cause) and a Konsist check that the Play client keeps calling `setObfuscatedAccountId`. Recorded as limits in ADR 0019 and `docs/sdk-android.md`: an unconfirmed purchase cannot be bought again, a purchase update with no waiting call is not sent (both fixed by `restore` in 1b), the activity lambda must not hold the activity. Not done on purpose: an ABI dump for `sdk/android` (only the core has one), `https` is not enforced. Waiting for the maintainer's OK to commit.
-
+- 2026-11-11: merged as #16. The pull request run was green; the run of `main` after the merge failed on a flaky iOS test (`anOlderAnswerNeverOverwritesANewerOne`), fixed in 1b-i (see the session log).
