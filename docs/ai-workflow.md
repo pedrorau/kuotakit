@@ -13,9 +13,10 @@ This project is built with AI coding agents, on purpose and in the open. The goa
 - For each phase, ask the agent for 2–3 implementation alternatives with trade-offs. You choose.
 - Record significant choices as ADRs.
 - Break the phase into tasks small enough to review in one sitting.
+- Every task starts with a plan in `docs/plans/`, written from `docs/plans/_template.md` and approved before any code is written. It replaces the plan that would otherwise live only in the agent's chat, so that any harness can read it.
 
 ### 3. Implement in small slices
-- One task per session. Start every session in plan mode: the agent restates the task and the files it will touch, you approve, then it writes code.
+- One task per session. Start every session in plan mode: the agent restates the task and the files it will touch, you approve the plan, the plan is saved in `docs/plans/` (a harness whose plan mode is read-only saves it right after the approval), then the agent writes code.
 - Public API changes are always called out explicitly.
 
 ### 4. Validate everything
@@ -23,9 +24,11 @@ This project is built with AI coding agents, on purpose and in the open. The goa
 - You review the public API surface and the integration points yourself.
 - End-to-end checks against real store sandboxes at the end of each phase.
 - Cross-check behavior against the store documentation, not against the agent's memory.
+- The reviewer reads the diff against the acceptance criteria of the task's plan, not only against the general rules.
 
 ### 5. Close the session
 - Update "Current state" in AGENTS.md.
+- Tick what was done in the task's plan and set its `Status`, so that it says what really happened.
 - Append an entry to docs/session-log.md (template below).
 
 ## Tooling setup (ADR 0010)
