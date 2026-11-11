@@ -159,3 +159,12 @@ One entry per working session. Template in [ai-workflow.md](ai-workflow.md).
 - Public API: `restore`, `RestoreOutcome` (with `unattributed`), `OwnedPurchase`, `OwnedState`, `PurchaseOutcome.AlreadyOwned`, `BillingResult.AlreadyOwned` and two members of `BillingAdapter` (dump in `sdk/core/api/`).
 - Time spent: pending · Diff accepted as-is: pending
 
+## 2026-11-12 — The backend accepts deferred plan changes (ADR 0020)
+- Goal: a downgrade made with Google's recommended `ReplacementMode.DEFERRED` must work. The maintainer asked whether leaving it out was acceptable; the analysis said no: the backend refused such a purchase and never acknowledged it, so Google would have cancelled the change after three days. Plan: `docs/plans/2026-11-backend-deferred-plan-changes.md`.
+- What the agent proposed / what I chose: one rule in the mapper that decides which item of a purchase the user has now (the old plan while it lasts, the new one after), the purchase stored and acknowledged as that item, the rest of the rules untouched; the plan's idea of an "owned" flag was not needed.
+- What I had to correct: the plan said L2-37 would change; reading it again, it scripted a single line item without an end date and no old item, which is still refused, so it stayed (narrowed) and four scenarios were added. The first draft of the fake scripts did not include the old item; Google's documentation says two line items. One negative check did not fail the suite because the chain-following made it an equivalent change.
+- Validation done: `./gradlew build`; the conformance run (54 scenarios, "fully conformant") and `self-check`; negative checks on the real backend; mutation testing of the changed classes (84 %). Not validated: the real Google (the reading of the two line items, the end date of the new item, the state after the first renewal are in ADR 0020 as unverified).
+- A read-only review found no way to gain access with the new rule, and asked for a safer reading: Google's own "not owned" signal instead of relying on the end date, no choice by the order of items, a fallback for a notification once Google stops listing the old plan, and stronger conformance assertions; done, with negative checks on the real backend (ownership ignored fails L2-40; choosing by order and no fallback fail the unit tests). One of my stronger assertions caught a flaw of my own script (the fake Google kept saying "not acknowledged" after the acknowledgement): the script now says it is.
+- Public API: none.
+- Time spent: pending · Diff accepted as-is: pending
+

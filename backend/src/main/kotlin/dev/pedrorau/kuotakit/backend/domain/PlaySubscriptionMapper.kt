@@ -35,12 +35,12 @@ object PlaySubscriptionMapper {
         now: Instant,
     ): Purchase {
         val item =
-            subscription.items.firstOrNull { it.productId == productId }
+            currentItem(subscription.items, productId, now)
                 ?: throw PurchaseInvalidException("The purchase is not for the product the receipt names")
         val status = statusOf(subscription.state, item.expiryTime, now)
         return Purchase(
             store = Store.PLAY_STORE,
-            productId = productId,
+            productId = item.productId,
             token = token,
             kind = PurchaseKind.SUBSCRIPTION,
             status = status,
@@ -51,6 +51,33 @@ object PlaySubscriptionMapper {
             billingIssueDetectedAt = billingIssue(subscription.state, existing, now),
             updatedAt = now,
         )
+    }
+
+    /**
+     * The item of the purchase the user has now, the only place where this is decided (docs/adr/0020). Usually it is
+     * the item of the product asked for. After a plan change with `ReplacementMode.DEFERRED` there are two: the old
+     * one, which lasts until its end, and the one that replaces it. The old one is what the user has even if the
+     * receipt names the new product, until it ends; then the item that replaces it is, even if a notification still
+     * names the old one. An item the user does not own yet (Google leaves out its order) is never current, and so is
+     * anything ambiguous (two items that match): both are refused, never guessed.
+     */
+    private fun currentItem(
+        items: List<PlaySubscriptionItem>,
+        productId: String,
+        now: Instant,
+    ): PlaySubscriptionItem? {
+        val replaced = items.filter { it.deferredReplacement == productId }
+        val named = items.filter { it.productId == productId }
+        var item = if (replaced.isEmpty()) named.singleOrNull() else replaced.singleOrNull()
+        var steps = 0
+        // A chain of replacements is at most as long as the items; the bound only stops a cycle in Google's answer.
+        while (item != null && steps++ < items.size) {
+            val ended = item.expiryTime?.let { end -> end <= now } == true
+            val successor = item.deferredReplacement?.takeIf { ended }
+            if (successor == null) break
+            item = items.singleOrNull { it.productId == successor }
+        }
+        return item?.takeIf { it.ownedByUser }
     }
 
     private fun statusOf(

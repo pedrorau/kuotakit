@@ -260,6 +260,33 @@ private val SCENARIOS =
             },
             act = { submit("premium_annual") },
         ),
+        Scenario(
+            "a receipt of a deferred plan change",
+            seed = {
+                repository.save(USER, purchase(token = "old-token", expiresAt = NOW + 10.days))
+                google.subscription = {
+                    playSubscription(linkedPurchaseToken = "old-token").copy(
+                        items =
+                            listOf(
+                                PlaySubscriptionItem(
+                                    "premium_monthly",
+                                    NOW + 10.days,
+                                    autoRenewing = false,
+                                    offerPhase = PlayOfferPhase.BASE_PRICE,
+                                    deferredReplacement = "premium_annual",
+                                ),
+                                PlaySubscriptionItem(
+                                    "premium_annual",
+                                    null,
+                                    autoRenewing = true,
+                                    offerPhase = PlayOfferPhase.BASE_PRICE,
+                                ),
+                            ),
+                    )
+                }
+            },
+            act = { submit("premium_annual") },
+        ),
     )
 
 class FaultToleranceTest :

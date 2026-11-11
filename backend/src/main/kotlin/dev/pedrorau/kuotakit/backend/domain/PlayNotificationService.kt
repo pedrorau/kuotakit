@@ -117,7 +117,13 @@ class PlayNotificationService(
                 val subscription = api.subscription(token)
                 purchases.save(
                     known.owner,
-                    PlaySubscriptionMapper.toPurchase(subscription, stored.productId, token, stored, now),
+                    PlaySubscriptionMapper.toPurchase(
+                        subscription,
+                        productOf(subscription, stored),
+                        token,
+                        stored,
+                        now,
+                    ),
                 )
                 // Only once the new purchase is safely stored does the one it replaced stop giving access.
                 linked.expire(subscription.linkedPurchaseToken, token, now)
@@ -134,6 +140,17 @@ class PlayNotificationService(
             }
             NotificationOutcome.STORE_REJECTED
         }
+    }
+
+    // After a deferred plan change Google may stop listing the old plan once the new one has started: the stored
+    // product is then gone from the purchase, and the one item the user owns is the plan they have now (ADR 0020).
+    private fun productOf(
+        subscription: PlaySubscription,
+        stored: Purchase,
+    ): String {
+        val owned = subscription.items.filter { it.ownedByUser }
+        val missing = subscription.items.none { it.productId == stored.productId }
+        return if (missing) owned.singleOrNull()?.productId ?: stored.productId else stored.productId
     }
 
     private class Known(

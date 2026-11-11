@@ -34,19 +34,26 @@ internal object GooglePlaySubscriptions {
         PlaySubscription(
             state = state(subscription.subscriptionState),
             startTime = instant(subscription.startTime),
-            items = subscription.lineItems.orEmpty().map(::item),
+            items = subscription.lineItems.orEmpty().let { lineItems -> lineItems.map { item(it, lineItems.size) } },
             acknowledged = subscription.acknowledgementState == ACKNOWLEDGED,
             obfuscatedAccountId = subscription.externalAccountIdentifiers?.obfuscatedExternalAccountId,
             linkedPurchaseToken = subscription.linkedPurchaseToken?.takeIf { it.isNotBlank() },
         )
 
-    private fun item(item: SubscriptionPurchaseLineItem) =
-        PlaySubscriptionItem(
-            productId = item.productId.orEmpty(),
-            expiryTime = instant(item.expiryTime),
-            autoRenewing = item.autoRenewingPlan?.autoRenewEnabled == true,
-            offerPhase = phase(item.offerPhase),
-        )
+    // Google leaves out `latestSuccessfulOrderId` for an item the user does not own yet (docs/adr/0020). A purchase
+    // with one item is the purchase itself, whatever it carries; only next to another item does the absence mean
+    // something.
+    private fun item(
+        item: SubscriptionPurchaseLineItem,
+        itemCount: Int,
+    ) = PlaySubscriptionItem(
+        productId = item.productId.orEmpty(),
+        expiryTime = instant(item.expiryTime),
+        autoRenewing = item.autoRenewingPlan?.autoRenewEnabled == true,
+        offerPhase = phase(item.offerPhase),
+        deferredReplacement = item.deferredItemReplacement?.productId?.takeIf { it.isNotBlank() },
+        ownedByUser = itemCount == 1 || !item.latestSuccessfulOrderId.isNullOrBlank(),
+    )
 
     // A state this backend does not know is UNKNOWN, which never grants access.
     private fun state(raw: String?): PlaySubscriptionState =

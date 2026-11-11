@@ -49,4 +49,8 @@ L2-33 an unreadable body is a 204, and unreachable signing keys are a 502
 L2-34 a notification for a purchase nobody submitted is a 204, the customer info stays empty, and a receipt that comes later behaves as a new one
 L2-35 a one-time purchase without the account id is a 402
 L2-36 a one-time purchase with another user's account id is a 409
-L2-37 a deferred replacement (the new line item has no end date) is a 402 and leaves the old plan alone
+L2-37 a replacement whose new line item has no end date and has no old item to follow is a 402 and leaves the old plan alone
+L2-38 a deferred plan change is accepted: the old plan keeps giving access until its end without renewing, and the purchase is acknowledged once as the old plan
+L2-39 when the old plan ends the renewal notification gives the new plan, with its own end date and renewing
+L2-40 a deferred plan change whose new item is not owned yet (Google gives it no order, even with an end date) once the old plan ended is a 402, nothing is acknowledged and the old plan is left alone
+L2-41 a deferred plan change follows the ownership rules: no account id is a 402 and another user's is a 409
