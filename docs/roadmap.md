@@ -18,12 +18,14 @@ Estimates assume ~10 hours per week. Each phase ends with an exit criterion that
 - Backend (Ktor), part 2c (done): one-time products and `linkedPurchaseToken` (ADR 0015).
 - Backend (Ktor), part 2d (done): request limits and refunds that arrive before the first receipt (ADR 0016).
 - Require the account id on Google receipts (done, ADR 0017). The SDK must attach `playObfuscatedAccountId(appUserId)` when it starts a purchase.
-- Conformance suite: first scenarios (valid purchase, invalid purchase, refund, store failure, token reuse), running in CI.
+- Plans in the repository (`docs/plans/`) and the design rule "no implicit state machines" (in progress, `docs/plans/2026-11-plans-in-the-repo.md`).
+- Conformance suite, in two pull requests: the backend can talk to a Google at another address when explicitly allowed (ADR 0018), then the black-box suite with a fake Google, two levels of scenarios and a check of the suite itself, running in CI. Plans: `docs/plans/2026-11-conformance-profile.md` and `docs/plans/2026-11-conformance-suite.md`.
 - SDK core (KMP) + Android adapter: configure, getOfferings, purchase, restore, getCustomerInfo, customer info listener.
 - Example Android app against a Play Console internal-testing track.
 - **Exit:** a test subscription bought on a real device unlocks `premium`; a cancellation from Play Console shows up as not renewing; tests green in CI.
 
 ## Phase 2 — iOS (4–6 weeks)
+- **Before starting:** audit of the implicit state machines of `backend/` and `contracts/` (report in `docs/audits/`, findings verified against the code, no change applied by the audit itself). Apple adds its own mapping on top of `Purchase`, so the audit is better done first. It also assesses whether the design rule can become an automatic check (ADR 0011) and what it would cost.
 - Backend: App Store Server API validation + App Store Server Notifications v2.
 - StoreKit 2 adapter in Swift, consuming the KMP core.
 - Example iOS app (StoreKit configuration file for local tests, then sandbox).
