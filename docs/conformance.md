@@ -86,9 +86,13 @@ Every scenario has an ID that is part of its name in the report. `conformance/ma
 | L2-34 | a notification for a purchase nobody submitted is a 204, the customer info stays empty, and a receipt that comes later behaves as a new one |
 | L2-35 | a one-time purchase without the account id is a 402 |
 | L2-36 | a one-time purchase with another user's account id is a 409 |
-| L2-37 | a deferred replacement (the new line item has no end date) is a 402 and leaves the old plan alone |
+| L2-37 | a replacement whose new line item has no end date and has no old item to follow is a 402 and leaves the old plan alone |
+| L2-38 | a deferred plan change is accepted: the old plan keeps giving access until its end without renewing, and the purchase is acknowledged once as the old plan |
+| L2-39 | when the old plan ends the renewal notification gives the new plan, with its own end date and renewing |
+| L2-40 | a deferred plan change whose new item is not owned yet (Google gives it no order, even with an end date) once the old plan ended is a 402, nothing is acknowledged and the old plan is left alone |
+| L2-41 | a deferred plan change follows the ownership rules: no account id is a 402 and another user's is a 409 |
 
-How the scenarios of Level 2 are grouped: L2-01 to L2-10 subscriptions (states, trial and introductory prices, grace, hold, pause, cancellation, acknowledgement); L2-11 to L2-14, L2-35 and L2-36 one-time purchases; L2-15 to L2-18 whose purchase it is (the account id, ADR 0017); L2-19 and L2-37 what replaces what; L2-20 to L2-23 what Google can say or do wrong, always failing closed; L2-24 to L2-34 the webhook (who may push, refunds, revocations, duplicates, another app, renewals).
+How the scenarios of Level 2 are grouped: L2-01 to L2-10 subscriptions (states, trial and introductory prices, grace, hold, pause, cancellation, acknowledgement); L2-11 to L2-14, L2-35 and L2-36 one-time purchases; L2-15 to L2-18 whose purchase it is (the account id, ADR 0017); L2-19, L2-37 and L2-38 to L2-41 what replaces what (plan changes, immediate and deferred); L2-20 to L2-23 what Google can say or do wrong, always failing closed; L2-24 to L2-34 the webhook (who may push, refunds, revocations, duplicates, another app, renewals).
 
 `R-01` is asked only of the reference backend (`CONFORMANCE_REFERENCE=true`, set by the reference compose file): it describes a temporary behaviour that Phase 2 removes, and other backends are not required to have it.
 

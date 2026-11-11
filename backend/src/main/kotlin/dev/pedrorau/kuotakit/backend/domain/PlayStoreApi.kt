@@ -36,12 +36,19 @@ enum class PlaySubscriptionState {
 /** The phase of an offer a subscription is in (`offerPhase`): how the trial and introductory periods are told apart. */
 enum class PlayOfferPhase { FREE_TRIAL, INTRODUCTORY_PRICE, BASE_PRICE, OTHER }
 
-/** One product of a subscription (a subscription can bundle several line items). */
+/**
+ * One product of a subscription (a subscription can bundle several line items). [deferredReplacement] is the product
+ * that will replace this one when it ends, if the user changed plan with `ReplacementMode.DEFERRED`: the old item then
+ * stays, with auto-renew off, until its end (docs/adr/0020). [ownedByUser] is false for an item the user does not own
+ * yet, which Google marks by leaving out its `latestSuccessfulOrderId`: the item a deferred change will switch to.
+ */
 data class PlaySubscriptionItem(
     val productId: String,
     val expiryTime: Instant?,
     val autoRenewing: Boolean,
     val offerPhase: PlayOfferPhase,
+    val deferredReplacement: String? = null,
+    val ownedByUser: Boolean = true,
 )
 
 /** What Google Play says about a purchase token. */

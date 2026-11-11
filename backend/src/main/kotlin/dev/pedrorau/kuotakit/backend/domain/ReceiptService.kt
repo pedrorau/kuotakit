@@ -58,7 +58,7 @@ class ReceiptService(
         val acknowledged: Boolean,
         val linkedToken: String?,
         val build: (existing: Purchase?, now: Instant) -> Purchase,
-        val acknowledge: suspend () -> Unit,
+        val acknowledge: suspend (productId: String) -> Unit,
     )
 
     private suspend fun submitPlayStore(
@@ -82,7 +82,7 @@ class ReceiptService(
                         ->
                         PlayOneTimeMapper.toPurchase(purchase, productId, token, existing, now)
                     },
-                    acknowledge = { api.acknowledgeOneTime(productId, token) },
+                    acknowledge = { id -> api.acknowledgeOneTime(id, token) },
                 )
             } else {
                 val subscription = api.subscription(token)
@@ -93,7 +93,7 @@ class ReceiptService(
                     build = { existing, now ->
                         PlaySubscriptionMapper.toPurchase(subscription, productId, token, existing, now)
                     },
-                    acknowledge = { api.acknowledge(productId, token) },
+                    acknowledge = { id -> api.acknowledge(id, token) },
                 )
             }
         accept(appUserId, token, read)
@@ -121,7 +121,8 @@ class ReceiptService(
         val purchase = if (ended == null) built else built.copy(status = ended)
 
         // Google refunds a purchase that is not acknowledged within three days, so a purchase that grants access is.
-        if (!read.acknowledged && purchase.grantsAccessAt(now)) read.acknowledge()
+        // The product of the purchase, not the one of the receipt: after a deferred plan change they differ (ADR 0020).
+        if (!read.acknowledged && purchase.grantsAccessAt(now)) read.acknowledge(purchase.productId)
         purchases.save(appUserId, purchase)
         settle(appUserId, purchase, ended, read.linkedToken, now)
     }

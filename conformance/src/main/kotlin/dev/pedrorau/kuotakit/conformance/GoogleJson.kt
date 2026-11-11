@@ -90,6 +90,38 @@ internal object GoogleJson {
             """.trimIndent()
     }
 
+    /**
+     * What `subscriptionsv2.get` answers for a plan change made with `ReplacementMode.DEFERRED` (docs/adr/0020): two
+     * line items, the old one with auto-renew off, ending when the change takes effect and naming the product that
+     * replaces it, and the new one, which has no end date until then (null [newExpiry]).
+     */
+    @Suppress("LongParameterList") // the fields of Google's answer
+    fun deferred(
+        oldProduct: String,
+        oldExpiry: String,
+        newProduct: String,
+        newExpiry: String?,
+        account: String?,
+        linked: String,
+        acknowledged: Boolean = false,
+        newOwned: Boolean = false,
+    ): String {
+        val ack = if (acknowledged) "ACKNOWLEDGED" else "PENDING"
+        val newOrder = if (newOwned) """"latestSuccessfulOrderId":"GPA.new",""" else ""
+        val accountPart =
+            account?.let { """"externalAccountIdentifiers":{"obfuscatedExternalAccountId":"$it"},""" }.orEmpty()
+        val newExpiryPart = newExpiry?.let { """"expiryTime":"$it",""" }.orEmpty()
+        return """
+            {"subscriptionState":"SUBSCRIPTION_STATE_ACTIVE","startTime":"${inDays(-1)}",
+             "acknowledgementState":"ACKNOWLEDGEMENT_STATE_$ack",$accountPart"linkedPurchaseToken":"$linked",
+             "lineItems":[
+              {"productId":"$oldProduct","latestSuccessfulOrderId":"GPA.old","expiryTime":"$oldExpiry","autoRenewingPlan":{"autoRenewEnabled":false},
+               "offerPhase":{"basePrice":{}},"deferredItemReplacement":{"productId":"$newProduct"}},
+              {"productId":"$newProduct",$newOrder$newExpiryPart"autoRenewingPlan":{"autoRenewEnabled":true},
+               "offerPhase":{"basePrice":{}}}]}
+            """.trimIndent()
+    }
+
     /** What `productsv2.getproductpurchasev2` answers. A null [refundable] leaves the refundable quantity out. */
     @Suppress("LongParameterList") // the fields of Google's answer
     fun oneTime(

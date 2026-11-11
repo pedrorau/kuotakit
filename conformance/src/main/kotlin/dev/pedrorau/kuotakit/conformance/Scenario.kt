@@ -67,4 +67,5 @@ internal fun level2Scenarios(): List<Scenario> =
         level2Ownership() +
         level2Failures() +
         level2WebhookAuth() +
-        level2WebhookEvents()
+        level2WebhookEvents() +
+        level2Deferred()

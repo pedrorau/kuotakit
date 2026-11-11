@@ -40,3 +40,4 @@ Plans were not kept in the repository before 2026-11-11, and they are not backfi
 - [2026-11-conformance-suite-behaviour.md](2026-11-conformance-suite-behaviour.md): part 2b, Level 2, the behaviour of the stores.
 - [2026-11-sdk-android-1a.md](2026-11-sdk-android-1a.md): the SDK core (KMP) and the Android adapter, subphase 1a (the basics).
 - [2026-11-sdk-android-1b-i.md](2026-11-sdk-android-1b-i.md): the SDK for Android, subphase 1b-i: restore and recovery of purchases.
+- [2026-11-backend-deferred-plan-changes.md](2026-11-backend-deferred-plan-changes.md): the backend accepts deferred plan changes (`ReplacementMode.DEFERRED`).
