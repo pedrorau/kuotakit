@@ -1,0 +1,84 @@
+# The conformance suite (docs/conformance.md): runs against ANY backend, in a closed network with a fake Google.
+#   docker compose -f docker-compose.conformance.yml -f docker-compose.conformance.reference.yml up --build \
+#     --abort-on-container-exit --exit-code-from conformance
+# To test another backend, skip the reference file and name its image: CONFORMANCE_BACKEND_IMAGE=my-backend:dev
+# Before the first run: ./gradlew :conformance:installDist
+# Nothing here is a secret: the API keys are for this test only, and the keys of the fake Google are made at start.
+services:
+  fake-google:
+    build: ./conformance
+    image: kuotakit-conformance:local
+    command: ["fake-google"]
+    environment:
+      CONFORMANCE_FAKE_GOOGLE_URL: http://fake-google:9000
+    volumes:
+      - fixtures:/fixtures
+    healthcheck:
+      test: ["CMD", "/app/bin/conformance", "ping", "http://localhost:9000/health"]
+      interval: 2s
+      timeout: 10s
+      retries: 30
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: kuotakit
+      POSTGRES_USER: kuotakit
+      POSTGRES_PASSWORD: conformance-only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kuotakit -d kuotakit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # The only service that changes from one backend to another. The settings are the ones of the reference backend
+  # (ADR 0013 to 0018): another backend reads the same names, and the files of /fixtures.
+  backend:
+    image: ${CONFORMANCE_BACKEND_IMAGE:-kuotakit-backend:conformance}
+    depends_on:
+      fake-google:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - fixtures:/fixtures:ro
+    environment:
+      PORT: "8080"
+      DATABASE_URL: jdbc:postgresql://postgres:5432/kuotakit
+      DATABASE_USER: kuotakit
+      DATABASE_PASSWORD: conformance-only
+      KUOTAKIT_APP_KEYS: pk_conformance_app_key_for_tests_only
+      KUOTAKIT_SECRET_KEYS: sk_conformance_secret_key_for_tests_only
+      KUOTAKIT_ENTITLEMENTS_FILE: /fixtures/entitlements.yaml
+      KUOTAKIT_GOOGLE_PACKAGE_NAME: com.example.conformance
+      KUOTAKIT_GOOGLE_SERVICE_ACCOUNT_FILE: /fixtures/google-key.json
+      KUOTAKIT_GOOGLE_PUBSUB_AUDIENCE: http://backend:8080/v1/webhooks/google
+      KUOTAKIT_GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL: push@conformance.iam.gserviceaccount.com
+      # For testing only (ADR 0018): the Google of this network, and the lock that allows it. Empty means off.
+      KUOTAKIT_ALLOW_CUSTOM_GOOGLE_URLS: ${CONFORMANCE_CUSTOM_GOOGLE-true}
+      KUOTAKIT_GOOGLE_API_BASE_URL: ${CONFORMANCE_GOOGLE_API_URL-http://fake-google:9000/}
+      KUOTAKIT_GOOGLE_CERTS_URL: ${CONFORMANCE_GOOGLE_CERTS_URL-http://fake-google:9000/oauth2/v1/certs}
+      # Low limits, so that the scenarios about them are quick; the suite plays the reverse proxy (X-Forwarded-For)
+      # so that each scenario has an address of its own (ADR 0016).
+      KUOTAKIT_RATE_LIMIT_PER_MINUTE: "60"
+      KUOTAKIT_RATE_LIMIT_RECEIPTS_PER_MINUTE: "30"
+      KUOTAKIT_RATE_LIMIT_RECEIPTS_PER_USER_PER_MINUTE: "30"
+      KUOTAKIT_TRUST_FORWARDED_FOR: "true"
+
+  conformance:
+    image: kuotakit-conformance:local
+    depends_on:
+      fake-google:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    environment:
+      CONFORMANCE_BACKEND_URL: http://backend:8080
+      CONFORMANCE_FAKE_GOOGLE_URL: http://fake-google:9000
+      # `all` (the default) or `1` for a backend that cannot redirect its Google calls.
+      CONFORMANCE_LEVEL: ${CONFORMANCE_LEVEL:-all}
+      CONFORMANCE_REFERENCE: ${CONFORMANCE_REFERENCE:-false}
+    command: ${CONFORMANCE_COMMAND:-}
+
+volumes:
+  fixtures:
