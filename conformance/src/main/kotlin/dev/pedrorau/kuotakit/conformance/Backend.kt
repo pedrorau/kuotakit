@@ -16,7 +16,7 @@
 
 package dev.pedrorau.kuotakit.conformance
 
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.random.Random
 
 /**
@@ -31,16 +31,19 @@ internal class Backend(
     private val http: Http = Http(),
     val appKey: String = Fixture.APP_KEY,
     val secretKey: String = Fixture.SECRET_KEY,
-    private val prefix: Int = Random.nextInt(PREFIX_SPACE),
 ) {
-    private val calls = AtomicInteger()
     val violations = mutableListOf<String>()
 
-    /** A client address nobody else used in this run: `10.x.y.z`, its first two octets random, so runs differ. */
+    /**
+     * A client address nobody else used in this run: `10.x.y.z`, counted up from a random start so that runs differ.
+     * The counter is shared by every [Backend] of the process (the runner makes one per scenario): a scenario that
+     * floods an address must never leave its used up budget to a later one.
+     */
     fun freshAddress(): String {
-        val n = calls.incrementAndGet() - 1
-        val high = (prefix / OCTETS + n / LAST_OCTET) % OCTETS
-        return "10.${prefix % OCTETS}.$high.${n % LAST_OCTET + 1}"
+        val index = (start + counter.getAndIncrement()) % ADDRESSES
+        val last = (index % LAST_OCTET).toInt() + 1
+        val rest = index / LAST_OCTET
+        return "10.${rest / OCTETS % OCTETS}.${rest % OCTETS}.$last"
     }
 
     /** Returns the answer. [path] is what the backend sees; a [key] of `null` sends no `Authorization` header. */
@@ -87,8 +90,10 @@ internal class Backend(
     ) = contract.describes(method, path, reply)
 
     private companion object {
-        const val OCTETS = 256
-        const val LAST_OCTET = 254
-        const val PREFIX_SPACE = OCTETS * OCTETS
+        const val OCTETS = 256L
+        const val LAST_OCTET = 254L
+        const val ADDRESSES = OCTETS * OCTETS * LAST_OCTET
+        val start = Random.nextLong(ADDRESSES)
+        val counter = AtomicLong()
     }
 }

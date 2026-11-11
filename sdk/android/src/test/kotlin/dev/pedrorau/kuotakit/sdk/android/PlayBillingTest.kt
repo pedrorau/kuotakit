@@ -192,8 +192,8 @@ class PlayBillingTest {
                         OwnedState.PENDING,
                         null,
                     ),
-                    OwnedPurchase(PlayStoreReceiptRequest("com.acme.app", "x", "c"), OwnedState.OTHER, "other"),
-                    OwnedPurchase(PlayStoreReceiptRequest("com.acme.app", "y", "c"), OwnedState.OTHER, "other"),
+                    OwnedPurchase(PlayStoreReceiptRequest("com.acme.app", "x", "c"), OwnedState.UNKNOWN, "other"),
+                    OwnedPurchase(PlayStoreReceiptRequest("com.acme.app", "y", "c"), OwnedState.UNKNOWN, "other"),
                 ),
                 owned,
             )

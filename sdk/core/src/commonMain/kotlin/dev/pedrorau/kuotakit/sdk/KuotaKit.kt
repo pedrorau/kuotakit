@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.time.Clock
 
 /** What [KuotaKit.configure] needs. The [apiKey] is the public key of the app (`pk_...`), never a secret key. */
 public class KuotaKitConfig(
@@ -48,15 +49,24 @@ public class KuotaKitConfig(
 public class KuotaKit internal constructor(
     private val api: ApiClient,
     private val billing: BillingAdapter,
+    storage: KeyValueStore,
+    clock: Clock,
     /** The anonymous id of this user, made on first use and kept on the device. It is a secret: do not log it. */
     public val appUserId: String,
 ) {
-    private val latest = LatestCustomerInfo()
+    private val latest = LatestCustomerInfo(storage, appUserId, clock)
     private val oneAtATime = Mutex()
     private val sync = PurchaseSync(api, billing, appUserId, playObfuscatedAccountId(appUserId), latest)
 
     /** The last customer info the backend gave, or `null` before the first one. Never computed by the SDK. */
     public val customerInfo: StateFlow<CustomerInfo?> = latest.flow
+
+    /**
+     * The last customer info the backend gave, even in an earlier run of the app, and when it was received; `null` if
+     * there is none. It is read with no network and replaced by every answer of the backend. It is **not proof of
+     * access**: the SDK never turns it into entitlements, and how long to trust it offline is the app's decision.
+     */
+    public val lastKnownCustomerInfo: StateFlow<CachedCustomerInfo?> = latest.cached
 
     public suspend fun getOfferings(): OfferingsResponse = api.offerings()
 
@@ -75,14 +85,20 @@ public class KuotaKit internal constructor(
 
     /**
      * Buys [pkg] with the store of the platform and has the backend check it. The user may cancel or the payment may
-     * be pending: those are outcomes, not failures. Only one purchase runs at a time.
+     * be pending: those are outcomes, not failures. Only one purchase runs at a time. With a [change] the purchase
+     * replaces the subscription the user has in the package of the change, found in the store by the SDK (the app never
+     * handles purchase tokens), and carries the account id like any purchase.
      */
-    public suspend fun purchase(pkg: OfferingPackage): PurchaseOutcome =
+    public suspend fun purchase(
+        pkg: OfferingPackage,
+        change: PlanChange? = null,
+    ): PurchaseOutcome =
         oneAtATime.withLock {
             val productId =
                 productOf(pkg, billing.store)
                     ?: throw KuotaKitException.InvalidRequest("The package '${pkg.id}' is not sold on this store")
-            val request = PurchaseRequest(productId, appUserId, playObfuscatedAccountId(appUserId))
+            val replacing = change?.let { replacementOf(it, productId) }
+            val request = PurchaseRequest(productId, appUserId, playObfuscatedAccountId(appUserId), replacing)
             when (val result = billing.purchase(request)) {
                 BillingResult.Cancelled -> {
                     PurchaseOutcome.Cancelled
@@ -104,6 +120,19 @@ public class KuotaKit internal constructor(
                 }
             }
         }
+
+    private fun replacementOf(
+        change: PlanChange,
+        productId: String,
+    ): ProductReplacement {
+        val replaced =
+            productOf(change.replacing, billing.store)
+                ?: throw KuotaKitException.InvalidRequest(
+                    "The package '${change.replacing.id}' is not sold on this store",
+                )
+        if (replaced == productId) throw KuotaKitException.InvalidRequest("A plan cannot replace itself")
+        return ProductReplacement(replaced, change.mode)
+    }
 
     private suspend fun alreadyOwned(productId: String): PurchaseOutcome {
         val result = sync.run()
@@ -190,6 +219,7 @@ public class KuotaKit internal constructor(
         internal fun create(
             config: KuotaKitConfig,
             engine: HttpClientEngine? = null,
+            clock: Clock = Clock.System,
         ): KuotaKit {
             validate(config)
             val api =
@@ -198,7 +228,7 @@ public class KuotaKit internal constructor(
                 } else {
                     ApiClient(config.baseUrl, config.apiKey, engine)
                 }
-            return KuotaKit(api, config.billing, appUserIdIn(config.storage))
+            return KuotaKit(api, config.billing, config.storage, clock, appUserIdIn(config.storage))
         }
 
         private fun validate(config: KuotaKitConfig) {
@@ -206,6 +236,10 @@ public class KuotaKit internal constructor(
                 when {
                     !config.baseUrl.startsWith("https://") && !config.baseUrl.startsWith("http://") -> {
                         "baseUrl must be an http or https address"
+                    }
+
+                    config.baseUrl.any { it == '?' || it == '#' || it.isWhitespace() } -> {
+                        "baseUrl must be an address with no query, fragment or spaces: the paths of the API are added to it"
                     }
 
                     config.apiKey.startsWith("sk_") -> {
