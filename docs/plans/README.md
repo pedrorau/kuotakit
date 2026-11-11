@@ -38,3 +38,4 @@ Plans were not kept in the repository before 2026-11-11, and they are not backfi
 - [2026-11-conformance-suite.md](2026-11-conformance-suite.md): the black-box suite that any backend must pass (superseded, split in two).
 - [2026-11-conformance-suite-base.md](2026-11-conformance-suite-base.md): part 2a, the base: runner, fake Google, Level 1, mutant proxy, CI.
 - [2026-11-conformance-suite-behaviour.md](2026-11-conformance-suite-behaviour.md): part 2b, Level 2, the behaviour of the stores.
+- [2026-11-sdk-android-1a.md](2026-11-sdk-android-1a.md): the SDK core (KMP) and the Android adapter, subphase 1a (the basics).

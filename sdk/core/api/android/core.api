@@ -1,0 +1,150 @@
+public abstract interface class dev/pedrorau/kuotakit/sdk/BillingAdapter {
+	public abstract fun getStore ()Ldev/pedrorau/kuotakit/contracts/Store;
+	public abstract fun purchase (Ldev/pedrorau/kuotakit/sdk/PurchaseRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class dev/pedrorau/kuotakit/sdk/BillingResult {
+}
+
+public final class dev/pedrorau/kuotakit/sdk/BillingResult$Cancelled : dev/pedrorau/kuotakit/sdk/BillingResult {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/sdk/BillingResult$Cancelled;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class dev/pedrorau/kuotakit/sdk/BillingResult$Pending : dev/pedrorau/kuotakit/sdk/BillingResult {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/sdk/BillingResult$Pending;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class dev/pedrorau/kuotakit/sdk/BillingResult$Purchased : dev/pedrorau/kuotakit/sdk/BillingResult {
+	public fun <init> (Ldev/pedrorau/kuotakit/contracts/ReceiptRequest;)V
+	public final fun component1 ()Ldev/pedrorau/kuotakit/contracts/ReceiptRequest;
+	public final fun copy (Ldev/pedrorau/kuotakit/contracts/ReceiptRequest;)Ldev/pedrorau/kuotakit/sdk/BillingResult$Purchased;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/sdk/BillingResult$Purchased;Ldev/pedrorau/kuotakit/contracts/ReceiptRequest;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/sdk/BillingResult$Purchased;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReceipt ()Ldev/pedrorau/kuotakit/contracts/ReceiptRequest;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class dev/pedrorau/kuotakit/sdk/KeyValueStore {
+	public abstract fun get (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun put (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKit {
+	public static final field Companion Ldev/pedrorau/kuotakit/sdk/KuotaKit$Companion;
+	public final fun getAppUserId ()Ljava/lang/String;
+	public final fun getCustomerInfo ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun getCustomerInfo (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getOfferings (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun purchase (Ldev/pedrorau/kuotakit/contracts/OfferingPackage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKit$Companion {
+	public final fun configure (Ldev/pedrorau/kuotakit/sdk/KuotaKitConfig;)Ldev/pedrorau/kuotakit/sdk/KuotaKit;
+	public final fun getShared ()Ldev/pedrorau/kuotakit/sdk/KuotaKit;
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ldev/pedrorau/kuotakit/sdk/BillingAdapter;Ldev/pedrorau/kuotakit/sdk/KeyValueStore;)V
+	public final fun getApiKey ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getBilling ()Ldev/pedrorau/kuotakit/sdk/BillingAdapter;
+	public final fun getStorage ()Ldev/pedrorau/kuotakit/sdk/KeyValueStore;
+}
+
+public abstract class dev/pedrorau/kuotakit/sdk/KuotaKitException : java/lang/Exception {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$InvalidConfiguration : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$InvalidRequest : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$Network : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$NotConfigured : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> ()V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$PurchaseInvalid : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$RateLimited : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public final fun getRetryAfterSeconds ()Ljava/lang/Integer;
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$StoreUnavailable : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$TokenAlreadyLinked : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$Unauthorized : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class dev/pedrorau/kuotakit/sdk/KuotaKitException$Unexpected : dev/pedrorau/kuotakit/sdk/KuotaKitException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract interface class dev/pedrorau/kuotakit/sdk/PurchaseOutcome {
+}
+
+public final class dev/pedrorau/kuotakit/sdk/PurchaseOutcome$Cancelled : dev/pedrorau/kuotakit/sdk/PurchaseOutcome {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/sdk/PurchaseOutcome$Cancelled;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class dev/pedrorau/kuotakit/sdk/PurchaseOutcome$Pending : dev/pedrorau/kuotakit/sdk/PurchaseOutcome {
+	public static final field INSTANCE Ldev/pedrorau/kuotakit/sdk/PurchaseOutcome$Pending;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class dev/pedrorau/kuotakit/sdk/PurchaseOutcome$Success : dev/pedrorau/kuotakit/sdk/PurchaseOutcome {
+	public fun <init> (Ldev/pedrorau/kuotakit/contracts/CustomerInfo;)V
+	public final fun component1 ()Ldev/pedrorau/kuotakit/contracts/CustomerInfo;
+	public final fun copy (Ldev/pedrorau/kuotakit/contracts/CustomerInfo;)Ldev/pedrorau/kuotakit/sdk/PurchaseOutcome$Success;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/sdk/PurchaseOutcome$Success;Ldev/pedrorau/kuotakit/contracts/CustomerInfo;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/sdk/PurchaseOutcome$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCustomerInfo ()Ldev/pedrorau/kuotakit/contracts/CustomerInfo;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class dev/pedrorau/kuotakit/sdk/PurchaseRequest {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ldev/pedrorau/kuotakit/sdk/PurchaseRequest;
+	public static synthetic fun copy$default (Ldev/pedrorau/kuotakit/sdk/PurchaseRequest;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ldev/pedrorau/kuotakit/sdk/PurchaseRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccountId ()Ljava/lang/String;
+	public final fun getAppUserId ()Ljava/lang/String;
+	public final fun getProductId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

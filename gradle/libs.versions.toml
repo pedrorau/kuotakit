@@ -14,6 +14,10 @@ hikaricp = "7.1.0"
 snakeyaml-engine = "3.2"
 # Google's generated Play Developer API client; v3-rev20260924-2.0.0 checked to have subscriptionsv2 and subscriptions.acknowledge.
 google-androidpublisher = "v3-rev20260924-2.0.0"
+kotlinx-coroutines = "1.11.0"
+# The latest Play Billing Library at the time of writing (release notes of 2026-06-18).
+play-billing = "9.1.0"
+junit = "4.13.2"
 testcontainers = "2.0.5"
 swagger-request-validator = "3.0.0"
 pitest-plugin = "1.19.0"
@@ -26,6 +30,15 @@ detekt = "2.0.0-alpha.6"
 [libraries]
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+junit = { module = "junit:junit", version.ref = "junit" }
+play-billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "play-billing" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
@@ -55,6 +68,7 @@ kotest-extensions-pitest = { module = "io.kotest:kotest-extensions-pitest", vers
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint-gradle-plugin" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
