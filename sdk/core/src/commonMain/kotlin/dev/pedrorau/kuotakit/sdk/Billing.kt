@@ -18,6 +18,7 @@ package dev.pedrorau.kuotakit.sdk
 
 import dev.pedrorau.kuotakit.contracts.ReceiptRequest
 import dev.pedrorau.kuotakit.contracts.Store
+import kotlinx.coroutines.flow.Flow
 
 /**
  * What the SDK asks of a store to buy a product. [accountId] is [dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId]
@@ -41,6 +42,9 @@ public sealed interface BillingResult {
 
     /** The payment is not complete yet (a pending purchase): nothing is owed and nothing is granted. */
     public data object Pending : BillingResult
+
+    /** The store says the user already owns the product: the SDK looks up what the user owns and sends it. */
+    public data object AlreadyOwned : BillingResult
 }
 
 /**
@@ -53,6 +57,18 @@ public interface BillingAdapter {
     public val store: Store
 
     public suspend fun purchase(request: PurchaseRequest): BillingResult
+
+    /**
+     * Every purchase the store says the user owns, in any state. A failed query is an exception: it is never an empty
+     * list, or a restore would look like "nothing to restore".
+     */
+    public suspend fun ownedPurchases(): List<OwnedPurchase>
+
+    /**
+     * Purchases that arrive while no [purchase] call is waiting: a pending payment that is approved later, or one made
+     * outside the app. The SDK sends them to the backend.
+     */
+    public val purchaseUpdates: Flow<OwnedPurchase>
 }
 
 /** A small place on the device to keep strings, such as the anonymous app user id. */
@@ -75,4 +91,12 @@ public sealed interface PurchaseOutcome {
     public data object Cancelled : PurchaseOutcome
 
     public data object Pending : PurchaseOutcome
+
+    /**
+     * The store said the user already owns the product. The SDK looked up what the user owns and sent it to the
+     * backend; [customerInfo] is what the backend says now.
+     */
+    public data class AlreadyOwned(
+        val customerInfo: dev.pedrorau.kuotakit.contracts.CustomerInfo,
+    ) : PurchaseOutcome
 }
