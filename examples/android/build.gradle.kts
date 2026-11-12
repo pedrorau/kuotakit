@@ -54,8 +54,8 @@ android {
         applicationId = "dev.pedrorau.kuotakit.sandbox"
         minSdk = 23
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
         buildConfigField("String", "DEFAULT_BASE_URL", javaString(sandboxSetting("baseUrl")))
         buildConfigField("String", "DEFAULT_API_KEY", javaString(sandboxSetting("apiKey")))
         buildConfigField("String", "PRIVACY_POLICY_URL", javaString(sandboxSetting("privacyPolicyUrl")))
