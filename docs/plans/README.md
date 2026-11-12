@@ -42,4 +42,5 @@ Plans were not kept in the repository before 2026-11-11, and they are not backfi
 - [2026-11-sdk-android-1b-i.md](2026-11-sdk-android-1b-i.md): the SDK for Android, subphase 1b-i: restore and recovery of purchases.
 - [2026-11-backend-deferred-plan-changes.md](2026-11-backend-deferred-plan-changes.md): the backend accepts deferred plan changes (`ReplacementMode.DEFERRED`).
 - [2026-11-sdk-android-1b-ii.md](2026-11-sdk-android-1b-ii.md): the SDK for Android, subphase 1b-ii: plan changes, offline cache, end-to-end test, closed API.
-- [2026-11-example-app.md](2026-11-example-app.md): the example Android app (the sandbox), draft.
+- [2026-11-example-app.md](2026-11-example-app.md): the example Android app (the sandbox).
+- [2026-11-example-app-privacy-link.md](2026-11-example-app-privacy-link.md): the example app links to its privacy policy and says "not set up yet" kindly.

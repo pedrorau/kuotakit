@@ -55,6 +55,10 @@ internal object SettingsValidation {
         val uri = parse(address)
         val host = uri?.host
         return when {
+            address.isEmpty() -> {
+                "Not set up yet: type the address of your backend (https://...)."
+            }
+
             uri == null || host == null -> {
                 "The backend address is not a valid URL (for example https://host)."
             }

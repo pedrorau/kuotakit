@@ -20,11 +20,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.pedrorau.kuotakit.sandbox.BuildConfig
 import dev.pedrorau.kuotakit.sandbox.SettingsState
 import dev.pedrorau.kuotakit.sandbox.SettingsViewModel
 import dev.pedrorau.kuotakit.sandbox.restartApp
@@ -41,6 +47,8 @@ internal fun SettingsScreen(
     val apiKey by model.apiKey.collectAsStateWithLifecycle()
     val state by model.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
+    var linkOpened by remember { mutableStateOf(true) }
     LaunchedEffect(state) { if (state == SettingsState.Saved) restartApp(context) }
 
     ScreenColumn {
@@ -62,6 +70,12 @@ internal fun SettingsScreen(
         (state as? SettingsState.Editing)?.problem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         if (state == SettingsState.Saved) Note("Saved. Restarting the app…")
         Button(onClick = model::save) { Text("Save and restart") }
+        if (BuildConfig.PRIVACY_POLICY_URL.isNotEmpty()) {
+            TextButton(
+                onClick = { linkOpened = runCatching { uriHandler.openUri(BuildConfig.PRIVACY_POLICY_URL) }.isSuccess },
+            ) { Text("Privacy policy") }
+            if (!linkOpened) Note("Could not open the link. The privacy policy is at ${BuildConfig.PRIVACY_POLICY_URL}")
+        }
         if (appUserId.isNotEmpty()) {
             Note(
                 "Your anonymous user id (secret, shown in part): ${truncatedUserId(appUserId)}",
