@@ -52,7 +52,8 @@ android {
 
     defaultConfig {
         applicationId = "dev.pedrorau.kuotakit.sandbox"
-        minSdk = 23
+        // 24, not the 23 of the SDK: Play automatic protection refuses a bundle with a lower minSdk when it uploads.
+        minSdk = 24
         targetSdk = 36
         versionCode = 2
         versionName = "0.1.1"
