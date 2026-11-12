@@ -82,6 +82,13 @@ class SettingsValidationTest {
     }
 
     @Test
+    fun `an empty address says that the app is not set up yet, instead of a technical error`() {
+        assertTrue(problem("").contains("Not set up yet"))
+        assertTrue(problem("   ", "").contains("Not set up yet"))
+        assertTrue(problem("not a url").contains("not a valid URL"))
+    }
+
+    @Test
     fun `the user id is shown only in part`() {
         assertEquals("anon_a_sec…", truncatedUserId("anon_a_secret_user_id"))
         assertEquals("short", truncatedUserId("short"))

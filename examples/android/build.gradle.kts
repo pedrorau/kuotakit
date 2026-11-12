@@ -58,6 +58,7 @@ android {
         versionName = "0.1.0"
         buildConfigField("String", "DEFAULT_BASE_URL", javaString(sandboxSetting("baseUrl")))
         buildConfigField("String", "DEFAULT_API_KEY", javaString(sandboxSetting("apiKey")))
+        buildConfigField("String", "PRIVACY_POLICY_URL", javaString(sandboxSetting("privacyPolicyUrl")))
     }
 
     buildFeatures {
