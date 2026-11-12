@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Debug builds may talk plain http to the computer that runs the emulator; release builds never do. -->
+    <application android:networkSecurityConfig="@xml/network_security_config" />
+
+</manifest>

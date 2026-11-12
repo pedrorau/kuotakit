@@ -192,3 +192,12 @@ One entry per working session. Template in [ai-workflow.md](ai-workflow.md).
 - Validation done: none yet (documentation only). The steps of the guide were not run.
 - Public API: none.
 - Time spent: pending · Diff accepted as-is: pending
+
+## 2026-11-11 — The example Android app
+- Goal: an open-source app that uses the SDK like an app should and that anyone can point at their own backend (plan `docs/plans/2026-11-example-app.md`, approved by the maintainer).
+- What the agent proposed / what I chose: Compose with Material 3, the three screens, a Settings screen that takes the backend address and the public key at run time (the SDK is configured once, so saving restarts the process), the view models behind a small `SubscriptionsGateway` that the tests replace (the SDK class cannot be faked), and signing like CallFilter and Pique (same `keystore.properties` keys, git-ignored; the release is minified).
+- What the review found (and I fixed, with tests): the Plan did not follow purchases and the foreground restore could overlap a purchase; a failed refresh left an old "active" unmarked; and my Konsist rule had a hole (a wildcard import passed): the canary I wrote for it failed first, which is how it was found. One finding is not fixed here because it is the SDK's: `sdk/android` catches nothing, so a runtime exception of `BillingClient` would escape (the app shows it as a failure that granted nothing); it needs its own plan.
+- What I had to correct: the first version of the plan promised the Play price text; the SDK has no price API, so the screens show the package and the product id only. detekt and ktlint rejected PascalCase `@Composable` function names, so both were configured to allow them (`.editorconfig`, `config/detekt/detekt.yml`).
+- Validation done: `./gradlew build`, 28 unit tests, four negative checks (each failed as it should and was reverted), R8 on in the release build, and a smoke test of the minified app on an emulator against the real reference backend (offerings read under R8, a failed purchase without a Play account granted nothing). Not validated: a real purchase on a device and the R8 effect on the Play Billing path.
+- Public API: none.
+- Time spent: pending · Diff accepted as-is: pending

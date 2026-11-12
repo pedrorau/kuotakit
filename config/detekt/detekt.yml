@@ -3,3 +3,9 @@ potential-bugs:
   # No `!!` in library code (AGENTS.md conventions, ADR 0011).
   UnsafeCallOnNullableType:
     active: true
+
+naming:
+  # Composable functions are named like types (PascalCase): the Compose convention, used by the example app.
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
