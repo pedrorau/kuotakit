@@ -10,6 +10,7 @@
 *.pem
 *.jks
 *.keystore
+keystore.properties
 *service-account*.json
 google-services.json
 GoogleService-Info.plist

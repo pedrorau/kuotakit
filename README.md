@@ -7,6 +7,8 @@
 
 **Status:** early development (Phase 1). Not ready for production use.
 
+An open-source example Android app that uses the SDK, and that you can point at your own backend: [`examples/android`](examples/android/README.md).
+
 ## Why
 
 Selling subscriptions in a mobile app means dealing with Google Play Billing and StoreKit 2: two different APIs, server-side receipt validation, renewal and refund notifications, grace periods, plan changes. Hosted services solve this well, but you send them your sales data and usually pay a percentage of your sales.

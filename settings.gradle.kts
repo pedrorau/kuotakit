@@ -22,4 +22,14 @@ rootProject.name = "kuotakit"
 
 // Future bridges (bridges/react-native, bridges/flutter) keep their own build tools
 // and are NOT included here (see AGENTS.md).
-include(":contracts", ":backend", ":openapi", ":architecture-tests", ":conformance", ":sdk:core", ":sdk:android", ":sdk:e2e")
+include(
+    ":contracts",
+    ":backend",
+    ":openapi",
+    ":architecture-tests",
+    ":conformance",
+    ":sdk:core",
+    ":sdk:android",
+    ":sdk:e2e",
+    ":examples:android",
+)

@@ -44,6 +44,7 @@ jobs:
               - *build
               - 'contracts/**'
               - 'sdk/**'
+              - 'examples/**'
               - 'backend/**'
               - 'architecture-tests/**'
               - 'openapi/**'

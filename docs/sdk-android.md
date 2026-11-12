@@ -2,6 +2,8 @@
 
 The Android SDK of v0: configure, offerings, purchase, plan changes, customer info, `restore` and the last known customer info (plans: `docs/plans/2026-11-sdk-android-1a.md`, `1b-i`, `1b-ii`; the decisions are in [ADR 0019](adr/0019-sdk-public-api.md)).
 
+An example app that uses all of this is in [`examples/android`](../examples/android/README.md).
+
 ## Add it
 ```kotlin
 dependencies {
