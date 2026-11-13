@@ -218,3 +218,11 @@ One entry per working session. Template in [ai-workflow.md](ai-workflow.md).
 - Validation done: unit tests of `sdk/core` and `sdk/android`, ktlint, detekt, ABI check (empty diff); the old test of "restore does not resend" was rewritten to the new rule.
 - Public API: none.
 - Time spent: pending · Diff accepted as-is: pending
+
+## 2026-11-13 — Notifications against the real Google (5a) and the check of 1d on the phone
+- Goal: see a cancel and a refund in the backend without the app sending the receipt. Plan: `docs/plans/2026-11-rtdn-real-google.md`.
+- What went right: 1d on the phone (a cancel shows after Restore without restarting); the whole RTDN path (topic, push subscription with OIDC, webhook) worked at the first try; cancel and refund reached the backend alone and the Plan screen showed them after Refresh.
+- What went wrong: a refund is invisible to Restore (Google no longer lists a refunded purchase, so "0 sent"): only notifications fix it, which is why this task exists. My instructions for the consoles had an error ("leave marked" for a checkbox that had to be unmarked) and I first sent the maintainer to the project permissions tab instead of "Principales con acceso" of the service account. The quick tunnel of the day before was dead ("Tunnel not found") and had to be restarted with a new address.
+- Validation done: the run above, read in the log and the `purchases` table. Pub/Sub asked for no billing.
+- Public API: none.
+- Time spent: pending · Diff accepted as-is: pending
