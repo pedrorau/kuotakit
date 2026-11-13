@@ -244,7 +244,7 @@ class RestoreTest {
         }
 
     @Test
-    fun aPurchaseTheBackendAlreadyAnsweredIsNotSentAgainButTheCustomerInfoIsReadAgain() =
+    fun everyRestoreSendsEveryCompletedPurchaseAgainAndAcceptedOrRefusedIsCountedEachTime() =
         runTest {
             val billing = OwningBilling()
             val backend = ReceiptBackend()
@@ -273,12 +273,13 @@ class RestoreTest {
             val second = kit.restore()
             val third = kit.restore()
 
-            assertEquals(listOf("ok", "bad", "new"), backend.receipts)
+            assertEquals(listOf("ok", "bad", "ok", "bad", "new", "ok", "bad", "new"), backend.receipts)
             assertEquals(1, first.submitted)
             assertEquals(1, first.refused)
-            assertEquals(0, second.refused)
-            assertEquals(1, second.submitted)
-            assertEquals(0, third.refused)
+            assertEquals(2, second.submitted)
+            assertEquals(1, second.refused)
+            assertEquals(2, third.submitted)
+            assertEquals(1, third.refused)
         }
 
     @Test
@@ -386,6 +387,24 @@ class RestoreTest {
             billing.updates.emit(owned("update", account(kit)))
             waitUntil { backend.receipts.size == 2 }
             assertEquals(listOf("t-1", "t-2"), backend.receipts)
+        }
+
+    @Test
+    fun theBackgroundSyncDoesNotSendAgainWhatTheBackendAlreadyAnswered() =
+        runTest {
+            val billing = OwningBilling()
+            val backend = ReceiptBackend()
+            val kit = kit(billing, backend)
+            billing.owned = { listOf(owned("same", account(kit))) }
+
+            kit.startBackgroundSync(backgroundScope)
+            waitUntil { backend.receipts.size == 1 }
+            billing.updates.emit(owned("update", account(kit)))
+            waitUntil { billing.asked == 2 }
+            runCurrent()
+            withContext(Dispatchers.Default) { delay(200) }
+
+            assertEquals(listOf("same"), backend.receipts)
         }
 
     @Test
