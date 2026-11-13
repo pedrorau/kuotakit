@@ -80,8 +80,11 @@ public class KuotaKit internal constructor(
      * approved, a purchase made on this device before a reinstall of the SDK data) and has the backend check them,
      * then returns what the backend says. Call it when the app comes to the foreground, as Google recommends. A
      * purchase made outside the app, or under another app user id, carries another account id and cannot be recovered.
+     * Every call sends every purchase again (a renewal, a cancel or a refund is only seen by the backend that way
+     * unless it gets Google's notifications), so call it when the app comes to the foreground, not in a loop: the
+     * backend limits the receipts of one app user and a restore that hits the limit throws [KuotaKitException.RateLimited].
      */
-    public suspend fun restore(): RestoreOutcome = sync.run().outcome
+    public suspend fun restore(): RestoreOutcome = sync.run(SyncTrigger.RESTORE).outcome
 
     /**
      * Buys [pkg] with the store of the platform and has the backend check it. The user may cancel or the payment may
@@ -135,7 +138,7 @@ public class KuotaKit internal constructor(
     }
 
     private suspend fun alreadyOwned(productId: String): PurchaseOutcome {
-        val result = sync.run()
+        val result = sync.run(SyncTrigger.AUTOMATIC)
         val outcome = result.outcome
         return when {
             productId in result.acceptedProducts -> PurchaseOutcome.AlreadyOwned(outcome.customerInfo)
@@ -159,8 +162,9 @@ public class KuotaKit internal constructor(
      */
     internal fun startBackgroundSync(scope: CoroutineScope) {
         // Listening starts at once, so an update that arrives while the first sync runs is not missed.
-        jobs += scope.launch { billing.purchaseUpdates.catch { }.collect { quietly { restore() } } }
-        jobs += scope.launch { quietly { restore() } }
+        jobs +=
+            scope.launch { billing.purchaseUpdates.catch { }.collect { quietly { sync.run(SyncTrigger.AUTOMATIC) } } }
+        jobs += scope.launch { quietly { sync.run(SyncTrigger.AUTOMATIC) } }
     }
 
     /** Stops the background sync (when the SDK is configured again). */

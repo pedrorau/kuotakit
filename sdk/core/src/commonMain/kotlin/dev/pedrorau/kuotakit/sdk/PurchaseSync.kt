@@ -106,6 +106,15 @@ internal fun classify(
         else -> OwnedAction.Send(purchase.receipt)
     }
 
+/** Who started a sync: it decides whether a purchase the backend already answered is sent again. */
+internal enum class SyncTrigger {
+    /** The app asked (`restore()`): the user wants the backend to look again, so every purchase is sent. */
+    RESTORE,
+
+    /** The SDK itself (start, an update, a product the store says is already owned): the limit of receipts is kept. */
+    AUTOMATIC,
+}
+
 /** What one sync did, with the products it got accepted (the outcome the app sees does not carry them). */
 internal class SyncResult(
     val outcome: RestoreOutcome,
@@ -116,8 +125,9 @@ internal class SyncResult(
  * Finds the purchases of the user in the store and has the backend check them. The store keeps a purchase until it is
  * confirmed or refunded, so it is the queue: nothing is stored on the device, and what could not be sent now is found
  * again by the next sync. One sync at a time. A purchase the backend already answered (accepted or refused) is not sent
- * again in the same run of the app: the backend limits the receipts of one app user (ADR 0016), and the answer would
- * not change; the customer info is always read again, which is where renewals and refunds show.
+ * again in the same run of the app when the sync is automatic (a side step of a purchase, the start, an update) ([SyncTrigger.AUTOMATIC]): the
+ * backend limits the receipts of one app user (ADR 0016). An explicit [SyncTrigger.RESTORE] always sends them: without
+ * Google's notifications the receipt is the only way the backend learns of a renewal, a cancel or a refund.
  */
 internal class PurchaseSync(
     private val api: ApiClient,
@@ -130,7 +140,7 @@ internal class PurchaseSync(
     private val answered = mutableSetOf<String>()
     private val accepted = mutableSetOf<String>()
 
-    suspend fun run(): SyncResult =
+    suspend fun run(trigger: SyncTrigger): SyncResult =
         lock.withLock {
             var submitted = 0
             var refused = 0
@@ -142,7 +152,7 @@ internal class PurchaseSync(
                         // Once per run, so the limit of receipts of the backend is not spent; but what the backend
                         // says is not active is asked again: Google may have renewed it (a renewal is only seen when
                         // the receipt is sent again, unless the backend gets Google's notifications).
-                        if (key !in answered) {
+                        if (trigger == SyncTrigger.RESTORE || key !in answered) {
                             if (send(action.receipt)) submitted++ else refused++
                             answered += key
                         } else if (endedAccordingToTheBackend(action.receipt)) {

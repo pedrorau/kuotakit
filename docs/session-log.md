@@ -210,3 +210,11 @@ One entry per working session. Template in [ai-workflow.md](ai-workflow.md).
 - Validation done: the unit tests, ktlint, detekt, lint and the ABI check of the core and the Android module, and **the run on the phone** (the maintainer's, driven over adb with a debug build with the fixes): the deferred change returned, and after the monthly plan ended a Restore, without restarting the app, showed `premium_annual` active (a first Restore, 25 seconds after the end, was refused by the backend while Google's answer was still changing, and granted nothing). Not validated: that the hypothesis about the hang is the cause (the log did not show the products of the update), cancel, refund and Google's notifications.
 - Public API: none.
 - Time spent: pending · Diff accepted as-is: pending
+
+## 2026-11-12 — SDK subphase 1d: Restore asks the backend again every time
+- Goal: a cancel or a refund made in Google must show after pressing Restore, with no restart (the second run on the phone). Plan: `docs/plans/2026-11-sdk-android-1d.md` (approved by the maintainer, who knew it changes an existing test).
+- What went right: the change is small (an enum `SyncTrigger` in `PurchaseSync`); the tests written first failed with the 1c rule and the negative check (going back to it) failed four tests.
+- What went wrong: nothing found yet; the phone run is pending.
+- Validation done: unit tests of `sdk/core` and `sdk/android`, ktlint, detekt, ABI check (empty diff); the old test of "restore does not resend" was rewritten to the new rule.
+- Public API: none.
+- Time spent: pending · Diff accepted as-is: pending

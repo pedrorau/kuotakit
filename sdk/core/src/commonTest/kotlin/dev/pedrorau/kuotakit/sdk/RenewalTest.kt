@@ -19,8 +19,10 @@
 
 package dev.pedrorau.kuotakit.sdk
 
+import dev.pedrorau.kuotakit.contracts.OfferingPackage
 import dev.pedrorau.kuotakit.contracts.PlayStoreReceiptRequest
 import dev.pedrorau.kuotakit.contracts.Store
+import dev.pedrorau.kuotakit.contracts.StoreProducts
 import dev.pedrorau.kuotakit.contracts.playObfuscatedAccountId
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -33,6 +35,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+
+private val NOT_RENEWING = Samples.CUSTOMER_PREMIUM.replace(""""will_renew":true""", """"will_renew":false""")
 
 private const val INACTIVE =
     """{"app_user_id":"anon","request_date":"2026-11-13T01:40:00Z","entitlements":{"premium":{"is_active":false,""" +
@@ -40,15 +45,18 @@ private const val INACTIVE =
         """"expires_at":"2026-11-13T01:37:36Z","will_renew":false,"billing_issue_detected_at":null}},""" +
         """"active_subscriptions":[],"non_subscription_purchases":[]}"""
 
+private val PACKAGE = OfferingPackage("monthly", StoreProducts("premium_monthly", null))
+
 /** The store owns the one purchase of the user all the time (Google renews it on its own). */
 private class OwningStore(
     private val token: String,
+    private val answer: BillingResult = BillingResult.Cancelled,
     private val account: () -> String,
 ) : BillingAdapter {
     override val store: Store = Store.PLAY_STORE
     override val purchaseUpdates: Flow<OwnedPurchase> = MutableSharedFlow()
 
-    override suspend fun purchase(request: PurchaseRequest): BillingResult = BillingResult.Cancelled
+    override suspend fun purchase(request: PurchaseRequest): BillingResult = answer
 
     override suspend fun ownedPurchases(): List<OwnedPurchase> =
         listOf(
@@ -99,59 +107,82 @@ class RenewalTest {
     ) = KuotaKit.create(KuotaKitConfig("https://b.example.com", "pk_abc", billing, MemoryStore()), backend.engine)
 
     @Test
-    fun aPurchaseTheBackendSaysIsActiveIsNotSentAgain() =
+    fun anExplicitRestoreSendsTheSamePurchaseEveryTimeEvenWhenTheBackendSaysItIsActive() =
         runTest {
             lateinit var kit: KuotaKit
             val store = OwningStore("renewed") { playObfuscatedAccountId(kit.appUserId) }
-            val backend = RenewingBackend(listOf(Samples.CUSTOMER_PREMIUM, INACTIVE, Samples.CUSTOMER_PREMIUM))
+            val backend = RenewingBackend(listOf(Samples.CUSTOMER_PREMIUM))
             kit = kit(store, backend)
 
-            kit.restore() // the first time: sent, and the backend says active
-            kit.restore() // it is still active: not sent again
-            assertEquals(listOf("renewed"), backend.receipts)
+            kit.restore()
+            kit.restore()
+            kit.restore()
+            assertEquals(listOf("renewed", "renewed", "renewed"), backend.receipts)
         }
 
     @Test
-    fun theLimitOfReceiptsNeverMakesARestoreFailWhereItWouldHaveAnswered() =
+    fun aCancelAfterThePurchaseShowsAtTheNextRestoreWithoutRestartingTheApp() =
         runTest {
             lateinit var kit: KuotaKit
             val store = OwningStore("renewed") { playObfuscatedAccountId(kit.appUserId) }
-            // The backend answers the first receipt, says the plan ended, and then refuses more receipts (429).
-            val backend = RenewingBackend(listOf(INACTIVE), limitAfter = 1)
+            val backend = RenewingBackend(listOf(Samples.CUSTOMER_PREMIUM, NOT_RENEWING))
             kit = kit(store, backend)
 
             kit.restore()
             val second = kit.restore()
 
-            assertEquals(0, second.submitted)
+            val premium = second.customerInfo.entitlements.getValue("premium")
+            assertEquals(true, premium.isActive)
+            assertEquals(false, premium.willRenew)
             assertEquals(
                 false,
-                second.customerInfo.entitlements
-                    .getValue("premium")
-                    .isActive,
+                kit.customerInfo.value
+                    ?.entitlements
+                    ?.getValue("premium")
+                    ?.willRenew,
             )
         }
 
     @Test
-    fun whenTheBackendSaysItEndedItIsAskedAgainAndOnceItIsActiveAgainItIsNot() =
+    fun theLimitOfReceiptsReachesAnExplicitRestoreInsteadOfPretendingItWasChecked() =
         runTest {
             lateinit var kit: KuotaKit
             val store = OwningStore("renewed") { playObfuscatedAccountId(kit.appUserId) }
-            // 1st receipt: the backend already thinks the plan ended; 2nd: Google renewed it, the backend says active.
-            val backend = RenewingBackend(listOf(INACTIVE, Samples.CUSTOMER_PREMIUM))
+            // The backend answers the first receipt and then refuses more receipts (429).
+            val backend = RenewingBackend(listOf(INACTIVE), limitAfter = 1)
             kit = kit(store, backend)
 
             kit.restore()
-            kit.restore()
-            kit.restore()
+            assertFailsWith<KuotaKitException.RateLimited> { kit.restore() }
+        }
 
+    @Test
+    fun theSyncOfAPurchaseOfWhatIsAlreadyOwnedDoesNotSendAgainWhatTheBackendSaysIsActive() =
+        runTest {
+            lateinit var kit: KuotaKit
+            val store =
+                OwningStore("renewed", answer = BillingResult.AlreadyOwned) { playObfuscatedAccountId(kit.appUserId) }
+            val backend = RenewingBackend(listOf(Samples.CUSTOMER_PREMIUM))
+            kit = kit(store, backend)
+
+            kit.purchase(PACKAGE)
+            kit.purchase(PACKAGE)
+            assertEquals(listOf("renewed"), backend.receipts)
+        }
+
+    @Test
+    fun theSyncOfAPurchaseOfWhatIsAlreadyOwnedAsksAgainWhatTheBackendSaysEndedAndOnceItIsActiveItDoesNot() =
+        runTest {
+            lateinit var kit: KuotaKit
+            val store =
+                OwningStore("renewed", answer = BillingResult.AlreadyOwned) { playObfuscatedAccountId(kit.appUserId) }
+            // 1st receipt: the backend thinks the plan ended; 2nd: Google renewed it, the backend says active.
+            val backend = RenewingBackend(listOf(INACTIVE, Samples.CUSTOMER_PREMIUM))
+            kit = kit(store, backend)
+
+            kit.purchase(PACKAGE)
+            kit.purchase(PACKAGE)
+            kit.purchase(PACKAGE)
             assertEquals(listOf("renewed", "renewed"), backend.receipts)
-            assertEquals(
-                true,
-                kit.customerInfo.value
-                    ?.entitlements
-                    ?.get("premium")
-                    ?.isActive,
-            )
         }
 }
