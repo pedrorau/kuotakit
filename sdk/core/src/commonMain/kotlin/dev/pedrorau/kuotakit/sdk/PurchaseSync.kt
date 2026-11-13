@@ -125,9 +125,10 @@ internal class SyncResult(
  * Finds the purchases of the user in the store and has the backend check them. The store keeps a purchase until it is
  * confirmed or refunded, so it is the queue: nothing is stored on the device, and what could not be sent now is found
  * again by the next sync. One sync at a time. A purchase the backend already answered (accepted or refused) is not sent
- * again in the same run of the app when the sync is automatic (a side step of a purchase, the start, an update) ([SyncTrigger.AUTOMATIC]): the
- * backend limits the receipts of one app user (ADR 0016). An explicit [SyncTrigger.RESTORE] always sends them: without
- * Google's notifications the receipt is the only way the backend learns of a renewal, a cancel or a refund.
+ * again in the same run of the app when the sync is automatic ([SyncTrigger.AUTOMATIC]: the start, an update, a side
+ * step of a purchase): the backend limits the receipts of one app user (ADR 0016). An explicit
+ * [SyncTrigger.RESTORE] always sends them: without Google's notifications the receipt is the only way the backend
+ * learns of a renewal, a cancel or a refund.
  */
 internal class PurchaseSync(
     private val api: ApiClient,
