@@ -31,3 +31,13 @@ What Google documents: with this mode "the new purchase is issued immediately wi
 - **Keep refusing it:** the change is cancelled by Google after three days; users would see a downgrade undo itself.
 - **Store the new product at once with a start date:** the entitlement would be granted before the old plan ends, or would need a "starts later" state; reading the current item keeps one row and one rule.
 - **Wait for the renewal notification to create the purchase:** the webhook never creates purchases (ADR 0014), and the token is acknowledged at the time of the change, not at the renewal.
+
+## Amendment (2026-11-12): checked against the real Google
+A deferred downgrade (monthly to annual, a test subscription of a license tester on a real phone, the purchase and Google's answers read with the Play Developer API) confirmed the reading of this ADR:
+- Google's answer for the new purchase has **two line items**: `premium_annual` with **no `expiryTime`** and `premium_monthly` with its end and `deferredItemReplacement` naming the annual product; the new purchase is `ACTIVE` and has a `linkedPurchaseToken`.
+- **`subscriptions.acknowledge` was accepted** with the old product and the new token: the backend acknowledges under the product the purchase has now (the old plan during the deferral), and Google reports the purchase `ACKNOWLEDGED`.
+- **The old token is `EXPIRED`**, with its end at the moment of the change, as ADR 0015 relies on.
+- The backend stored the new purchase as the old plan (`premium_monthly`, ending at the old end, not renewing) and, after that end, once the receipt was sent again (the app was restarted), as `premium_annual` active.
+- **After the old plan ended (second run, a phone driven over adb):** for about 25 seconds Google's answer was still changing and the backend refused a receipt (`refused`, nothing granted: fail closed); a few seconds later Google reported the annual item with its end date and an order, and the **monthly item without `deferredItemReplacement`** (it is dropped once the swap happened), and the backend, sent the receipt again, stored the purchase as `premium_annual`, active, renewing.
+- **Still not verified:** the first renewal of the annual plan after the swap, and the behaviour with Google's notifications on (they are not set up yet in the sandbox).
+- The call of the SDK for such a change stayed waiting. The likely cause (a hypothesis, not confirmed with a device log) is that the Billing Library lists the replaced product in the new purchase; the SDK now accepts that too (amendment of ADR 0019, subphase 1c).
