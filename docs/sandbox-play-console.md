@@ -45,8 +45,9 @@ Order matters (Play Console needs an uploaded app before it lets you create prod
 Two subscriptions, each with its own base plan, and not one subscription with two base plans: the backend tells products apart by the **product ID** of the subscription, and a plan change between the two is then a change between two products (docs/adr/0013, 0015, 0020).
 
 ## A. Before you start
-- A Google Play developer account (you have one) and a **payments profile linked to it**, which Google requires to sell in-app products ([Set up Play Billing](https://developer.android.com/google/play/billing/getting-ready#set-up-a-google-play-developer-account), [link your payments profile](https://support.google.com/googleplay/android-developer/answer/3092739)). Check it in Play Console: if *Monetize with Play* is there and lets you open *Products*, it is linked.
+- A Google Play developer account (you have one) and a **payments profile linked to it**, which Google requires to sell in-app products ([Set up Play Billing](https://developer.android.com/google/play/billing/getting-ready#set-up-a-google-play-developer-account), [link your payments profile](https://support.google.com/googleplay/android-developer/answer/3092739)). Check it in Play Console: if *Monetize with Play* is there and lets you open *Products*, it is linked. *(Lived in the first run: with no payments profile the menu does not offer products; after creating the profile, and after a first build with the billing library was published, the submenu took a while to appear and *Monetize with Play → Get started* looped for some minutes. Waiting and reloading was the fix.)*
 - A computer with this repository, JDK (Gradle brings its own), Docker (Colima works) and an **Android phone with the Play Store** (an emulator image *with Google Play* also works; not tried).
+- Know **which email owns the developer account**: license testers and testers are separate from it, and the phone's own Gmail may be a different address (in the first run the owner was not the phone's account, so the phone was not a tester until it was added to the lists of parts D and F).
 - A second Google account (a Gmail made only for testing) for the license tester. Do not buy anything with real payment methods on it ([Test your integration](https://developer.android.com/google/play/billing/test): "Gmail accounts created for testing purposes shouldn't be used to make purchases using real instruments on Google Play").
 - Your account may be a *personal* account created after 2023-11-13: then Google requires extra testing before an app can go to production (the official page links to ["App testing requirements for new personal developer accounts"](https://support.google.com/googleplay/android-developer/answer/14151465)). It does **not** affect the internal testing track used here; it matters only when the sandbox app is opened to the public.
 
@@ -79,7 +80,7 @@ In both cases never put the file or the passwords in the repository, in a chat o
 ## D. Upload the first build to the internal testing track
 Play Console enables the billing features only after "a version of your app that includes the Google Play Billing Library" has been published, "to any track, including the internal test track" ([Set up Play Billing](https://developer.android.com/google/play/billing/getting-ready#enable-billing-related-features-in-the-google-play-console)). So the first build comes **before** the products.
 
-1. **The agent builds the bundle** once the example app exists (task `docs/plans/2026-11-example-app.md`): `./gradlew :examples:android:bundleRelease`. It needs your upload key; the command and the `local.properties` lines will be in the example app's README.
+1. **The agent builds the bundle** once the example app exists (task `docs/plans/2026-11-example-app.md`): `./gradlew :examples:android:bundleRelease`. The app's `minSdk` must be **24 or higher** or Play Console refuses the bundle when automatic protection is on (the example app uses 24). It needs your upload key; the command and the `local.properties` lines will be in the example app's README.
 2. In Play Console, open your app → **Test and release → Testing → Internal testing** ([Set up an open, closed, or internal test](https://support.google.com/googleplay/android-developer/answer/3131213)).
 *(Button names in Play Console change over time; follow what your screen shows if it differs from the names below.)*
 3. **Testers** tab → **Create email list** → a name (`sandbox-testers`) and the emails of the people who will install the app (your test Gmail, your own account, friends): up to 100 testers per app. **Save changes**, select the list, put a feedback email or URL, **Save changes**.
@@ -138,7 +139,7 @@ The backend asks Google about every purchase with a **service account**; its key
 1. **Google Cloud project**: <https://console.cloud.google.com> → create a project (for example `kuotakit-sandbox`). Skip if you have one.
 2. **Enable the API**: in that project enable the *Google Play Android Developer API* (APIs & Services → Library → search the name → **Enable**).
 3. **Create the service account**: IAM & Admin → Service Accounts → **Create service account** (name `kuotakit-backend`). You can skip the optional "grant access" steps of the Cloud wizard: the access it needs is given in Play Console. Copy its email (it ends with `.iam.gserviceaccount.com`).
-4. **Create a key** for it: open the service account → **Keys → Add key → Create new key → JSON**. The browser downloads a file. *(The official page does not describe the key; this is general Google Cloud knowledge.)* Treat the file like a password: move it to `secrets/play-service-account.json` of your clone of this repository (git-ignored), and delete it from Downloads.
+4. **Create a key** for it: open the service account → **Keys → Add key → Create new key → JSON**. The browser downloads a file. **Move the downloaded file straight to `secrets/play-service-account.json`** (git-ignored); never leave it in `docs/` or the Downloads folder of a clone: the ignore pattern `*service-account*.json` only matches names that contain `service-account`, and Google names the file after the project. *(The official page does not describe the key; this is general Google Cloud knowledge.)* Treat the file like a password: move it to `secrets/play-service-account.json` of your clone of this repository (git-ignored), and delete it from Downloads.
 5. **Give it access in Play Console**: **Users and permissions → Invite new users**, enter the service account's email and grant "View financial data, orders, and cancellation survey responses" and "Manage orders and subscriptions", then **Invite user**.
 6. The official page says nothing about how long the access takes to apply. If the backend gets a 401 or a 403 from Google right after this, it answers `502 store_unavailable` and grants nothing; wait and retry ([docs/google-play-setup.md](google-play-setup.md)).
 
@@ -154,7 +155,7 @@ The app needs an address it can reach from the phone, and Google (part I, later)
    ./gradlew :backend:installDist
    cp .env.example .env
    ```
-   Edit `.env`: a real `POSTGRES_PASSWORD`; `KUOTAKIT_APP_KEYS=pk_<long random>` (it goes inside the app and is not secret) and `KUOTAKIT_SECRET_KEYS=sk_<long random>` (secret; make them with `echo "pk_$(openssl rand -hex 24)"`); and
+   Edit `.env` **yourself** (the agent's guards refuse to edit it, on purpose): a real `POSTGRES_PASSWORD`; `KUOTAKIT_APP_KEYS=pk_<long random>` (it goes inside the app and is not secret) and `KUOTAKIT_SECRET_KEYS=sk_<long random>` (secret; make them with `echo "pk_$(openssl rand -hex 24)"`); and
    ```
    KUOTAKIT_GOOGLE_PACKAGE_NAME=dev.pedrorau.kuotakit.sandbox
    ```
@@ -181,6 +182,7 @@ The app needs an address it can reach from the phone, and Google (part I, later)
    On macOS with Colima, `DOCKER_HOST` must be exported first (AGENTS.md → Conventions).
 5. In another terminal: `cloudflared tunnel --url http://localhost:8080`. It prints an address like `https://<random-words>.trycloudflare.com`. That is the **base URL** for the app. *Behind a tunnel every request reaches the backend from the tunnel's address, so all clients would share one request budget: add `KUOTAKIT_TRUST_FORWARDED_FOR=true` to `.env` only if you know the tunnel sets `X-Forwarded-For`; if in doubt leave it off for your own tests (docs/adr/0016).*
 6. Check it: `curl https://<that address>/health`.
+7. Keep the computer awake while you test (`caffeinate -dims` on macOS): a sleeping Mac drops the tunnel and the backend, and the app then shows its stale marker.
 
 Limits: the tunnel allows 200 requests in flight, and the address changes every time. The example app has a settings screen where you type the backend address and the public key at run time (plan `docs/plans/2026-11-example-app.md`), so a new tunnel address needs no new build and no new upload to Play.
 
@@ -207,7 +209,15 @@ Without them a refund or a renewal done by Google is not seen until the app send
 4. In `.env` of the backend: `KUOTAKIT_GOOGLE_PUBSUB_AUDIENCE=<that audience>` and `KUOTAKIT_GOOGLE_PUBSUB_SERVICE_ACCOUNT_EMAIL=<email of the push service account>`; restart the backend.
 5. Play Console → your app → **Monetize → Monetization setup** → **Real-time developer notifications**: tick *Enable real-time notifications*, **Topic name** `projects/<project_id>/topics/<topic>`, choose *Get all notifications for subscriptions and one-time products* if you created `lifetime_unlock` (otherwise *subscriptions and all voided purchases*), press **Send Test Message** (the backend logs it as ignored and answers 204) and **Save changes**.
 
-## J. What to tell the agent, and what never to share
+## J. Testing cheat sheet (what the first real run showed)
+All of this was seen with a license tester on the internal track; times are Google's test values ([Test your integration](https://developer.android.com/google/play/billing/test#renewals)).
+- A monthly test subscription renews every **5 minutes**, an annual one every **30 minutes**, at most **6 times**; after that it expires.
+- A plan change with `DEFERRED` gives a purchase with two items: the old plan keeps its end date until the swap, then Google drops it and the new plan takes over. For about 25 seconds after the swap the backend refuses the purchase (fail closed); the next sync fixes it.
+- **Cancel**: Play Store → profile → Payments & subscriptions → Subscriptions → the app → Cancel. The backend sees it as `will_renew=false` only when the app sends the receipt again (Restore or opening the app), or at once with real-time notifications (part I).
+- **Refund**: with the Google Play Developer API `purchases.subscriptionsv2.revoke` (a `revocationContext` with a full refund is required), or from Play Console → Order management. Same visibility rule as for a cancel.
+- Without real-time notifications the backend only learns about renewals, cancellations and refunds when it receives the receipt again. That is expected, not a bug (ADR 0014).
+
+## K. What to tell the agent, and what never to share
 When parts B to H are done (I is for later), send, in the chat:
 - confirmation that the package name and the product ids are the defaults, or the ones you used;
 - the base URL of the backend (the tunnel's or the sandbox's) and the **public** key `pk_...`;
@@ -228,6 +238,8 @@ When parts B to H are done (I is for later), send, in the chat:
 | The app throws a configuration error when it starts | the key is a secret one (`sk_...`): the SDK refuses it in `configure` on purpose; use the public `pk_...` key |
 | The app cannot reach the backend after restarting `cloudflared` | the quick tunnel gives a new address each time (part H stage 1) |
 | Everything is OK but the access ends after ~30 minutes | test subscriptions renew at most 6 times |
+| Play Console refuses the bundle with a `minSdk` error | automatic protection needs `minSdk` 24 or higher (part D) |
+| The phone is not offered the test purchase although the owner account is a tester | the phone's Gmail is not the owner's: add it to both email lists (parts D and F) |
 | A tester cannot buy more than a few things | spend limits of the internal track (part D) |
 
 ## Sources (all read on 2026-11-11)
