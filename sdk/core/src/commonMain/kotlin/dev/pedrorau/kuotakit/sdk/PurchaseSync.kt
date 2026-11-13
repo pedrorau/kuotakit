@@ -44,6 +44,18 @@ internal class LatestCustomerInfo(
     private var applied = 0L
 
     val flow: StateFlow<CustomerInfo?> = value.asStateFlow()
+
+    /**
+     * Whether the last answer of the backend says that the entitlement of [productId] is not active. The SDK does not
+     * decide access (that is the backend's answer): this only says that asking again is worth it, because the store
+     * may have renewed what the backend believes has ended.
+     */
+    fun saysNotActive(productId: String): Boolean =
+        value.value
+            ?.entitlements
+            ?.values
+            ?.any { it.productId == productId && !it.isActive } == true
+
     val cached: StateFlow<CachedCustomerInfo?> = cache.asStateFlow()
 
     suspend fun stamp(): Long = lock.withLock { ++issued }
@@ -127,9 +139,22 @@ internal class PurchaseSync(
                 when (val action = classify(purchase, accountId)) {
                     is OwnedAction.Send -> {
                         val key = keyOf(action.receipt)
+                        // Once per run, so the limit of receipts of the backend is not spent; but what the backend
+                        // says is not active is asked again: Google may have renewed it (a renewal is only seen when
+                        // the receipt is sent again, unless the backend gets Google's notifications).
                         if (key !in answered) {
                             if (send(action.receipt)) submitted++ else refused++
                             answered += key
+                        } else if (endedAccordingToTheBackend(action.receipt)) {
+                            // Asked again only if the backend lets it: the limit of receipts must never make a restore
+                            // fail where it used to answer, so a refusal to wait is simply tried at the next trigger.
+                            try {
+                                if (send(action.receipt)) submitted++ else refused++
+                            } catch (
+                                @Suppress("SwallowedException") limit: KuotaKitException.RateLimited,
+                            ) {
+                                Unit
+                            }
                         }
                     }
 
@@ -146,6 +171,9 @@ internal class PurchaseSync(
             val info = api.customerInfo(appUserId).also { latest.remember(stamp, it) }
             SyncResult(RestoreOutcome(info, submitted, refused, unattributed), accepted.toSet())
         }
+
+    private fun endedAccordingToTheBackend(receipt: ReceiptRequest): Boolean =
+        receipt is PlayStoreReceiptRequest && latest.saysNotActive(receipt.productId)
 
     private fun keyOf(receipt: ReceiptRequest): String =
         when (receipt) {
